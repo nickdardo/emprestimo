@@ -301,7 +301,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
       <div class="fgrid">
         <div class="fg full"><span class="lbl">Nome *</span><input id="um-nome" placeholder="Nome do usuário"/></div>
         <div class="fg"><span class="lbl">Login *</span><input id="um-login" placeholder="Ex: joao.silva"/></div>
-        <div class="fg"><span class="lbl">Perfil</span><select id="um-role"><option value="admin">👑 Admin</option><option value="op">👤 Operador</option></select></div>
+        <div class="fg"><span class="lbl">Perfil</span><select id="um-role"><option value="admin">👑 Admin</option><option value="op">🎯 3°JOB</option></select></div>
         <div class="fg full"><span class="lbl">Senha *</span><input type="password" id="um-pass" placeholder="Mínimo 4 caracteres"/></div>
         <div class="fg full" id="um-p2w"><span class="lbl">Confirmar senha *</span><input type="password" id="um-pass2" placeholder="Repita a senha"/></div>
       </div>
@@ -450,7 +450,7 @@ async function bootApp(){
       av.textContent=ini(session.nome);av.style.cssText=AV_STYLE[session.role]||AV_STYLE.op;
     }
     document.getElementById('nav-name').textContent=session.nome||'';
-    document.getElementById('nav-role').textContent=session.role==='admin'?'👑 Admin':'👤 Operador';
+    document.getElementById('nav-role').textContent=session.role==='admin'?'👑 Admin':'🎯 3°JOB';
   }catch(e){}
   try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
   buildSidebar();showPage('dashboard');
@@ -1575,7 +1575,7 @@ function renderPerfil(){
           </div>
           <div style="text-align:center">
             <div style="font-weight:600;font-size:16px">${session.nome}</div>
-            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'👑 Admin':'👤 Operador'}</div>
+            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'👑 Admin':'🎯 3°JOB'}</div>
           </div>
           <div style="width:100%">
             <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Selecionar foto</div>
@@ -1698,7 +1698,7 @@ function usrListHTML(){
       <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;${av}">${ini(u.nome)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:15px">${u.nome}${isSelf?' <span style="font-size:11px;color:var(--n4)">(você)</span>':''}</div>
-        <div style="font-size:12px;color:var(--n4);margin-top:2px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'👑 Admin':'👤 Operador'}</span></div>
+        <div style="font-size:12px;color:var(--n4);margin-top:2px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'👑 Admin':'🎯 3°JOB'}</span></div>
       </div>
       <div style="display:flex;gap:.4rem">
         <button class="btn btn-g btn-sm" onclick="openUsrModal('${u.id}')">✏ Editar</button>
