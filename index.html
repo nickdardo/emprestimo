@@ -1155,13 +1155,18 @@ function openParcelas(empId){
           `:`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}','${empId}')" title="Reverter para pendente" style="font-size:11px">↩ Reverter</button>`}
         </div>
       </div>`;
-    }).join('')}`;
+    }).join('')}</div>`;
 
   const footer=document.getElementById('parc-modal').querySelector('.mfooter');
   footer.innerHTML=`
     <button class="btn btn-g btn-sm" onclick="closeM('parc-modal')">Fechar</button>
     <button class="btn btn-p btn-sm" onclick="addParcela('${empId}')">+ Adicionar Parcela</button>`;
   openM('parc-modal');
+  // Scroll to bottom so latest parcelas are visible
+  setTimeout(()=>{
+    const el=document.getElementById('parc-list-scroll');
+    if(el)el.scrollTop=el.scrollHeight;
+  },50);
 }
 
 function confirmarPagamento(id, empId){
