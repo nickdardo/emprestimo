@@ -1107,9 +1107,9 @@ function openParcelas(empId){
         <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:2px">✅ Recebido</div>
         <div style="font-family:var(--FT);font-size:1.2rem;color:var(--grn)">${fmtR(pago)}</div>
       </div>
-      <div style="background:var(--amb0);border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid var(--amb1)">
-        <div style="font-size:9px;color:var(--amb);font-weight:700;text-transform:uppercase;margin-bottom:2px">⏳ Pendente</div>
-        <div style="font-family:var(--FT);font-size:1.2rem;color:var(--amb)">${fmtR(pend)}</div>
+      <div style="background:${saldo===0?'var(--grn0)':'var(--red0)'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${saldo===0?'var(--grn1)':'var(--red1)'}">
+        <div style="font-size:9px;color:${saldo===0?'var(--grn)':'var(--red)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">⚖️ Saldo Devedor</div>
+        <div style="font-family:var(--FT);font-size:1.2rem;color:${saldo===0?'var(--grn)':'var(--red)'}">${saldo===0?'✓ Quitado!':fmtR(saldo)}</div>
       </div>
       <div style="background:${atrasadasCnt?'var(--red0)':'#F9FAFB'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${atrasadasCnt?'var(--red1)':'#E5E7EB'}">
         <div style="font-size:9px;color:${atrasadasCnt?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">⚠️ Atraso</div>
