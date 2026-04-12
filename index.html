@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EmprestimoPainel</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23111827'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='%2310B981'>$</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0FDF4;--card:#fff;--border:#D1FAE5;--border2:#A7F3D0;
+  --n1:#111827;--n2:#374151;--n3:#6B7280;--n4:#9CA3AF;
+  --grn:#059669;--grn0:#ECFDF5;--grn1:#A7F3D0;--grn2:#10B981;
+  --red:#DC2626;--red0:#FEF2F2;--red1:#FECACA;
+  --amb:#D97706;--amb0:#FFFBEB;--amb1:#FDE68A;
+  --blu:#2563EB;--blu0:#EFF6FF;
+  --blk:#111827;--blk2:#1F2937;--blk3:#374151;
+  --FT:'DM Serif Display',serif;--FB:'DM Sans',sans-serif;
+  --r:12px;--rs:8px;--sh:0 1px 3px rgba(0,0,0,.08);--shm:0 8px 30px rgba(0,0,0,.15);
+}
+body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh;font-size:15px}
+
+/* LOGIN */
+.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#064E3B 0%,#111827 60%,#064E3B 100%);padding:1rem}
+.login-card{background:#fff;border-radius:20px;padding:2.5rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.login-logo{font-family:var(--FT);font-size:2rem;color:var(--n1);margin-bottom:.2rem}
+.login-logo span{color:var(--grn)}
+.login-sub{font-size:13px;color:var(--n3);margin-bottom:2rem}
+.login-field{margin-bottom:1rem}
+.login-field label{display:block;font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.login-field input{width:100%;padding:.7rem 1rem;border:1px solid #D1D5DB;border-radius:var(--rs);font-family:var(--FB);font-size:14px;color:var(--n1);background:#F9FAFB;outline:none;transition:border-color .15s}
+.login-field input:focus{border-color:var(--grn);background:#fff}
+.login-error{background:var(--red0);color:var(--red);font-size:13px;padding:.6rem .85rem;border-radius:var(--rs);margin-bottom:1rem;display:none;border-left:3px solid var(--red)}
+.login-hint{font-size:11px;color:var(--n4);text-align:center;margin-top:1rem}
+
+/* NAV */
+.nav{background:var(--blk);border-bottom:1px solid var(--blk2);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.nav-brand{font-family:var(--FT);font-size:1.3rem;color:#fff}
+.nav-brand span{color:#10B981}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.nav-user{font-size:13px;color:#9CA3AF;display:flex;align-items:center;gap:8px}
+.nav-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.nav-badge{font-size:11px;padding:2px 9px;border-radius:999px;font-weight:600}
+.logout-btn{background:transparent;border:1px solid #374151;color:#9CA3AF;font-size:12px;padding:.3rem .75rem;border-radius:var(--rs);cursor:pointer;font-family:var(--FB);transition:all .12s}
+.logout-btn:hover{background:#1F2937;color:#fff}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:6px;border-radius:6px}
+.hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px}
+
+/* LAYOUT */
+.app-body{display:flex;min-height:calc(100vh - 56px)}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}
+.sb-overlay.open{display:block}
+.sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #E5E7EB;padding:1rem 0;display:flex;flex-direction:column;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;transition:left .25s}
+.sidebar-section{padding:0 1rem .4rem;font-size:10px;font-weight:700;color:var(--n4);letter-spacing:.08em;text-transform:uppercase;margin-top:.5rem}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:.65rem 1.25rem;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--FB);font-size:14px;color:var(--n3);border-right:3px solid transparent;transition:all .12s}
+.sidebar-item:hover{background:#F0FDF4;color:var(--n1)}
+.sidebar-item.active{background:#ECFDF5;color:var(--grn);font-weight:600;border-right-color:var(--grn)}
+.sidebar-icon{width:18px;text-align:center;font-size:15px}
+.sidebar-footer{margin-top:auto;padding:1rem;border-top:1px solid #E5E7EB;font-size:11px;color:var(--n4);line-height:1.6}
+.content{flex:1;padding:1.5rem;min-width:0}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem}
+.stat{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);padding:1rem 1.25rem;box-shadow:var(--sh)}
+.stat-label{font-size:10px;color:var(--n4);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.stat-value{font-family:var(--FT);font-size:1.6rem;line-height:1;color:var(--n1)}
+.stat-sub{font-size:12px;color:var(--n4);margin-top:4px}
+
+/* CARDS */
+.card{background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--sh)}
+.card-title{font-family:var(--FT);font-size:1.15rem;margin-bottom:1rem;color:var(--n1)}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+.sec-title{font-family:var(--FT);font-size:1.3rem;color:var(--n1)}
+
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:4px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+.full{grid-column:1/-1}
+.lbl{font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{padding:.55rem .85rem;border:1px solid #D1D5DB;border-radius:var(--rs);font-family:var(--FB);font-size:14px;color:var(--n1);background:#fff;outline:none;transition:border-color .15s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--grn)}
+input::placeholder,textarea::placeholder{color:#D1D5DB}
+select option{background:#fff;color:var(--n1)}
+
+/* BTNS */
+.btn{padding:.6rem 1.25rem;border-radius:var(--rs);font-family:var(--FB);font-size:14px;font-weight:500;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .12s;white-space:nowrap}
+.btn-p{background:var(--blk);color:#fff}.btn-p:hover{background:var(--blk2)}
+.btn-grn{background:var(--grn);color:#fff}.btn-grn:hover{background:#047857}
+.btn-g{background:transparent;color:var(--n3);border:1px solid #D1D5DB}.btn-g:hover{background:#F9FAFB}
+.btn-d{background:transparent;color:var(--red);border:1px solid var(--red1)}.btn-d:hover{background:var(--red0)}
+.btn-amb{background:var(--amb0);color:var(--amb);border:1px solid var(--amb1)}.btn-amb:hover{opacity:.85}
+.btn-sm{padding:.35rem .85rem;font-size:13px}
+.btn-xs{padding:.22rem .65rem;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:.85rem;font-size:15px}
+
+/* BADGES */
+.bdg{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.bdg-pago{background:var(--grn0);color:var(--grn)}
+.bdg-pend{background:var(--amb0);color:var(--amb)}
+.bdg-cancel{background:var(--red0);color:var(--red)}
+.bdg-admin{background:#EDE9FE;color:#5B21B6}
+.bdg-op{background:var(--grn0);color:var(--grn)}
+.bdg-atras{background:var(--red0);color:var(--red)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid #E5E7EB}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:.7rem 1rem;text-align:left;font-size:10px;font-weight:700;color:var(--n4);text-transform:uppercase;letter-spacing:.06em;background:#F9FAFB;border-bottom:1px solid #E5E7EB;white-space:nowrap}
+tbody tr{border-bottom:1px solid #F3F4F6;transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F0FDF4}
+tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
+
+/* MODAL */
+.mbd{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:#fff;border-radius:var(--r);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shm)}
+.mhdr{padding:1.25rem 1.5rem 1rem;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between}
+.mtitle{font-family:var(--FT);font-size:1.15rem;color:var(--n1)}
+.mclose{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--n4);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px}
+.mclose:hover{background:#F3F4F6}
+.mbody{padding:1.25rem 1.5rem}
+.mfooter{padding:1rem 1.5rem;border-top:1px solid #E5E7EB;display:flex;gap:.5rem;justify-content:flex-end}
+.msec{font-size:11px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;margin-top:1rem;padding-top:.75rem;border-top:1px solid #F3F4F6}
+
+/* PARCELA ROW */
+.parc-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #F3F4F6}
+.parc-row:last-child{border-bottom:none}
+.parc-atras{color:var(--red);font-weight:600}
+
+/* SIMULADOR */
+.sim-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem;margin-top:1rem}
+.sim-header{background:var(--blk);color:#fff;padding:.5rem;text-align:center;font-size:11px;font-weight:700;border-radius:var(--rs) var(--rs) 0 0}
+.sim-cell{background:#F9FAFB;padding:.5rem;text-align:center;font-size:12px;border:1px solid #E5E7EB}
+.sim-cell.highlight{background:var(--grn0);color:var(--grn);font-weight:700}
+.sim-cell.total-col{background:#ECFDF5;font-weight:700;color:var(--grn)}
+
+/* MISC */
+.empty{text-align:center;padding:2.5rem;color:var(--n4)}
+.empty-icon{font-size:2.5rem;margin-bottom:.5rem}
+.empty-text{font-size:14px;color:var(--n3)}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;color:#fff;padding:.75rem 1.25rem;border-radius:var(--r);font-size:14px;font-weight:500;z-index:999;box-shadow:var(--shm);animation:sup .2s ease;max-width:320px}
+@keyframes sup{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.info-box{padding:.75rem 1rem;background:var(--grn0);border-radius:var(--rs);font-size:13px;color:#065F46;border:1px solid var(--grn1);margin-bottom:1rem}
+.warn-box{padding:.75rem 1rem;background:var(--amb0);border-radius:var(--rs);font-size:13px;color:#78350F;border:1px solid var(--amb1);margin-bottom:1rem}
+
+@media(max-width:900px){.hamburger{display:flex}.sidebar{position:fixed;top:56px;left:-240px;height:calc(100vh - 56px);z-index:95}.sidebar.open{left:0;box-shadow:var(--shm)}.stats{grid-template-columns:1fr 1fr}.fgrid{grid-template-columns:1fr}.full{grid-column:1}}
+@media(max-width:600px){.content{padding:1rem}.stats{grid-template-columns:1fr 1fr}.nav-user span:not(.nav-badge){display:none}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-bg">
+    <div class="login-card">
+      <div id="login-panel">
+        <div class="login-logo">Emprestimo<span>Painel</span></div>
+        <div class="login-sub">Sistema de Gestão de Empréstimos</div>
+        <div class="login-error" id="login-error"></div>
+        <div class="login-field"><label>Usuário</label><input type="text" id="lu" placeholder="seu.usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <div class="login-field"><label>Senha</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <button onclick="doLogin()" id="login-btn" class="btn btn-grn btn-full">Entrar →</button>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-top:1.25rem">
+          <div style="flex:1;height:1px;background:#E5E7EB"></div>
+          <span style="font-size:12px;color:var(--n4)">ou</span>
+          <div style="flex:1;height:1px;background:#E5E7EB"></div>
+        </div>
+        <button onclick="showRegister()" class="btn btn-g btn-full" style="margin-top:.75rem">Criar minha conta →</button>
+        <p class="login-hint">Desenvolvido por Eduardo Ribeiro</p>
+      </div>
+      <div id="register-panel" style="display:none">
+        <div class="login-logo">Emprestimo<span>Painel</span></div>
+        <div class="login-sub">Criar nova conta</div>
+        <div class="login-error" id="reg-error"></div>
+        <div class="login-field"><label>Nome completo *</label><input type="text" id="reg-nome" placeholder="Seu nome completo" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+        <div class="login-field"><label>Usuário *</label><input type="text" id="reg-login" placeholder="Ex: joao.silva" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+        <div class="login-field"><label>Senha *</label><input type="password" id="reg-pass" placeholder="Mínimo 4 caracteres" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+        <div class="login-field"><label>Confirmar senha *</label><input type="password" id="reg-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+        <button onclick="doRegister()" id="register-btn" class="btn btn-grn btn-full">Criar conta →</button>
+        <button onclick="showLogin()" style="margin-top:.75rem;width:100%;padding:.6rem;background:transparent;color:var(--n4);border:none;font-family:var(--FB);font-size:13px;cursor:pointer">← Voltar para o login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-page" style="display:none;flex-direction:column;min-height:100vh">
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <nav class="nav">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+      <span class="nav-brand">Emprestimo<span>Painel</span></span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-av"></div>
+        <span id="nav-name"></span>
+        <span class="nav-badge" id="nav-role"></span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sair</button>
+    </div>
+  </nav>
+  <div class="app-body">
+    <aside class="sidebar" id="sidebarEl"></aside>
+    <main class="content" id="main-content"></main>
+  </div>
+</div>
+
+<!-- MODAL EMPRÉSTIMO -->
+<div class="mbd" id="emp-modal" style="display:none" onclick="if(event.target===this)closeM('emp-modal')">
+  <div class="modal" style="max-width:540px">
+    <div class="mhdr"><span class="mtitle" id="emp-modal-title">Novo Empréstimo</span><button class="mclose" onclick="closeM('emp-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fgrid">
+        <div class="fg full">
+          <span class="lbl">Tomador *</span>
+          <div style="display:flex;gap:.5rem">
+            <select id="emp-tom" style="flex:1" onchange="updateEmpCalc()"><option value="">Selecione ou crie</option></select>
+            <button class="btn btn-g btn-sm" onclick="openTomModal(null)">+ Novo</button>
+          </div>
+        </div>
+        <div class="fg"><span class="lbl">Responsável</span><input id="emp-resp" placeholder="Ex: Nicole"/></div>
+        <div class="fg"><span class="lbl">Garantia</span><input id="emp-gar" placeholder="Ex: TV 32&quot;, Sem garantia"/></div>
+        <div class="fg"><span class="lbl">Local</span><input id="emp-loc" placeholder="Ex: Belém, Marituba"/></div>
+        <div class="fg"><span class="lbl">Data do Empréstimo *</span><input type="date" id="emp-data"/></div>
+
+        <div class="msec full" style="border-top:none;padding-top:0">Valores</div>
+        <div class="fg"><span class="lbl">Valor Emprestado (R$) *</span><input type="number" id="emp-valor" placeholder="0,00" min="0" step="0.01" oninput="updateEmpCalc()"/></div>
+        <div class="fg"><span class="lbl">Juros (%) *</span>
+          <select id="emp-juros" onchange="updateEmpCalc()">
+            <option value="0.2">20%</option>
+            <option value="0.3">30%</option>
+            <option value="0.1">10%</option>
+            <option value="0.15">15%</option>
+            <option value="0.25">25%</option>
+            <option value="0.5">50%</option>
+          </select>
+        </div>
+      </div>
+      <!-- CÁLCULO AUTOMÁTICO -->
+      <div id="emp-calc" style="display:none;margin-top:.75rem;background:var(--grn0);border-radius:var(--rs);padding:1rem;border:1px solid var(--grn1)">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;text-align:center">
+          <div><div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:3px">Lucro</div><div style="font-family:var(--FT);font-size:1.3rem;color:var(--grn)" id="calc-lucro">R$ 0,00</div></div>
+          <div><div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:3px">Total a receber</div><div style="font-family:var(--FT);font-size:1.3rem;color:#065F46" id="calc-total">R$ 0,00</div></div>
+          <div><div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:3px">Parcela mensal</div><div style="font-family:var(--FT);font-size:1.3rem;color:var(--grn)" id="calc-parc">R$ 0,00</div></div>
+        </div>
+      </div>
+
+      <div class="fgrid" style="margin-top:.75rem">
+        <div class="fg"><span class="lbl">Nº de Parcelas *</span>
+          <select id="emp-nparc" onchange="updateEmpCalc()">
+            <option value="1">1 parcela</option><option value="2">2 parcelas</option><option value="3">3 parcelas</option>
+            <option value="4">4 parcelas</option><option value="5">5 parcelas</option><option value="6">6 parcelas</option>
+            <option value="8">8 parcelas</option><option value="10">10 parcelas</option><option value="12">12 parcelas</option>
+            <option value="15">15 parcelas</option><option value="20">20 parcelas</option>
+          </select>
+        </div>
+        <div class="fg"><span class="lbl">Observação</span><input id="emp-obs" placeholder="Anotações..."/></div>
+      </div>
+    </div>
+    <div class="mfooter"><button class="btn btn-g btn-sm" onclick="closeM('emp-modal')">Cancelar</button><button class="btn btn-grn btn-sm" onclick="saveEmp()">💾 Salvar Empréstimo</button></div>
+  </div>
+</div>
+
+<!-- MODAL TOMADOR -->
+<div class="mbd" id="tom-modal" style="display:none" onclick="if(event.target===this)closeM('tom-modal')">
+  <div class="modal" style="max-width:440px">
+    <div class="mhdr"><span class="mtitle" id="tom-modal-title">Novo Tomador</span><button class="mclose" onclick="closeM('tom-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fgrid">
+        <div class="fg full"><span class="lbl">Nome *</span><input id="tom-nome" placeholder="Nome completo"/></div>
+        <div class="fg"><span class="lbl">Contato</span><input id="tom-cont" placeholder="(91) 99999-0000" maxlength="15" oninput="maskTel(this)" inputmode="numeric"/></div>
+        <div class="fg"><span class="lbl">Local / Endereço</span><input id="tom-loc" placeholder="Bairro ou cidade"/></div>
+        <div class="fg full"><span class="lbl">Garantia padrão</span><input id="tom-gar" placeholder="Ex: TV, Celular, Sem garantia"/></div>
+      </div>
+    </div>
+    <div class="mfooter"><button class="btn btn-g btn-sm" onclick="closeM('tom-modal')">Cancelar</button><button class="btn btn-p btn-sm" onclick="saveTom()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- MODAL PARCELAS -->
+<div class="mbd" id="parc-modal" style="display:none" onclick="if(event.target===this)closeM('parc-modal')">
+  <div class="modal" style="max-width:500px">
+    <div class="mhdr"><span class="mtitle" id="parc-modal-title">Parcelas</span><button class="mclose" onclick="closeM('parc-modal')">✕</button></div>
+    <div class="mbody" id="parc-modal-body" style="padding:1rem 1.5rem"></div>
+    <div class="mfooter"><button class="btn btn-g btn-sm" onclick="closeM('parc-modal')">Fechar</button></div>
+  </div>
+</div>
+
+<!-- MODAL USUÁRIO -->
+<div class="mbd" id="usr-modal" style="display:none" onclick="if(event.target===this)closeM('usr-modal')">
+  <div class="modal" style="max-width:420px">
+    <div class="mhdr"><span class="mtitle" id="usr-modal-title">Novo Usuário</span><button class="mclose" onclick="closeM('usr-modal')">✕</button></div>
+    <div class="mbody">
+      <div class="fgrid">
+        <div class="fg full"><span class="lbl">Nome *</span><input id="um-nome" placeholder="Nome do usuário"/></div>
+        <div class="fg"><span class="lbl">Login *</span><input id="um-login" placeholder="Ex: joao.silva"/></div>
+        <div class="fg"><span class="lbl">Perfil</span><select id="um-role"><option value="admin">👑 Admin</option><option value="op">👤 Operador</option></select></div>
+        <div class="fg full"><span class="lbl">Senha *</span><input type="password" id="um-pass" placeholder="Mínimo 4 caracteres"/></div>
+        <div class="fg full" id="um-p2w"><span class="lbl">Confirmar senha *</span><input type="password" id="um-pass2" placeholder="Repita a senha"/></div>
+      </div>
+    </div>
+    <div class="mfooter"><button class="btn btn-g btn-sm" onclick="closeM('usr-modal')">Cancelar</button><button class="btn btn-p btn-sm" onclick="saveUsr()">Salvar</button></div>
+  </div>
+</div>
+
+<script>
+// ══ SUPABASE ══
+const SUPA_URL='https://abmwlhxdvfgnptmvtkla.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFibXdsaHhkdmZnbnB0bXZ0a2xhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NjU2NzQsImV4cCI6MjA5MTU0MTY3NH0.rHxMXklvuy1uktseEWAkPRp4cdvVlzl_mx97fAvKZY0';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+// ══ SESSÃO ══
+const TIMEOUT_MS=10*60*1000;
+let session=null, _lastActivity=Date.now();
+
+function saveSession(s){try{localStorage.setItem('ep_s',JSON.stringify(s));document.cookie='ep_s='+encodeURIComponent(JSON.stringify(s))+';path=/;max-age='+(30*24*3600)+';SameSite=Lax';}catch(e){}}
+function clearSession(){try{localStorage.removeItem('ep_s');}catch(e){}try{document.cookie='ep_s=;path=/;max-age=0';}catch(e){}}
+function readSession(){
+  try{const v=localStorage.getItem('ep_s');if(v){const p=JSON.parse(v);if(p&&p.id)return p;}}catch(e){}
+  try{const m=document.cookie.match(/(?:^|;\s*)ep_s=([^;]*)/);if(m&&m[1]){const p=JSON.parse(decodeURIComponent(m[1]));if(p&&p.id)return p;}}catch(e){}
+  return null;
+}
+
+// ══ STATE ══
+let tomadores=[],emprestimos=[],parcelas=[],users=[];
+let editEmp=null,editTom=null,editUsr=null,curPage='dashboard';
+
+// ══ HELPERS ══
+function hp(s){let h=0;for(let i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0}return h.toString(36);}
+const ini=n=>(n||'?').split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+const fmtDate=d=>d?new Date(d+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+const today=()=>new Date().toISOString().split('T')[0];
+const fmtR=v=>v!=null?'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+const can=p=>{if(!session)return false;if(session.role==='admin')return true;return['dashboard','emprestimos','tomadores','simulador'].includes(p);};
+const AV_STYLE={admin:'background:#FDE68A;color:#78350F',op:'background:#D1FAE5;color:#065F46'};
+const isAtrasada=v=>v&&v.status==='pendente'&&new Date(v.vencimento+'T12:00:00')<new Date();
+
+function maskTel(el){let v=el.value.replace(/[^\d]/g,'');if(v.length>0)v='('+v;if(v.length>3)v=v.slice(0,3)+') '+v.slice(3);if(v.length>10)v=v.slice(0,10)+'-'+v.slice(10);el.value=v.slice(0,15);}
+function toast(msg,err=false){const t=document.createElement('div');t.className='toast';t.textContent=msg;t.style.background=err?'#991B1B':'#065F46';document.body.appendChild(t);setTimeout(()=>t.remove(),2800);}
+function openM(id){document.getElementById(id).style.display='flex';}
+function closeM(id){document.getElementById(id).style.display='none';}
+
+// ══ SIDEBAR ══
+function toggleSidebar(){document.getElementById('sidebarEl').classList.toggle('open');document.getElementById('sb-overlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebarEl').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
+
+function buildSidebar(){
+  const tabs=[
+    {id:'dashboard',icon:'📊',label:'Dashboard'},
+    {id:'emprestimos',icon:'💰',label:'Empréstimos'},
+    {id:'tomadores',icon:'👥',label:'Tomadores'},
+    {id:'simulador',icon:'🧮',label:'Simulador'},
+    {id:'usuarios',icon:'⚙️',label:'Usuários',admin:true},
+  ];
+  document.getElementById('sidebarEl').innerHTML=
+    `<div class="sidebar-section">Menu</div>`+
+    tabs.filter(t=>can(t.id)||(t.admin&&session.role==='admin')).map(t=>
+      `<button class="sidebar-item${curPage===t.id?' active':''}" id="si-${t.id}" onclick="showPage('${t.id}')">
+        <span class="sidebar-icon">${t.icon}</span>${t.label}
+      </button>`
+    ).join('')+
+    `<div class="sidebar-footer">EmprestimoPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`;
+}
+
+function showPage(p){
+  curPage=p;closeSidebar();
+  document.querySelectorAll('.sidebar-item').forEach(e=>e.classList.remove('active'));
+  const si=document.getElementById('si-'+p);if(si)si.classList.add('active');
+  if(p==='dashboard')renderDashboard();
+  else if(p==='emprestimos')renderEmprestimos();
+  else if(p==='tomadores')renderTomadores();
+  else if(p==='simulador')renderSimulador();
+  else if(p==='usuarios')renderUsuarios();
+}
+
+// ══ AUTH ══
+function showRegister(){document.getElementById('login-panel').style.display='none';document.getElementById('register-panel').style.display='block';document.getElementById('reg-error').style.display='none';}
+function showLogin(){document.getElementById('register-panel').style.display='none';document.getElementById('login-panel').style.display='block';document.getElementById('login-error').style.display='none';}
+function showErr(msg){const e=document.getElementById('login-error');e.textContent=msg;e.style.display='block';}
+function showRegErr(msg){const e=document.getElementById('reg-error');e.textContent=msg;e.style.display='block';}
+
+async function doLogin(){
+  const login=document.getElementById('lu').value.trim().toLowerCase();
+  const pass=document.getElementById('lp').value;
+  if(!login||!pass){showErr('Preencha usuário e senha');return;}
+  const btn=document.getElementById('login-btn');btn.textContent='Entrando...';btn.disabled=true;
+  try{
+    const{data,error}=await sb.from('users').select('*').eq('login',login).eq('pass_hash',hp(pass)).maybeSingle();
+    btn.textContent='Entrar →';btn.disabled=false;
+    if(error||!data){showErr('Usuário ou senha incorretos.');return;}
+    if(data.ativo===false){showErr('Conta suspensa. Contate o administrador.');return;}
+    session=data;saveSession(session);await bootApp();
+  }catch(e){btn.textContent='Entrar →';btn.disabled=false;showErr('Erro de conexão.');}
+}
+
+async function doRegister(){
+  const nome=document.getElementById('reg-nome').value.trim();
+  const login=document.getElementById('reg-login').value.trim().toLowerCase();
+  const pass=document.getElementById('reg-pass').value;
+  const pass2=document.getElementById('reg-pass2').value;
+  document.getElementById('reg-error').style.display='none';
+  if(!nome){showRegErr('Informe seu nome.');return;}
+  if(!login||login.length<3){showRegErr('Login deve ter ao menos 3 caracteres.');return;}
+  if(!/^[a-z0-9._]+$/.test(login)){showRegErr('Login inválido. Use letras, números, ponto.');return;}
+  if(pass.length<4){showRegErr('Senha deve ter ao menos 4 caracteres.');return;}
+  if(pass!==pass2){showRegErr('As senhas não coincidem.');return;}
+  const btn=document.getElementById('register-btn');btn.textContent='Criando...';btn.disabled=true;
+  try{
+    const{data:ex}=await sb.from('users').select('id').eq('login',login).maybeSingle();
+    if(ex){showRegErr('Login já em uso.');btn.textContent='Criar conta →';btn.disabled=false;return;}
+    const{data,error}=await sb.from('users').insert({nome,login,pass_hash:hp(pass),role:'op',ativo:true}).select().single();
+    if(error||!data){showRegErr('Erro ao criar conta.');btn.textContent='Criar conta →';btn.disabled=false;return;}
+    session=data;saveSession(session);btn.textContent='Criar conta →';btn.disabled=false;
+    await bootApp();toast(`✓ Bem-vindo(a), ${data.nome.split(' ')[0]}!`);
+  }catch(e){showRegErr('Erro de conexão.');btn.textContent='Criar conta →';btn.disabled=false;}
+}
+
+async function bootApp(){
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app-page').style.display='flex';
+  try{
+    const av=document.getElementById('nav-av');
+    av.textContent=ini(session.nome);av.style.cssText=AV_STYLE[session.role]||AV_STYLE.op;
+    document.getElementById('nav-name').textContent=session.nome||'';
+    document.getElementById('nav-role').textContent=session.role==='admin'?'👑 Admin':'👤 Operador';
+  }catch(e){}
+  try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
+  buildSidebar();showPage('dashboard');
+}
+
+function doLogout(){
+  session=null;clearSession();
+  document.getElementById('app-page').style.display='none';
+  document.getElementById('login-page').style.display='';
+  document.getElementById('lu').value='';document.getElementById('lp').value='';
+  document.getElementById('login-error').style.display='none';
+  tomadores=[];emprestimos=[];parcelas=[];users=[];
+}
+
+async function loadAll(){
+  const[tr,er,pr,ur]=await Promise.all([
+    sb.from('tomadores').select('*').order('nome'),
+    sb.from('emprestimos').select('*').order('created_at',{ascending:false}),
+    sb.from('parcelas').select('*').order('numero'),
+    sb.from('users').select('*').order('nome'),
+  ]);
+  tomadores=tr.data||[];emprestimos=er.data||[];parcelas=pr.data||[];users=ur.data||[];
+}
+
+// ══ DASHBOARD ══
+function renderDashboard(){
+  const mc=document.getElementById('main-content');
+  const totalEmp=emprestimos.reduce((s,e)=>s+Number(e.valor||0),0);
+  const totalLucro=emprestimos.reduce((s,e)=>s+Number(e.lucro||0),0);
+  const pRecebido=parcelas.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor||0),0);
+  const pPendente=parcelas.filter(p=>p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);
+  const atrasadas=parcelas.filter(p=>isAtrasada(p));
+  const vencHoje=parcelas.filter(p=>p.status==='pendente'&&p.vencimento===today());
+
+  mc.innerHTML=`
+    <div class="sec-hdr"><span class="sec-title">Dashboard</span>
+      <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Total Emprestado</div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${emprestimos.length} empréstimo${emprestimos.length!==1?'s':''}</div></div>
+      <div class="stat"><div class="stat-label">Lucro Esperado</div><div class="stat-value" style="color:var(--grn)">${fmtR(totalLucro)}</div><div class="stat-sub">em juros</div></div>
+      <div class="stat"><div class="stat-label">Recebido</div><div class="stat-value" style="color:var(--grn)">${fmtR(pRecebido)}</div><div class="stat-sub">em parcelas pagas</div></div>
+      <div class="stat"><div class="stat-label">Pendente</div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${parcelas.filter(p=>p.status==='pendente').length} parcelas</div></div>
+    </div>
+    ${atrasadas.length?`<div class="warn-box">⚠️ <strong>${atrasadas.length} parcela${atrasadas.length!==1?'s':''} em atraso!</strong> Verifique os empréstimos pendentes.</div>`:''}
+    ${vencHoje.length?`<div class="info-box">📅 <strong>${vencHoje.length} parcela${vencHoje.length!==1?'s':''} vence${vencHoje.length===1?'':'m'} hoje.</strong></div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="card">
+        <div class="card-title">Últimos Empréstimos</div>
+        ${emprestimos.slice(0,6).map(e=>{
+          const tom=tomadores.find(t=>t.id===e.tomador_id);
+          const parcsEmp=parcelas.filter(p=>p.emprestimo_id===e.id);
+          const pgCnt=parcsEmp.filter(p=>p.status==='pago').length;
+          return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #F3F4F6">
+            <div>
+              <div style="font-size:13px;font-weight:600">${tom?.nome||'—'}</div>
+              <div style="font-size:11px;color:var(--n4)">${fmtDate(e.data_emprestimo)} · ${fmtR(e.valor)}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:12px;color:var(--grn);font-weight:600">${pgCnt}/${parcsEmp.length} pagas</div>
+              <div style="font-size:11px;color:var(--n4)">${(e.juros*100).toFixed(0)}% juros</div>
+            </div>
+          </div>`;
+        }).join('')||'<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Nenhum empréstimo ainda.</div></div>'}
+      </div>
+      <div class="card">
+        <div class="card-title">Parcelas em Atraso</div>
+        ${atrasadas.slice(0,8).map(p=>{
+          const emp=emprestimos.find(e=>e.id===p.emprestimo_id);
+          const tom=tomadores.find(t=>t.id===emp?.tomador_id);
+          const dias=Math.floor((new Date()-new Date(p.vencimento+'T12:00:00'))/(1000*60*60*24));
+          return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #F3F4F6">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--red)">${tom?.nome||'—'}</div>
+              <div style="font-size:11px;color:var(--n4)">${dias}d de atraso · Parcela ${p.numero}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <span style="font-size:13px;font-weight:600;color:var(--red)">${fmtR(p.valor)}</span>
+              <button class="btn btn-grn btn-xs" onclick="marcarPago('${p.id}')">✓ Pago</button>
+            </div>
+          </div>`;
+        }).join('')||'<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Nenhum atraso. Tudo em dia!</div></div>'}
+      </div>
+    </div>`;
+}
+
+// ══ EMPRÉSTIMOS ══
+function renderEmprestimos(){
+  const mc=document.getElementById('main-content');
+  mc.innerHTML=`
+    <div class="sec-hdr">
+      <span class="sec-title">Empréstimos</span>
+      <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
+    </div>
+    <div style="margin-bottom:1rem"><input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:380px"/></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Nº</th><th>Tomador</th><th>Responsável</th><th>Garantia</th><th>Local</th>
+          <th>Valor</th><th>Juros</th><th>Total</th><th>Data</th><th>Parcelas</th><th></th>
+        </tr></thead>
+        <tbody id="emp-tbody">${empTbodyHTML(emprestimos)}</tbody>
+      </table>
+    </div>`;
+}
+
+function filterEmp(){
+  const q=(document.getElementById('emp-s')?.value||'').toLowerCase();
+  const f=emprestimos.filter(e=>{
+    const tom=tomadores.find(t=>t.id===e.tomador_id);
+    return(tom?.nome||'').toLowerCase().includes(q)||(e.responsavel||'').toLowerCase().includes(q)||(e.local||'').toLowerCase().includes(q);
+  });
+  const tb=document.getElementById('emp-tbody');if(tb)tb.innerHTML=empTbodyHTML(f);
+}
+
+function empTbodyHTML(list){
+  if(!list.length)return`<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>`;
+  return list.map((e,i)=>{
+    const tom=tomadores.find(t=>t.id===e.tomador_id);
+    const parcsEmp=parcelas.filter(p=>p.emprestimo_id===e.id);
+    const pgCnt=parcsEmp.filter(p=>p.status==='pago').length;
+    const atCnt=parcsEmp.filter(p=>isAtrasada(p)).length;
+    const allPago=parcsEmp.length>0&&pgCnt===parcsEmp.length;
+    return`<tr>
+      <td style="color:var(--n4);font-size:12px">${i+1}</td>
+      <td style="font-weight:600">${tom?.nome||'—'}</td>
+      <td style="color:var(--n3)">${e.responsavel||'—'}</td>
+      <td style="color:var(--n3)">${e.garantia||'—'}</td>
+      <td style="color:var(--n3)">${e.local||'—'}</td>
+      <td style="font-weight:600;color:var(--blu)">${fmtR(e.valor)}</td>
+      <td style="color:var(--n3)">${(e.juros*100).toFixed(0)}%</td>
+      <td style="font-weight:600;color:var(--grn)">${fmtR(e.valor_total)}</td>
+      <td style="color:var(--n4);font-size:12px">${fmtDate(e.data_emprestimo)}</td>
+      <td>
+        <button class="btn btn-xs ${allPago?'btn-grn':atCnt?'btn-d':'btn-amb'}" onclick="openParcelas('${e.id}')">
+          ${allPago?'✅':'💳'} ${pgCnt}/${parcsEmp.length}${atCnt?` ⚠️${atCnt}`:''}
+        </button>
+      </td>
+      <td>
+        <div style="display:flex;gap:.3rem">
+          <button class="btn btn-xs btn-g" onclick="openEmpModal('${e.id}')">✏</button>
+          ${session.role==='admin'?`<button class="btn btn-xs btn-d" onclick="deleteEmp('${e.id}')">✕</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateEmpCalc(){
+  const val=parseFloat(document.getElementById('emp-valor')?.value)||0;
+  const juros=parseFloat(document.getElementById('emp-juros')?.value)||0;
+  const nparc=parseInt(document.getElementById('emp-nparc')?.value)||1;
+  const lucro=val*juros;
+  const total=val+lucro;
+  const parc=nparc>0?total/nparc:total;
+  const box=document.getElementById('emp-calc');
+  if(val>0&&box){
+    box.style.display='block';
+    document.getElementById('calc-lucro').textContent=fmtR(lucro);
+    document.getElementById('calc-total').textContent=fmtR(total);
+    document.getElementById('calc-parc').textContent=fmtR(parc);
+  } else if(box){box.style.display='none';}
+}
+
+function openEmpModal(id){
+  editEmp=id?emprestimos.find(e=>e.id===id):null;
+  document.getElementById('emp-modal-title').textContent=editEmp?'Editar Empréstimo':'Novo Empréstimo';
+  // Populate tomador select
+  const sel=document.getElementById('emp-tom');
+  sel.innerHTML='<option value="">Selecione o tomador</option>'+
+    tomadores.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('');
+  if(editEmp){
+    sel.value=editEmp.tomador_id||'';
+    document.getElementById('emp-resp').value=editEmp.responsavel||'';
+    document.getElementById('emp-gar').value=editEmp.garantia||'';
+    document.getElementById('emp-loc').value=editEmp.local||'';
+    document.getElementById('emp-data').value=editEmp.data_emprestimo||'';
+    document.getElementById('emp-valor').value=editEmp.valor||'';
+    document.getElementById('emp-juros').value=editEmp.juros||'0.2';
+    document.getElementById('emp-obs').value=editEmp.obs||'';
+    document.getElementById('emp-nparc').value=parcelas.filter(p=>p.emprestimo_id===editEmp.id).length||1;
+  } else {
+    sel.value='';
+    document.getElementById('emp-resp').value='';
+    document.getElementById('emp-gar').value='';
+    document.getElementById('emp-loc').value='';
+    document.getElementById('emp-data').value=today();
+    document.getElementById('emp-valor').value='';
+    document.getElementById('emp-juros').value='0.2';
+    document.getElementById('emp-obs').value='';
+    document.getElementById('emp-nparc').value='1';
+    document.getElementById('emp-calc').style.display='none';
+  }
+  updateEmpCalc();
+  openM('emp-modal');
+}
+
+async function saveEmp(){
+  const tomId=document.getElementById('emp-tom').value;
+  const valor=parseFloat(document.getElementById('emp-valor').value);
+  const juros=parseFloat(document.getElementById('emp-juros').value);
+  const data=document.getElementById('emp-data').value;
+  const nparc=parseInt(document.getElementById('emp-nparc').value)||1;
+  if(!tomId){toast('⚠ Selecione o tomador',true);return;}
+  if(!valor||valor<=0){toast('⚠ Informe o valor',true);return;}
+  if(!data){toast('⚠ Informe a data',true);return;}
+  const payload={
+    tomador_id:tomId,
+    responsavel:document.getElementById('emp-resp').value.trim()||null,
+    garantia:document.getElementById('emp-gar').value.trim()||null,
+    local:document.getElementById('emp-loc').value.trim()||null,
+    valor,juros,
+    data_emprestimo:data,
+    obs:document.getElementById('emp-obs').value.trim()||null,
+    created_by:session.id
+  };
+  const btn=document.querySelector('#emp-modal .btn-grn');btn.textContent='Salvando...';btn.disabled=true;
+  try{
+    if(editEmp){
+      const{data:d,error}=await sb.from('emprestimos').update(payload).eq('id',editEmp.id).select().single();
+      if(error)throw error;
+      emprestimos=emprestimos.map(e=>e.id===editEmp.id?d:e);
+      toast('✓ Empréstimo atualizado!');
+    } else {
+      const{data:d,error}=await sb.from('emprestimos').insert(payload).select().single();
+      if(error)throw error;
+      emprestimos.unshift(d);
+      // Gerar parcelas
+      const valorTotal=valor+valor*juros;
+      const valorParc=valorTotal/nparc;
+      const dataBase=new Date(data+'T12:00:00');
+      const parcsPayload=Array.from({length:nparc},(_,i)=>{
+        const venc=new Date(dataBase.getTime()+(i+1)*31*24*60*60*1000);
+        return{emprestimo_id:d.id,numero:i+1,vencimento:venc.toISOString().split('T')[0],valor:parseFloat(valorParc.toFixed(2)),status:'pendente'};
+      });
+      const{data:ps,error:pe}=await sb.from('parcelas').insert(parcsPayload).select();
+      if(!pe&&ps)parcelas.push(...ps);
+      toast('✓ Empréstimo registrado! '+nparc+' parcela'+( nparc!==1?'s':'')+' gerada'+(nparc!==1?'s':'')+'.');
+    }
+    closeM('emp-modal');
+    if(curPage==='dashboard')renderDashboard();
+    else renderEmprestimos();
+  }catch(e){toast('Erro ao salvar',true);console.error(e);}
+  btn.textContent='💾 Salvar Empréstimo';btn.disabled=false;
+}
+
+async function deleteEmp(id){
+  const emp=emprestimos.find(e=>e.id===id);
+  const tom=tomadores.find(t=>t.id===emp?.tomador_id);
+  if(!confirm(`Remover empréstimo de "${tom?.nome}"?\nTodas as parcelas serão removidas.`))return;
+  await sb.from('parcelas').delete().eq('emprestimo_id',id);
+  await sb.from('emprestimos').delete().eq('id',id);
+  emprestimos=emprestimos.filter(e=>e.id!==id);
+  parcelas=parcelas.filter(p=>p.emprestimo_id!==id);
+  toast('Empréstimo removido');
+  if(curPage==='dashboard')renderDashboard();else renderEmprestimos();
+}
+
+// ══ PARCELAS ══
+function openParcelas(empId){
+  const emp=emprestimos.find(e=>e.id===empId);
+  const tom=tomadores.find(t=>t.id===emp?.tomador_id);
+  const parcsEmp=parcelas.filter(p=>p.emprestimo_id===empId).sort((a,b)=>a.numero-b.numero);
+  document.getElementById('parc-modal-title').textContent=`Parcelas — ${tom?.nome||''}`;
+  const pago=parcsEmp.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor||0),0);
+  const pend=parcsEmp.filter(p=>p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);
+  document.getElementById('parc-modal-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+      <div style="background:var(--grn0);border-radius:var(--rs);padding:.75rem 1rem;text-align:center">
+        <div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase">Recebido</div>
+        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--grn)">${fmtR(pago)}</div>
+      </div>
+      <div style="background:var(--amb0);border-radius:var(--rs);padding:.75rem 1rem;text-align:center">
+        <div style="font-size:10px;color:var(--amb);font-weight:700;text-transform:uppercase">Pendente</div>
+        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--amb)">${fmtR(pend)}</div>
+      </div>
+    </div>
+    ${parcsEmp.map(p=>{
+      const atras=isAtrasada(p);
+      const diasAtras=atras?Math.floor((new Date()-new Date(p.vencimento+'T12:00:00'))/(1000*60*60*24)):0;
+      return`<div class="parc-row">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:${atras?'var(--red)':p.status==='pago'?'var(--grn)':'var(--n1)'}">
+            ${p.numero}ª Parcela${atras?` <span style="font-size:11px">(${diasAtras}d atraso)</span>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--n4)">Venc: ${fmtDate(p.vencimento)}${p.pago_em?` · Pago: ${fmtDate(p.pago_em)}`:''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span style="font-weight:700;font-size:13px">${fmtR(p.valor)}</span>
+          <span class="bdg ${p.status==='pago'?'bdg-pago':atras?'bdg-atras':'bdg-pend'}">${p.status==='pago'?'Pago':atras?'Atraso':'Pendente'}</span>
+          ${p.status==='pendente'?`<button class="btn btn-xs btn-grn" onclick="marcarPago('${p.id}')">✓ Pago</button>`:''}
+          ${p.status==='pago'?`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}')">↩</button>`:''}
+        </div>
+      </div>`;
+    }).join('')}`;
+  openM('parc-modal');
+}
+
+async function marcarPago(id){
+  const{data,error}=await sb.from('parcelas').update({status:'pago',pago_em:today()}).eq('id',id).select().single();
+  if(error){toast('Erro ao atualizar',true);return;}
+  parcelas=parcelas.map(p=>p.id===id?data:p);
+  toast('✓ Parcela marcada como paga!');
+  // Refresh modal or page
+  const modal=document.getElementById('parc-modal');
+  if(modal.style.display!=='none'){
+    const emp=emprestimos.find(e=>e.id===data.emprestimo_id);
+    if(emp)openParcelas(emp.id);
+  }
+  if(curPage==='dashboard')renderDashboard();
+  else if(curPage==='emprestimos')renderEmprestimos();
+}
+
+async function marcarPendente(id){
+  const{data,error}=await sb.from('parcelas').update({status:'pendente',pago_em:null}).eq('id',id).select().single();
+  if(error){toast('Erro ao atualizar',true);return;}
+  parcelas=parcelas.map(p=>p.id===id?data:p);
+  toast('Parcela revertida para pendente');
+  const emp=emprestimos.find(e=>e.id===data.emprestimo_id);
+  if(emp)openParcelas(emp.id);
+  if(curPage==='dashboard')renderDashboard();
+}
+
+// ══ TOMADORES ══
+function renderTomadores(){
+  const mc=document.getElementById('main-content');
+  mc.innerHTML=`
+    <div class="sec-hdr">
+      <span class="sec-title">Tomadores</span>
+      <button class="btn btn-p btn-sm" onclick="openTomModal(null)">+ Novo Tomador</button>
+    </div>
+    <div style="margin-bottom:1rem"><input type="text" id="tom-s" placeholder="🔍  Buscar tomador..." oninput="filterTom()" style="max-width:360px"/></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Nº</th><th>Nome</th><th>Contato</th><th>Local</th><th>Garantia</th><th>Empréstimos</th><th>Total Devido</th><th></th></tr></thead>
+        <tbody id="tom-tbody">${tomTbodyHTML(tomadores)}</tbody>
+      </table>
+    </div>`;
+}
+
+function filterTom(){
+  const q=(document.getElementById('tom-s')?.value||'').toLowerCase();
+  const f=tomadores.filter(t=>t.nome.toLowerCase().includes(q)||(t.contato||'').includes(q)||(t.local||'').toLowerCase().includes(q));
+  const tb=document.getElementById('tom-tbody');if(tb)tb.innerHTML=tomTbodyHTML(f);
+}
+
+function tomTbodyHTML(list){
+  if(!list.length)return`<tr><td colspan="8"><div class="empty"><div class="empty-icon">👥</div><div class="empty-text">Nenhum tomador.</div></div></td></tr>`;
+  return list.map((t,i)=>{
+    const emps=emprestimos.filter(e=>e.tomador_id===t.id);
+    const parcsT=parcelas.filter(p=>emps.some(e=>e.id===p.emprestimo_id)&&p.status==='pendente');
+    const devido=parcsT.reduce((s,p)=>s+Number(p.valor||0),0);
+    return`<tr>
+      <td style="color:var(--n4);font-size:12px">${i+1}</td>
+      <td style="font-weight:600">${t.nome}</td>
+      <td style="color:var(--n3)">${t.contato||'—'}</td>
+      <td style="color:var(--n3)">${t.local||'—'}</td>
+      <td style="color:var(--n3)">${t.garantia||'—'}</td>
+      <td style="font-weight:600;color:var(--blu)">${emps.length}</td>
+      <td style="font-weight:700;color:${devido>0?'var(--amb)':'var(--grn)'}">${fmtR(devido)}</td>
+      <td><div style="display:flex;gap:.3rem">
+        <button class="btn btn-xs btn-g" onclick="openTomModal('${t.id}')">✏</button>
+        ${session.role==='admin'?`<button class="btn btn-xs btn-d" onclick="deleteTom('${t.id}')">✕</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function openTomModal(id){
+  editTom=id?tomadores.find(t=>t.id===id):null;
+  document.getElementById('tom-modal-title').textContent=editTom?'Editar Tomador':'Novo Tomador';
+  document.getElementById('tom-nome').value=editTom?.nome||'';
+  document.getElementById('tom-cont').value=editTom?.contato||'';
+  document.getElementById('tom-loc').value=editTom?.local||'';
+  document.getElementById('tom-gar').value=editTom?.garantia||'';
+  openM('tom-modal');
+}
+
+async function saveTom(){
+  const nome=document.getElementById('tom-nome').value.trim();
+  if(!nome){toast('⚠ Informe o nome',true);return;}
+  const payload={nome,contato:document.getElementById('tom-cont').value.trim()||null,local:document.getElementById('tom-loc').value.trim()||null,garantia:document.getElementById('tom-gar').value.trim()||null};
+  if(editTom){
+    const{data,error}=await sb.from('tomadores').update(payload).eq('id',editTom.id).select().single();
+    if(error){toast('Erro ao salvar',true);return;}
+    tomadores=tomadores.map(t=>t.id===editTom.id?data:t);
+    toast('✓ Tomador atualizado');
+  } else {
+    const{data,error}=await sb.from('tomadores').insert(payload).select().single();
+    if(error){toast('Erro ao salvar',true);return;}
+    tomadores.push(data);tomadores.sort((a,b)=>a.nome.localeCompare(b.nome));
+    // Atualizar select do modal de empréstimo se estiver aberto
+    const sel=document.getElementById('emp-tom');
+    if(sel){sel.innerHTML='<option value="">Selecione o tomador</option>'+tomadores.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('');sel.value=data.id;}
+    toast('✓ Tomador cadastrado');
+  }
+  closeM('tom-modal');
+  if(curPage==='tomadores')renderTomadores();
+}
+
+async function deleteTom(id){
+  const t=tomadores.find(x=>x.id===id);
+  const cnt=emprestimos.filter(e=>e.tomador_id===id).length;
+  if(cnt>0&&!confirm(`"${t?.nome}" possui ${cnt} empréstimo${cnt!==1?'s':''}. Remover mesmo assim?`))return;
+  if(cnt===0&&!confirm(`Remover tomador "${t?.nome}"?`))return;
+  await sb.from('tomadores').delete().eq('id',id);
+  tomadores=tomadores.filter(x=>x.id!==id);
+  toast('Tomador removido');renderTomadores();
+}
+
+// ══ SIMULADOR ══
+function renderSimulador(){
+  const mc=document.getElementById('main-content');
+  mc.innerHTML=`
+    <div class="sec-hdr"><span class="sec-title">Simulador de Juros</span></div>
+    <div class="card" style="max-width:500px">
+      <div class="card-title">Calcular Empréstimo</div>
+      <div class="fgrid">
+        <div class="fg"><span class="lbl">Valor (R$)</span><input type="number" id="sim-val" placeholder="Ex: 1000" min="0" step="0.01" oninput="calcSim()"/></div>
+        <div class="fg"><span class="lbl">Juros (%)</span>
+          <select id="sim-jur" onchange="calcSim()">
+            <option value="0.1">10%</option><option value="0.15">15%</option>
+            <option value="0.2" selected>20%</option><option value="0.25">25%</option>
+            <option value="0.3">30%</option><option value="0.5">50%</option>
+          </select>
+        </div>
+        <div class="fg"><span class="lbl">Parcelas</span>
+          <select id="sim-parc" onchange="calcSim()">
+            ${[1,2,3,4,5,6,8,10,12,15,20].map(n=>`<option value="${n}">${n}x</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg"><span class="lbl">Data início</span><input type="date" id="sim-data" value="${today()}" onchange="calcSim()"/></div>
+      </div>
+      <div id="sim-result" style="margin-top:1rem"></div>
+    </div>
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">Tabela de Referência — 30% de juros</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Valor</th><th>Saída (capital)</th><th>1 mês</th><th>2 meses</th><th>3 meses</th><th>4 meses</th><th>5 meses</th><th>Total</th></tr></thead>
+          <tbody>
+            ${[300,400,500,600,700,800,900,1000,2000,3000,4000,5000].map(v=>{
+              const lucro=v*0.3;const total=v+lucro;const parc=total/5;
+              return`<tr>
+                <td style="font-weight:600;color:var(--blu)">${fmtR(v)}</td>
+                <td style="color:var(--n3)">${fmtR(v)}</td>
+                ${[1,2,3,4,5].map(_=>`<td style="color:var(--grn);font-weight:600">${fmtR(parc)}</td>`).join('')}
+                <td style="font-weight:700;color:var(--grn)">${fmtR(total)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  calcSim();
+}
+
+function calcSim(){
+  const val=parseFloat(document.getElementById('sim-val')?.value)||0;
+  const jur=parseFloat(document.getElementById('sim-jur')?.value)||0.2;
+  const nparc=parseInt(document.getElementById('sim-parc')?.value)||1;
+  const data=document.getElementById('sim-data')?.value||today();
+  const res=document.getElementById('sim-result');if(!res)return;
+  if(!val){res.innerHTML='';return;}
+  const lucro=val*jur;const total=val+lucro;const valorParc=total/nparc;
+  const dataBase=new Date(data+'T12:00:00');
+  const vencimentos=Array.from({length:nparc},(_,i)=>{
+    const d=new Date(dataBase.getTime()+(i+1)*31*24*60*60*1000);
+    return{num:i+1,data:d.toLocaleDateString('pt-BR'),valor:valorParc};
+  });
+  res.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem">
+      <div style="background:var(--blu0);border-radius:var(--rs);padding:.75rem;text-align:center">
+        <div style="font-size:10px;color:var(--blu);font-weight:700;text-transform:uppercase">Lucro</div>
+        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--blu)">${fmtR(lucro)}</div>
+      </div>
+      <div style="background:var(--grn0);border-radius:var(--rs);padding:.75rem;text-align:center">
+        <div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase">Total a receber</div>
+        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--grn)">${fmtR(total)}</div>
+      </div>
+      <div style="background:var(--amb0);border-radius:var(--rs);padding:.75rem;text-align:center">
+        <div style="font-size:10px;color:var(--amb);font-weight:700;text-transform:uppercase">Valor por parcela</div>
+        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--amb)">${fmtR(valorParc)}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Vencimentos (a cada 31 dias)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.4rem">
+      ${vencimentos.map(v=>`<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:var(--rs);padding:.5rem .75rem;font-size:12px">
+        <div style="font-weight:700;color:var(--n3)">${v.num}ª parcela</div>
+        <div style="color:var(--n4)">${v.data}</div>
+        <div style="font-weight:700;color:var(--grn)">${fmtR(v.valor)}</div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ══ USUÁRIOS ══
+function renderUsuarios(){
+  document.getElementById('main-content').innerHTML=`
+    <div class="sec-hdr">
+      <span class="sec-title">Usuários</span>
+      <button class="btn btn-p btn-sm" onclick="openUsrModal(null)">+ Novo Usuário</button>
+    </div>
+    <div id="usr-list">${usrListHTML()}</div>`;
+}
+
+function usrListHTML(){
+  return users.map(u=>{
+    const isSelf=u.id===session.id;
+    const av=u.role==='admin'?'background:#FDE68A;color:#78350F':'background:#D1FAE5;color:#065F46';
+    return`<div style="background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;margin-bottom:.65rem;box-shadow:var(--sh)">
+      <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;${av}">${ini(u.nome)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:15px">${u.nome}${isSelf?' <span style="font-size:11px;color:var(--n4)">(você)</span>':''}</div>
+        <div style="font-size:12px;color:var(--n4);margin-top:2px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'👑 Admin':'👤 Operador'}</span></div>
+      </div>
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn-g btn-sm" onclick="openUsrModal('${u.id}')">✏ Editar</button>
+        ${!isSelf?`<button class="btn btn-d btn-sm" onclick="deleteUsr('${u.id}')">✕</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openUsrModal(id){
+  editUsr=id?users.find(u=>u.id===id):null;
+  document.getElementById('usr-modal-title').textContent=editUsr?'Editar Usuário':'Novo Usuário';
+  document.getElementById('um-nome').value=editUsr?.nome||'';
+  document.getElementById('um-login').value=editUsr?.login||'';
+  document.getElementById('um-role').value=editUsr?.role||'op';
+  document.getElementById('um-pass').value='';document.getElementById('um-pass2').value='';
+  document.getElementById('um-pass').placeholder=editUsr?'Deixe em branco para não alterar':'Mínimo 4 caracteres';
+  document.getElementById('um-p2w').style.display=editUsr?'none':'flex';
+  openM('usr-modal');
+}
+
+async function saveUsr(){
+  const nome=document.getElementById('um-nome').value.trim();
+  const login=document.getElementById('um-login').value.trim().toLowerCase();
+  const role=document.getElementById('um-role').value;
+  const pass=document.getElementById('um-pass').value;
+  const pass2=document.getElementById('um-pass2').value;
+  if(!nome||!login){toast('⚠ Preencha nome e login',true);return;}
+  if(users.find(u=>u.login===login&&u.id!==editUsr?.id)){toast('⚠ Login já em uso',true);return;}
+  const payload={nome,login,role};
+  if(pass){if(pass.length<4){toast('⚠ Senha muito curta',true);return;}if(!editUsr&&pass!==pass2){toast('⚠ Senhas não coincidem',true);return;}payload.pass_hash=hp(pass);}
+  if(editUsr){
+    const{data,error}=await sb.from('users').update(payload).eq('id',editUsr.id).select().single();
+    if(error){toast('Erro ao salvar',true);return;}
+    users=users.map(u=>u.id===editUsr.id?data:u);
+    if(editUsr.id===session.id){session={...session,...data};saveSession(session);}
+    toast('✓ Usuário atualizado');
+  } else {
+    if(!pass){toast('⚠ Informe a senha',true);return;}
+    const{data,error}=await sb.from('users').insert(payload).select().single();
+    if(error){toast('Erro ao salvar',true);return;}
+    users.push(data);toast('✓ Usuário criado');
+  }
+  closeM('usr-modal');renderUsuarios();
+}
+
+async function deleteUsr(id){
+  if(id===session.id){toast('⚠ Não pode remover você mesmo',true);return;}
+  const u=users.find(x=>x.id===id);
+  if(!confirm(`Remover "${u?.nome}"?`))return;
+  await sb.from('users').delete().eq('id',id);
+  users=users.filter(x=>x.id!==id);toast('Usuário removido');renderUsuarios();
+}
+
+// ══ INIT ══
+window.addEventListener('DOMContentLoaded',async()=>{
+  session=readSession();
+  if(session){
+    document.getElementById('login-page').style.display='none';
+    document.getElementById('app-page').style.display='flex';
+    await bootApp();
+  }
+  _lastActivity=Date.now();
+  ['click','keydown','mousedown','touchstart','scroll'].forEach(ev=>{
+    document.addEventListener(ev,()=>{_lastActivity=Date.now();},{passive:true});
+  });
+  setInterval(()=>{
+    if(!session)return;
+    if(Date.now()-_lastActivity>TIMEOUT_MS){toast('Sessão encerrada por inatividade.',true);setTimeout(doLogout,1500);}
+  },30000);
+});
+</script>
+</body>
+</html>
