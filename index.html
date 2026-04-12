@@ -465,7 +465,20 @@ async function loadAll(){
     sb.from('parcelas').select('*').order('numero'),
     sb.from('users').select('*').order('nome'),
   ]);
-  tomadores=tr.data||[];emprestimos=er.data||[];parcelas=pr.data||[];users=ur.data||[];
+  tomadores=tr.data||[];emprestimos=er.data||[];users=ur.data||[];
+  // Garantir que o valor de cada parcela é só o juros mensal (sem o capital)
+  parcelas=(pr.data||[]).map(p=>{
+    const emp=emprestimos.find(e=>e.id===p.emprestimo_id);
+    if(emp&&!p.abatimento){
+      const jurosCorreto=parseFloat((emp.valor*emp.juros).toFixed(2));
+      // Se o valor na DB for o total (valor+juros), corrige na memória
+      const totalEmp=parseFloat((emp.valor+emp.valor*emp.juros).toFixed(2));
+      if(Math.abs(p.valor-totalEmp)<0.01){
+        return{...p,valor:jurosCorreto};
+      }
+    }
+    return p;
+  });
 }
 
 // ══ DASHBOARD ══
