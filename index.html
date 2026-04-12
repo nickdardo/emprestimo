@@ -274,9 +274,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
     <div class="mbody">
       <div class="fgrid">
         <div class="fg full"><span class="lbl">Nome *</span><input id="tom-nome" placeholder="Nome completo"/></div>
-        <div class="fg"><span class="lbl">Contato</span><input id="tom-cont" placeholder="(91) 99999-0000" maxlength="15" oninput="maskTel(this)" inputmode="numeric"/></div>
-        <div class="fg"><span class="lbl">Local / Endereço</span><input id="tom-loc" placeholder="Bairro ou cidade"/></div>
-        <div class="fg full"><span class="lbl">Garantia padrão</span><input id="tom-gar" placeholder="Ex: TV, Celular, Sem garantia"/></div>
+        <div class="fg full"><span class="lbl">Contato</span><input id="tom-cont" placeholder="(91) 99999-0000" maxlength="15" oninput="maskTel(this)" inputmode="numeric"/></div>
       </div>
     </div>
     <div class="mfooter"><button class="btn btn-g btn-sm" onclick="closeM('tom-modal')">Cancelar</button><button class="btn btn-p btn-sm" onclick="saveTom()">Salvar</button></div>
@@ -715,44 +713,125 @@ function openParcelas(empId){
   const emp=emprestimos.find(e=>e.id===empId);
   const tom=tomadores.find(t=>t.id===emp?.tomador_id);
   const parcsEmp=parcelas.filter(p=>p.emprestimo_id===empId).sort((a,b)=>a.numero-b.numero);
-  document.getElementById('parc-modal-title').textContent=`Parcelas — ${tom?.nome||''}`;
+  document.getElementById('parc-modal-title').textContent=`${tom?.nome||'Parcelas'}`;
+
   const pago=parcsEmp.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor||0),0);
   const pend=parcsEmp.filter(p=>p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);
+  const atrasadasCnt=parcsEmp.filter(p=>isAtrasada(p)).length;
+  const progPct=parcsEmp.length?Math.round(parcsEmp.filter(p=>p.status==='pago').length/parcsEmp.length*100):0;
+
   document.getElementById('parc-modal-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-      <div style="background:var(--grn0);border-radius:var(--rs);padding:.75rem 1rem;text-align:center">
-        <div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase">Recebido</div>
-        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--grn)">${fmtR(pago)}</div>
+    <!-- INFO EMPRÉSTIMO -->
+    <div style="background:#F9FAFB;border-radius:var(--rs);padding:.75rem 1rem;margin-bottom:1rem;border:1px solid #E5E7EB;font-size:12px;color:var(--n3);display:flex;flex-wrap:wrap;gap:.5rem 1.5rem">
+      <span>💰 <strong>${fmtR(emp?.valor)}</strong> emprestado</span>
+      <span>📈 <strong>${((emp?.juros||0)*100).toFixed(0)}%</strong> juros</span>
+      <span>🏆 <strong>${fmtR(emp?.valor_total||emp?.valor*(1+(emp?.juros||0)))}</strong> total</span>
+      <span>📅 <strong>${fmtDate(emp?.data_emprestimo)}</strong></span>
+      ${emp?.garantia?`<span>🔒 <strong>${emp.garantia}</strong></span>`:''}
+    </div>
+
+    <!-- RESUMO FINANCEIRO -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem">
+      <div style="background:var(--grn0);border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid var(--grn1)">
+        <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:2px">✅ Recebido</div>
+        <div style="font-family:var(--FT);font-size:1.2rem;color:var(--grn)">${fmtR(pago)}</div>
       </div>
-      <div style="background:var(--amb0);border-radius:var(--rs);padding:.75rem 1rem;text-align:center">
-        <div style="font-size:10px;color:var(--amb);font-weight:700;text-transform:uppercase">Pendente</div>
-        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--amb)">${fmtR(pend)}</div>
+      <div style="background:var(--amb0);border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid var(--amb1)">
+        <div style="font-size:9px;color:var(--amb);font-weight:700;text-transform:uppercase;margin-bottom:2px">⏳ Pendente</div>
+        <div style="font-family:var(--FT);font-size:1.2rem;color:var(--amb)">${fmtR(pend)}</div>
+      </div>
+      <div style="background:${atrasadasCnt?'var(--red0)':'#F9FAFB'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${atrasadasCnt?'var(--red1)':'#E5E7EB'}">
+        <div style="font-size:9px;color:${atrasadasCnt?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">⚠️ Atraso</div>
+        <div style="font-family:var(--FT);font-size:1.2rem;color:${atrasadasCnt?'var(--red)':'var(--n4)'}">${atrasadasCnt}</div>
       </div>
     </div>
+
+    <!-- BARRA DE PROGRESSO -->
+    ${parcsEmp.length?`<div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--n4);margin-bottom:4px">
+        <span>${parcsEmp.filter(p=>p.status==='pago').length} de ${parcsEmp.length} parcelas pagas</span>
+        <span>${progPct}%</span>
+      </div>
+      <div style="background:#E5E7EB;border-radius:999px;height:8px;overflow:hidden">
+        <div style="background:var(--grn);height:100%;border-radius:999px;width:${progPct}%;transition:width .3s"></div>
+      </div>
+    </div>`:''}
+
+    <!-- LISTA DE PARCELAS -->
+    <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Parcelas</div>
+    ${parcsEmp.length===0?`<div class="empty"><div class="empty-icon">♾️</div><div class="empty-text">Empréstimo ilimitado — adicione parcelas conforme o pagamento.</div></div>`:''}
     ${parcsEmp.map(p=>{
       const atras=isAtrasada(p);
       const diasAtras=atras?Math.floor((new Date()-new Date(p.vencimento+'T12:00:00'))/(1000*60*60*24)):0;
-      return`<div class="parc-row">
+      const vencHoje=p.status==='pendente'&&p.vencimento===today();
+      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .85rem;margin-bottom:.4rem;border-radius:var(--rs);border:1px solid ${p.status==='pago'?'#D1FAE5':atras?'#FECACA':vencHoje?'#FDE68A':'#E5E7EB'};background:${p.status==='pago'?'#F0FDF4':atras?'#FEF2F2':vencHoje?'#FFFBEB':'#FAFAFA'}">
         <div>
-          <div style="font-size:13px;font-weight:600;color:${atras?'var(--red)':p.status==='pago'?'var(--grn)':'var(--n1)'}">
-            ${p.numero}ª Parcela${atras?` <span style="font-size:11px">(${diasAtras}d atraso)</span>`:''}
+          <div style="font-size:13px;font-weight:700;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':vencHoje?'var(--amb)':'var(--n1)'}">
+            ${p.numero}ª Parcela
+            ${atras?`<span style="font-size:10px;font-weight:400;background:var(--red);color:#fff;padding:1px 6px;border-radius:999px;margin-left:4px">${diasAtras}d atraso</span>`:''}
+            ${vencHoje?`<span style="font-size:10px;font-weight:400;background:var(--amb);color:#fff;padding:1px 6px;border-radius:999px;margin-left:4px">Vence hoje</span>`:''}
           </div>
-          <div style="font-size:11px;color:var(--n4)">Venc: ${fmtDate(p.vencimento)}${p.pago_em?` · Pago: ${fmtDate(p.pago_em)}`:''}</div>
+          <div style="font-size:11px;color:var(--n4);margin-top:2px">
+            Venc: <strong>${fmtDate(p.vencimento)}</strong>
+            ${p.pago_em?` · Pago em: <strong style="color:var(--grn)">${fmtDate(p.pago_em)}</strong>`:''}
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:.5rem">
-          <span style="font-weight:700;font-size:13px">${fmtR(p.valor)}</span>
-          <span class="bdg ${p.status==='pago'?'bdg-pago':atras?'bdg-atras':'bdg-pend'}">${p.status==='pago'?'Pago':atras?'Atraso':'Pendente'}</span>
-          ${p.status==='pendente'?`<button class="btn btn-xs btn-grn" onclick="marcarPago('${p.id}')">✓ Pago</button>`:''}
-          ${p.status==='pago'?`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}')">↩</button>`:''}
+        <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+          <span style="font-weight:700;font-size:14px;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':'var(--n1)'}">${fmtR(p.valor)}</span>
+          ${p.status==='pendente'?`
+            <button class="btn btn-xs btn-grn" onclick="confirmarPagamento('${p.id}','${empId}')" style="font-weight:700">✓ Confirmar</button>
+            <button class="btn btn-xs btn-d" onclick="deleteParcela('${p.id}','${empId}')" title="Remover parcela">✕</button>
+          `:`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}','${empId}')" title="Reverter para pendente" style="font-size:11px">↩ Reverter</button>`}
         </div>
       </div>`;
     }).join('')}`;
-  // Add "add parcela" button for ilimitado
+
   const footer=document.getElementById('parc-modal').querySelector('.mfooter');
   footer.innerHTML=`
     <button class="btn btn-g btn-sm" onclick="closeM('parc-modal')">Fechar</button>
-    <button class="btn btn-grn btn-sm" onclick="addParcela('${empId}')">+ Adicionar Parcela</button>`;
+    <button class="btn btn-p btn-sm" onclick="addParcela('${empId}')">+ Adicionar Parcela</button>`;
   openM('parc-modal');
+}
+
+function confirmarPagamento(id, empId){
+  // Show inline confirmation with date
+  const p=parcelas.find(x=>x.id===id);
+  if(!p)return;
+  // Create confirm dialog inside parc-modal-body
+  const div=document.createElement('div');
+  div.id='confirm-pay-'+id;
+  div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem';
+  div.innerHTML=`<div style="background:#fff;border-radius:var(--r);padding:1.5rem;max-width:340px;width:100%;box-shadow:var(--shm)">
+    <div style="font-family:var(--FT);font-size:1.1rem;color:var(--n1);margin-bottom:1rem">Confirmar Pagamento</div>
+    <div style="font-size:13px;color:var(--n3);margin-bottom:1rem">
+      <strong>${p.numero}ª Parcela</strong> — ${fmtR(p.valor)}<br>
+      Vencimento: ${fmtDate(p.vencimento)}
+    </div>
+    <div style="margin-bottom:1rem">
+      <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Data do recebimento</div>
+      <input type="date" id="pay-date-${id}" value="${today()}" style="width:100%"/>
+    </div>
+    <div style="font-size:11px;color:var(--n4);margin-bottom:1rem;background:var(--grn0);padding:.6rem .75rem;border-radius:var(--rs)">
+      💡 Confirme a data em que o dinheiro foi recebido.
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+      <button class="btn btn-g btn-sm" onclick="document.getElementById('confirm-pay-${id}').remove()">Cancelar</button>
+      <button class="btn btn-grn btn-sm" onclick="efetivarPagamento('${id}','${empId}')">✓ Confirmar Pagamento</button>
+    </div>
+  </div>`;
+  document.body.appendChild(div);
+}
+
+async function efetivarPagamento(id, empId){
+  const datePay=document.getElementById('pay-date-'+id)?.value||today();
+  const{data,error}=await sb.from('parcelas').update({status:'pago',pago_em:datePay}).eq('id',id).select().single();
+  document.getElementById('confirm-pay-'+id)?.remove();
+  if(error){toast('Erro ao confirmar',true);return;}
+  parcelas=parcelas.map(p=>p.id===id?data:p);
+  toast('✓ Pagamento confirmado!');
+  openParcelas(empId);
+  if(curPage==='dashboard')renderDashboard();
+  else if(curPage==='emprestimos')renderEmprestimos();
 }
 
 async function marcarPago(id){
@@ -760,7 +839,6 @@ async function marcarPago(id){
   if(error){toast('Erro ao atualizar',true);return;}
   parcelas=parcelas.map(p=>p.id===id?data:p);
   toast('✓ Parcela marcada como paga!');
-  // Refresh modal or page
   const modal=document.getElementById('parc-modal');
   if(modal.style.display!=='none'){
     const emp=emprestimos.find(e=>e.id===data.emprestimo_id);
@@ -770,14 +848,23 @@ async function marcarPago(id){
   else if(curPage==='emprestimos')renderEmprestimos();
 }
 
-async function marcarPendente(id){
+async function deleteParcela(id, empId){
+  if(!confirm('Remover esta parcela?'))return;
+  await sb.from('parcelas').delete().eq('id',id);
+  parcelas=parcelas.filter(p=>p.id!==id);
+  toast('Parcela removida');
+  openParcelas(empId);
+}
+
+async function marcarPendente(id, empId){
+  if(!confirm('Reverter pagamento desta parcela para pendente?'))return;
   const{data,error}=await sb.from('parcelas').update({status:'pendente',pago_em:null}).eq('id',id).select().single();
   if(error){toast('Erro ao atualizar',true);return;}
   parcelas=parcelas.map(p=>p.id===id?data:p);
   toast('Parcela revertida para pendente');
-  const emp=emprestimos.find(e=>e.id===data.emprestimo_id);
-  if(emp)openParcelas(emp.id);
+  openParcelas(empId||data.emprestimo_id);
   if(curPage==='dashboard')renderDashboard();
+  else if(curPage==='emprestimos')renderEmprestimos();
 }
 
 // ══ TOMADORES ══
