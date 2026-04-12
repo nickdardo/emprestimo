@@ -543,7 +543,8 @@ function renderDashboard(){
             </div>
             <div style="display:flex;align-items:center;gap:.5rem">
               <span style="font-size:13px;font-weight:600;color:var(--red)">${fmtR(p.valor)}</span>
-              <button class="btn btn-grn btn-xs" onclick="marcarPago('${p.id}')">✓ Pago</button>
+              <span class="bdg bdg-atras">Pendente</span>
+              <button class="btn btn-grn btn-xs" onclick="marcarPago('${p.id}')">Confirmar</button>
             </div>
           </div>`;
         }).join('')||'<div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum atraso. Tudo em dia!</div></div>'}
