@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -58,7 +59,7 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .sidebar-item{display:flex;align-items:center;gap:10px;padding:.65rem 1.25rem;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--FB);font-size:14px;color:var(--n3);border-right:3px solid transparent;transition:all .12s}
 .sidebar-item:hover{background:#FFF7ED;color:var(--n1)}
 .sidebar-item.active{background:#FFF7ED;color:var(--grn);font-weight:600;border-right-color:var(--grn)}
-.sidebar-icon{width:18px;text-align:center;font-size:15px}
+.sidebar-icon{width:8px;height:8px;border-radius:50%;background:var(--grn);display:inline-block;flex-shrink:0}
 .sidebar-footer{margin-top:auto;padding:1rem;border-top:1px solid #E5E7EB;font-size:11px;color:var(--n4);line-height:1.6}
 .content{flex:1;padding:1.5rem;min-width:0}
 
@@ -220,7 +221,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
           <span class="lbl">Tomador *</span>
           <div style="display:flex;gap:.5rem">
             <select id="emp-tom" style="flex:1" onchange="updateEmpCalc()"><option value="">Selecione ou crie</option></select>
-            <button class="btn btn-g btn-sm" onclick="openTomModal(null)" style="z-index:250;position:relative">+ Criar novo cliente</button>
+            <button class="btn btn-g btn-sm" onclick="openTomModal(null)" style="z-index:250;position:relative">+ Novo Cliente</button>
           </div>
         </div>
         <div class="fg"><span class="lbl">Responsável</span><input id="emp-resp" placeholder="Ex: Nicole"/></div>
@@ -255,7 +256,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
       <div class="fgrid" style="margin-top:.75rem">
         <div class="fg"><span class="lbl">Nº de Parcelas <span style="font-weight:400;font-size:10px;color:var(--n4);text-transform:none;letter-spacing:0">(conforme negociado)</span></span>
           <select id="emp-nparc" onchange="updateEmpCalc()">
-            <option value="0">♾️ Ilimitado</option>
+            <option value="0">Ilimitado</option>
             <option value="1">1 parcela</option><option value="2">2 parcelas</option><option value="3">3 parcelas</option>
             <option value="4">4 parcelas</option><option value="5">5 parcelas</option><option value="6">6 parcelas</option>
             <option value="7">7 parcelas</option><option value="8">8 parcelas</option><option value="9">9 parcelas</option>
@@ -266,7 +267,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
         <div class="fg"><span class="lbl">Observação</span><input id="emp-obs" placeholder="Anotações..."/></div>
       </div>
     </div>
-    <div class="mfooter"><button class="btn btn-g btn-sm" onclick="closeM('emp-modal')">Cancelar</button><button class="btn btn-grn btn-sm" onclick="saveEmp()">💾 Salvar Empréstimo</button></div>
+    <div class="mfooter"><button class="btn btn-g btn-sm" onclick="closeM('emp-modal')">Cancelar</button><button class="btn btn-grn btn-sm" onclick="saveEmp()">Salvar Empréstimo</button></div>
   </div>
 </div>
 
@@ -301,7 +302,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
       <div class="fgrid">
         <div class="fg full"><span class="lbl">Nome *</span><input id="um-nome" placeholder="Nome do usuário"/></div>
         <div class="fg"><span class="lbl">Login *</span><input id="um-login" placeholder="Ex: joao.silva"/></div>
-        <div class="fg"><span class="lbl">Perfil</span><select id="um-role"><option value="admin">👑 Admin</option><option value="op">🎯 3°JOB</option></select></div>
+        <div class="fg"><span class="lbl">Perfil</span><select id="um-role"><option value="admin">Admin</option><option value="op">3°JOB</option></select></div>
         <div class="fg full"><span class="lbl">Senha *</span><input type="password" id="um-pass" placeholder="Mínimo 4 caracteres"/></div>
         <div class="fg full" id="um-p2w"><span class="lbl">Confirmar senha *</span><input type="password" id="um-pass2" placeholder="Repita a senha"/></div>
       </div>
@@ -367,18 +368,18 @@ function closeSidebar(){document.getElementById('sidebarEl').classList.remove('o
 
 function buildSidebar(){
   const tabs=[
-    {id:'dashboard',icon:'📊',label:'Dashboard'},
-    {id:'emprestimos',icon:'💰',label:'Empréstimos'},
-    {id:'tomadores',icon:'👥',label:'Tomadores'},
-    {id:'simulador',icon:'🧮',label:'Simulador'},
-    {id:'perfil',icon:'👤',label:'Meu Perfil'},
-    {id:'usuarios',icon:'⚙️',label:'Usuários',admin:true},
+    {id:'dashboard',icon:'◈',label:'Dashboard'},
+    {id:'emprestimos',icon:'◈',label:'Empréstimos'},
+    {id:'tomadores',icon:'◈',label:'Tomadores'},
+    {id:'simulador',icon:'◈',label:'Simulador'},
+    {id:'perfil',icon:'◈',label:'Meu Perfil'},
+    {id:'usuarios',icon:'◈',label:'Usuários',admin:true},
   ];
   document.getElementById('sidebarEl').innerHTML=
     `<div class="sidebar-section">Menu</div>`+
     tabs.filter(t=>can(t.id)||(t.admin&&session.role==='admin')).map(t=>
       `<button class="sidebar-item${curPage===t.id?' active':''}" id="si-${t.id}" onclick="showPage('${t.id}')">
-        <span class="sidebar-icon">${t.icon}</span>${t.label}
+        <span class="sidebar-icon"></span>${t.label}
       </button>`
     ).join('')+
     `<div class="sidebar-footer">AGPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`;
@@ -450,7 +451,7 @@ async function bootApp(){
       av.textContent=ini(session.nome);av.style.cssText=AV_STYLE[session.role]||AV_STYLE.op;
     }
     document.getElementById('nav-name').textContent=session.nome||'';
-    document.getElementById('nav-role').textContent=session.role==='admin'?'👑 Admin':'🎯 3°JOB';
+    document.getElementById('nav-role').textContent=session.role==='admin'?'Admin':'3°JOB';
   }catch(e){}
   try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
   buildSidebar();showPage('dashboard');
@@ -508,8 +509,8 @@ function renderDashboard(){
       <div class="stat"><div class="stat-label">Recebido</div><div class="stat-value" style="color:var(--grn)">${fmtR(pRecebido)}</div><div class="stat-sub">em parcelas pagas</div></div>
       <div class="stat"><div class="stat-label">Pendente</div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${parcelas.filter(p=>p.status==='pendente').length} parcelas</div></div>
     </div>
-    ${atrasadas.length?`<div class="warn-box">⚠️ <strong>${atrasadas.length} parcela${atrasadas.length!==1?'s':''} em atraso!</strong> Verifique os empréstimos pendentes.</div>`:''}
-    ${vencHoje.length?`<div class="info-box">📅 <strong>${vencHoje.length} parcela${vencHoje.length!==1?'s':''} vence${vencHoje.length===1?'':'m'} hoje.</strong></div>`:''}
+    ${atrasadas.length?`<div class="warn-box"><strong>${atrasadas.length} parcela${atrasadas.length!==1?'s':''} em atraso!</strong> Verifique os empréstimos pendentes.</div>`:''}
+    ${vencHoje.length?`<div class="info-box"><strong>${vencHoje.length} parcela${vencHoje.length!==1?'s':''} vence${vencHoje.length===1?'':'m'} hoje.</strong></div>`:''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
       <div class="card">
         <div class="card-title">Últimos Empréstimos</div>
@@ -527,7 +528,7 @@ function renderDashboard(){
               <div style="font-size:11px;color:var(--n4)">${(e.juros*100).toFixed(0)}% juros</div>
             </div>
           </div>`;
-        }).join('')||'<div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Nenhum empréstimo ainda.</div></div>'}
+        }).join('')||'<div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum empréstimo ainda.</div></div>'}
       </div>
       <div class="card">
         <div class="card-title">Parcelas em Atraso</div>
@@ -545,7 +546,7 @@ function renderDashboard(){
               <button class="btn btn-grn btn-xs" onclick="marcarPago('${p.id}')">✓ Pago</button>
             </div>
           </div>`;
-        }).join('')||'<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Nenhum atraso. Tudo em dia!</div></div>'}
+        }).join('')||'<div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum atraso. Tudo em dia!</div></div>'}
       </div>
     </div>`;
 }
@@ -607,7 +608,7 @@ function showImportPreview(dataRows){
     </div>
     <div style="padding:1.25rem 1.5rem">
       <div style="padding:.75rem 1rem;background:var(--grn0);border-radius:var(--rs);font-size:13px;color:#065F46;margin-bottom:1rem;border:1px solid var(--grn1)">
-        ✅ Arquivo reconhecido! <strong>${dataRows.length} empréstimos</strong> serão importados.<br>
+        Arquivo reconhecido. <strong>${dataRows.length} empréstimos</strong> serão importados.<br>
         Os tomadores serão criados automaticamente se ainda não existirem.
       </div>
       <div style="font-size:11px;font-weight:700;color:var(--n4);text-transform:uppercase;margin-bottom:.5rem">Prévia (primeiros 5)</div>
@@ -692,7 +693,7 @@ async function executeImport(dataRows){
   }
 
   document.getElementById('import-preview-modal')?.remove();
-  toast(`✓ Importado! ${empCriados} empréstimos, ${tomCriados} tomadores, ${parcCriadas} parcelas.${erros?` ⚠ ${erros} erro(s).`:''}`);
+  toast(`Importado! ${empCriados} empréstimos, ${tomCriados} tomadores, ${parcCriadas} parcelas.${erros?` ⚠ ${erros} erro(s).`:''}`);
   renderEmprestimos();
 }
 
@@ -739,7 +740,7 @@ function toggleSelectMode(){
   const btn=document.getElementById('btn-select-mode');
   const btnDel=document.getElementById('btn-del-all');
   const thChk=document.getElementById('th-check');
-  if(btn)btn.textContent=_selectMode?'✕ Cancelar':'☑ Selecionar';
+  if(btn)btn.textContent=_selectMode?'Cancelar':'Selecionar';
   if(btn)btn.className=_selectMode?'btn btn-g btn-sm':'btn btn-g btn-sm';
   document.querySelectorAll('.chk-cell').forEach(el=>el.style.display=_selectMode?'':'none');
   if(thChk)thChk.style.display=_selectMode?'':'none';
@@ -756,7 +757,7 @@ function onChkChange(){
   const checked=document.querySelectorAll('.emp-chk:checked').length;
   const btnDel=document.getElementById('btn-del-all');
   if(btnDel)btnDel.style.display=checked>0?'':'none';
-  if(btnDel&&checked>0)btnDel.textContent=`🗑 Excluir ${checked} selecionado${checked!==1?'s':''}`;
+  if(btnDel&&checked>0)btnDel.textContent=`Excluir ${checked} selecionado${checked!==1?'s':''}`;
 }
 
 async function deleteSelectedEmps(){
@@ -781,9 +782,9 @@ function renderEmprestimos(){
     <div class="sec-hdr">
       <span class="sec-title">Empréstimos</span>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="exportExcel()">⬇ Exportar</button>
+        <button class="btn btn-g btn-sm" onclick="exportExcel()">Exportar</button>
         <label class="btn btn-g btn-sm" style="cursor:pointer">
-          ⬆ Importar Excel
+          Importar Excel
           <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
         </label>
         <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
@@ -791,8 +792,8 @@ function renderEmprestimos(){
     </div>
     <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
       <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:380px"/>
-      <button class="btn btn-d btn-sm" onclick="deleteSelectedEmps()" id="btn-del-all" style="display:none">🗑 Excluir selecionados</button>
-      <button class="btn btn-g btn-sm" onclick="toggleSelectMode()" id="btn-select-mode">☑ Selecionar</button>
+      <button class="btn btn-d btn-sm" onclick="deleteSelectedEmps()" id="btn-del-all" style="display:none">Excluir selecionados</button>
+      <button class="btn btn-g btn-sm" onclick="toggleSelectMode()" id="btn-select-mode">Selecionar</button>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -816,7 +817,7 @@ function filterEmp(){
 }
 
 function empTbodyHTML(list){
-  if(!list.length)return`<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>`;
+  if(!list.length)return`<tr><td colspan="11"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>`;
   return list.map((e,i)=>{
     const tom=tomadores.find(t=>t.id===e.tomador_id);
     const parcsEmp=parcelas.filter(p=>p.emprestimo_id===e.id);
@@ -836,7 +837,7 @@ function empTbodyHTML(list){
       <td style="color:var(--n4);font-size:12px">${fmtDate(e.data_emprestimo)}</td>
       <td>
         ${parcsEmp.length===0
-          ?`<button class="btn btn-xs btn-g" onclick="addParcela('${e.id}')">♾️ Ilimitado</button>`
+          ?`<button class="btn btn-xs btn-g" onclick="addParcela('${e.id}')">Ilimitado</button>`
           :`<button class="btn btn-xs ${allPago?'btn-grn':atCnt?'btn-d':'btn-amb'}" onclick="openParcelas('${e.id}')">
             ${allPago?'✅':'💳'} ${pgCnt}/${parcsEmp.length}${atCnt?` ⚠️${atCnt}`:''}
           </button>`}
@@ -950,7 +951,7 @@ async function saveEmp(){
     if(curPage==='dashboard')renderDashboard();
     else renderEmprestimos();
   }catch(e){toast('Erro ao salvar',true);console.error(e);}
-  btn.textContent='💾 Salvar Empréstimo';btn.disabled=false;
+  btn.textContent='Salvar Empréstimo';btn.disabled=false;
 }
 
 function openClientView(tomId){
@@ -981,7 +982,7 @@ function openClientView(tomId){
           <span style="font-size:11px;font-weight:700;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':'var(--n4)'};min-width:20px">${p.numero}°</span>
           <div>
             <div style="font-size:12px;color:var(--n3)">Venc: ${fmtDate(p.vencimento)}${atras?` <span style="color:var(--red);font-size:10px">(${diasAtras}d atraso)</span>`:''}</div>
-            ${p.pago_em?`<div style="font-size:11px;color:var(--grn)">✓ Pago em ${fmtDate(p.pago_em)}</div>`:''}
+            ${p.pago_em?`<div style="font-size:11px;color:var(--grn)">Pago em ${fmtDate(p.pago_em)}</div>`:''}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:.5rem">
@@ -995,11 +996,11 @@ function openClientView(tomId){
         <div>
           <span style="font-weight:700;color:var(--blu)">${fmtR(e.valor)}</span>
           <span style="font-size:12px;color:var(--n4);margin-left:.5rem">${pctStr}% juros · ${fmtDate(e.data_emprestimo)}</span>
-          ${e.garantia?`<span style="font-size:11px;color:var(--n4);margin-left:.4rem">· 🔒 ${e.garantia}</span>`:''}
+          ${e.garantia?`<span style="font-size:11px;color:var(--n4);margin-left:.4rem">· ${e.garantia}</span>`:''}
         </div>
         <span style="font-size:12px;font-weight:600;color:${atCnt?'var(--red)':'var(--grn)'}">${pgCnt}/${parcsEmp.length} pagas${atCnt?` ⚠️${atCnt}`:''}</span>
       </div>
-      <div style="padding:.6rem .75rem">${parcRows||`<div style="text-align:center;color:var(--n4);padding:.5rem;font-size:12px">♾️ Ilimitado — sem parcelas definidas</div>`}</div>
+      <div style="padding:.6rem .75rem">${parcRows||`<div style="text-align:center;color:var(--n4);padding:.5rem;font-size:12px">Ilimitado — sem parcelas definidas</div>`}</div>
     </div>`;
   }).join('');
 
@@ -1012,7 +1013,7 @@ function openClientView(tomId){
     <div style="padding:1.25rem 1.5rem 1rem;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1">
       <div>
         <div style="font-family:var(--FT);font-size:1.3rem;color:var(--n1)">${tom.nome}</div>
-        <div style="font-size:12px;color:var(--n4);margin-top:2px">${tom.contato?`📞 ${tom.contato} · `:''} ${empsDoTom.length} empréstimo${empsDoTom.length!==1?'s':''}</div>
+        <div style="font-size:12px;color:var(--n4);margin-top:2px">${tom.contato?`${tom.contato} · `:''} ${empsDoTom.length} empréstimo${empsDoTom.length!==1?'s':''}</div>
       </div>
       <button onclick="document.getElementById('client-view-modal').remove()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--n4)">✕</button>
     </div>
@@ -1024,11 +1025,11 @@ function openClientView(tomId){
           <div style="font-family:var(--FT);font-size:1.1rem;color:var(--blu)">${fmtR(totalEmprestado)}</div>
         </div>
         <div style="background:#FFF7ED;border-radius:var(--rs);padding:.75rem;text-align:center">
-          <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:3px">✅ Recebido</div>
+          <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:3px">Recebido</div>
           <div style="font-family:var(--FT);font-size:1.1rem;color:var(--grn)">${fmtR(totalRecebido)}</div>
         </div>
         <div style="background:${atrasadas.length?'var(--red0)':'#F9FAFB'};border-radius:var(--rs);padding:.75rem;text-align:center">
-          <div style="font-size:9px;color:${atrasadas.length?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:3px">${atrasadas.length?'⚠️ Em atraso':'⚖️ Saldo'}</div>
+          <div style="font-size:9px;color:${atrasadas.length?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:3px">${atrasadas.length?'Em atraso':'Saldo'}</div>
           <div style="font-family:var(--FT);font-size:1.1rem;color:${atrasadas.length?'var(--red)':'var(--n4)'}">
             ${atrasadas.length?atrasadas.length+' parcela'+(atrasadas.length>1?'s':''):
               fmtR(empsDoTom.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0))}
@@ -1046,7 +1047,7 @@ function openClientView(tomId){
         </div>
       </div>`:''}
       <!-- HISTÓRICO COMPLETO -->
-      <div style="font-size:11px;font-weight:700;color:var(--n4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">📋 Histórico completo</div>
+      <div style="font-size:11px;font-weight:700;color:var(--n4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Histórico completo</div>
       ${histRows||'<div style="text-align:center;color:var(--n4);padding:1rem">Nenhum empréstimo.</div>'}
     </div>
   </div>`;
@@ -1100,26 +1101,26 @@ function openParcelas(empId){
   document.getElementById('parc-modal-body').innerHTML=`
     <!-- INFO EMPRÉSTIMO -->
     <div style="background:#F9FAFB;border-radius:var(--rs);padding:.75rem 1rem;margin-bottom:1rem;border:1px solid #E5E7EB;font-size:12px;color:var(--n3);display:flex;flex-wrap:wrap;gap:.5rem 1.5rem">
-      <span>💰 <strong>${fmtR(emp?.valor)}</strong> emprestado</span>
-      <span>📈 <strong>${((emp?.juros||0)*100)%1===0?((emp?.juros||0)*100).toFixed(0):((emp?.juros||0)*100).toFixed(1)}%</strong> juros</span>
+      <span><strong>${fmtR(emp?.valor)}</strong> emprestado</span>
+      <span><strong>${((emp?.juros||0)*100)%1===0?((emp?.juros||0)*100).toFixed(0):((emp?.juros||0)*100).toFixed(1)}%</strong> juros</span>
       <span>💵 <strong style="color:var(--grn)">${fmtR(emp?.valor*(emp?.juros||0))}</strong>/mês</span>
-      ${emp?.saldo_devedor!=null?`<span>⚖️ Saldo: <strong style="color:${emp.saldo_devedor===0?'var(--grn)':'var(--red)'}">${fmtR(emp.saldo_devedor)}${emp.saldo_devedor===0?' ✓ Quitado!':''}</strong></span>`:`<span>⚖️ Saldo: <strong style="color:var(--red)">${fmtR(emp?.valor)}</strong></span>`}
-      <span>📅 <strong>${fmtDate(emp?.data_emprestimo)}</strong></span>
-      ${emp?.garantia?`<span>🔒 <strong>${emp.garantia}</strong></span>`:''}
+      ${emp?.saldo_devedor!=null?`<span>Saldo: <strong style="color:${emp.saldo_devedor===0?'var(--grn)':'var(--red)'}">${fmtR(emp.saldo_devedor)}${emp.saldo_devedor===0?' Quitado!':''}</strong></span>`:`<span>Saldo: <strong style="color:var(--red)">${fmtR(emp?.valor)}</strong></span>`}
+      <span><strong>${fmtDate(emp?.data_emprestimo)}</strong></span>
+      ${emp?.garantia?`<span><strong>${emp.garantia}</strong></span>`:''}
     </div>
 
     <!-- RESUMO FINANCEIRO -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem">
       <div style="background:var(--grn0);border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid var(--grn1)">
-        <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:2px">✅ Recebido</div>
+        <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:2px">Recebido</div>
         <div style="font-family:var(--FT);font-size:1.2rem;color:var(--grn)">${fmtR(pago)}</div>
       </div>
       <div style="background:${saldo===0?'var(--grn0)':'var(--red0)'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${saldo===0?'var(--grn1)':'var(--red1)'}">
-        <div style="font-size:9px;color:${saldo===0?'var(--grn)':'var(--red)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">⚖️ Saldo Devedor</div>
-        <div style="font-family:var(--FT);font-size:1.2rem;color:${saldo===0?'var(--grn)':'var(--red)'}">${saldo===0?'✓ Quitado!':fmtR(saldo)}</div>
+        <div style="font-size:9px;color:${saldo===0?'var(--grn)':'var(--red)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">Saldo Devedor</div>
+        <div style="font-family:var(--FT);font-size:1.2rem;color:${saldo===0?'var(--grn)':'var(--red)'}">${saldo===0?'Quitado!':fmtR(saldo)}</div>
       </div>
       <div style="background:${atrasadasCnt?'var(--red0)':'#F9FAFB'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${atrasadasCnt?'var(--red1)':'#E5E7EB'}">
-        <div style="font-size:9px;color:${atrasadasCnt?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">⚠️ Atraso</div>
+        <div style="font-size:9px;color:${atrasadasCnt?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">Atraso</div>
         <div style="font-family:var(--FT);font-size:1.2rem;color:${atrasadasCnt?'var(--red)':'var(--n4)'}">${atrasadasCnt}</div>
       </div>
     </div>
@@ -1137,7 +1138,7 @@ function openParcelas(empId){
 
     <!-- LISTA DE PARCELAS -->
     <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Parcelas</div>
-    ${parcsEmp.length===0?`<div class="empty"><div class="empty-icon">♾️</div><div class="empty-text">Empréstimo ilimitado — adicione parcelas conforme o pagamento.</div></div>`:''}
+    ${parcsEmp.length===0?`<div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Empréstimo ilimitado — adicione parcelas conforme o pagamento.</div></div>`:''}
     ${parcsEmp.map(p=>{
       const atras=isAtrasada(p);
       const diasAtras=atras?Math.floor((new Date()-new Date(p.vencimento+'T12:00:00'))/(1000*60*60*24)):0;
@@ -1157,9 +1158,9 @@ function openParcelas(empId){
         <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
           <span style="font-weight:700;font-size:14px;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':'var(--n1)'}">${fmtR(p.valor)}</span>
           ${p.status==='pendente'?`
-            <button class="btn btn-xs btn-grn" onclick="confirmarPagamento('${p.id}','${empId}')" style="font-weight:700">✓ Confirmar</button>
+            <button class="btn btn-xs btn-grn" onclick="confirmarPagamento('${p.id}','${empId}')" style="font-weight:700">Confirmar</button>
             <button class="btn btn-xs btn-d" onclick="deleteParcela('${p.id}','${empId}')" title="Remover parcela">✕</button>
-          `:`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}','${empId}')" title="Reverter para pendente" style="font-size:11px">↩ Reverter</button>`}
+          `:`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}','${empId}')" title="Reverter para pendente" style="font-size:11px">Reverter</button>`}
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -1200,13 +1201,13 @@ function confirmarPagamento(id, empId){
 
     <!-- JUROS (OBRIGATÓRIO) -->
     <div style="margin-bottom:.85rem">
-      <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">💰 Juros cobrado (obrigatório)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Juros cobrado (obrigatório)</div>
       <div style="padding:.7rem 1rem;background:#FFF7ED;border:1px solid #FED7AA;border-radius:var(--rs);font-family:var(--FT);font-size:1.3rem;color:var(--grn);text-align:center">${fmtR(jurosParc)}</div>
     </div>
 
     <!-- ABATIMENTO (OPCIONAL) -->
     <div style="margin-bottom:.85rem">
-      <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">➕ Abatimento no capital (opcional)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Abatimento no capital (opcional)</div>
       <input type="text" id="pay-abat-${id}" placeholder="R$ 0,00 — valor extra para abater a dívida"
         oninput="maskCurrency(this);updatePaySummary('${id}',${jurosParc},${saldo})"
         inputmode="numeric" style="font-size:15px;font-weight:600"/>
@@ -1232,13 +1233,13 @@ function confirmarPagamento(id, empId){
 
     <!-- DATA -->
     <div style="margin-bottom:1rem">
-      <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">📅 Data do recebimento</div>
+      <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Data do recebimento</div>
       <input type="date" id="pay-date-${id}" value="${p.vencimento||today()}" style="width:100%"/>
     </div>
 
     <div style="display:flex;gap:.5rem;justify-content:flex-end">
       <button class="btn btn-g btn-sm" onclick="document.getElementById('confirm-pay-${id}').remove()">Cancelar</button>
-      <button class="btn btn-grn btn-sm" onclick="efetivarPagamento('${id}','${empId}',${jurosParc},${saldo})">✓ Confirmar Pagamento</button>
+      <button class="btn btn-grn btn-sm" onclick="efetivarPagamento('${id}','${empId}',${jurosParc},${saldo})">Confirmar Pagamento</button>
     </div>
   </div>`;
   document.body.appendChild(div);
@@ -1354,7 +1355,7 @@ function filterTom(){
 }
 
 function tomTbodyHTML(list){
-  if(!list.length)return`<tr><td colspan="8"><div class="empty"><div class="empty-icon">👥</div><div class="empty-text">Nenhum tomador.</div></div></td></tr>`;
+  if(!list.length)return`<tr><td colspan="8"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum tomador.</div></div></td></tr>`;
   return list.map((t,i)=>{
     const emps=emprestimos.filter(e=>e.tomador_id===t.id);
     const parcsT=parcelas.filter(p=>emps.some(e=>e.id===p.emprestimo_id)&&p.status==='pendente');
@@ -1575,7 +1576,7 @@ function renderPerfil(){
           </div>
           <div style="text-align:center">
             <div style="font-weight:600;font-size:16px">${session.nome}</div>
-            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'👑 Admin':'🎯 3°JOB'}</div>
+            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'Admin':'3°JOB'}</div>
           </div>
           <div style="width:100%">
             <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Selecionar foto</div>
@@ -1583,7 +1584,7 @@ function renderPerfil(){
               style="width:100%;padding:.5rem;border:1px dashed #D1D5DB;border-radius:var(--rs);background:#F9FAFB;color:var(--n3);font-size:13px;cursor:pointer"/>
             <div style="font-size:11px;color:var(--n4);margin-top:.4rem">JPG, PNG ou WEBP · Máximo 2MB</div>
           </div>
-          <button class="btn btn-p btn-full" onclick="uploadAvatar()">📷 Salvar foto</button>
+          <button class="btn btn-p btn-full" onclick="uploadAvatar()">Salvar foto</button>
           ${session.avatar_url?`<button class="btn btn-g btn-full" onclick="removeAvatar()" style="margin-top:-.5rem">Remover foto</button>`:''}
         </div>
       </div>
@@ -1600,9 +1601,9 @@ function renderPerfil(){
             <input type="password" id="p-pwd-new2" placeholder="Repita a nova senha" oninput="checkPwdMatch()"/>
             <div id="pwd-match" style="margin-top:.3rem;font-size:11px"></div>
           </div>
-          <button class="btn btn-p btn-full" onclick="savePerfilSenha()">🔑 Alterar senha</button>
+          <button class="btn btn-p btn-full" onclick="savePerfilSenha()">Alterar senha</button>
           <div style="padding:.75rem 1rem;background:#F9FAFB;border-radius:var(--rs);font-size:12px;color:var(--n3);border:1px solid #E5E7EB">
-            💡 Use ao menos 4 caracteres. Recomendamos misturar letras, números e símbolos.
+            Use ao menos 4 caracteres. Recomendamos misturar letras, números e símbolos.
           </div>
         </div>
       </div>
@@ -1698,7 +1699,7 @@ function usrListHTML(){
       <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;${av}">${ini(u.nome)}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:15px">${u.nome}${isSelf?' <span style="font-size:11px;color:var(--n4)">(você)</span>':''}</div>
-        <div style="font-size:12px;color:var(--n4);margin-top:2px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'👑 Admin':'🎯 3°JOB'}</span></div>
+        <div style="font-size:12px;color:var(--n4);margin-top:2px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'3°JOB'}</span></div>
       </div>
       <div style="display:flex;gap:.4rem">
         <button class="btn btn-g btn-sm" onclick="openUsrModal('${u.id}')">✏ Editar</button>
