@@ -514,6 +514,49 @@ function renderDashboard(){
 }
 
 // ══ EMPRÉSTIMOS ══
+let _selectMode=false;
+
+function toggleSelectMode(){
+  _selectMode=!_selectMode;
+  const btn=document.getElementById('btn-select-mode');
+  const btnDel=document.getElementById('btn-del-all');
+  const thChk=document.getElementById('th-check');
+  if(btn)btn.textContent=_selectMode?'✕ Cancelar':'☑ Selecionar';
+  if(btn)btn.className=_selectMode?'btn btn-g btn-sm':'btn btn-g btn-sm';
+  document.querySelectorAll('.chk-cell').forEach(el=>el.style.display=_selectMode?'':'none');
+  if(thChk)thChk.style.display=_selectMode?'':'none';
+  if(btnDel)btnDel.style.display='none';
+  if(!_selectMode){document.querySelectorAll('.emp-chk').forEach(el=>el.checked=false);const chkAll=document.getElementById('chk-all');if(chkAll)chkAll.checked=false;}
+}
+
+function toggleAllChk(chk){
+  document.querySelectorAll('.emp-chk').forEach(el=>el.checked=chk.checked);
+  onChkChange();
+}
+
+function onChkChange(){
+  const checked=document.querySelectorAll('.emp-chk:checked').length;
+  const btnDel=document.getElementById('btn-del-all');
+  if(btnDel)btnDel.style.display=checked>0?'':'none';
+  if(btnDel&&checked>0)btnDel.textContent=`🗑 Excluir ${checked} selecionado${checked!==1?'s':''}`;
+}
+
+async function deleteSelectedEmps(){
+  const ids=[...document.querySelectorAll('.emp-chk:checked')].map(el=>el.value);
+  if(!ids.length)return;
+  const nomes=ids.map(id=>{const e=emprestimos.find(x=>x.id===id);const t=tomadores.find(x=>x.id===e?.tomador_id);return t?.nome||'?';});
+  if(!confirm(`Excluir ${ids.length} empréstimo${ids.length!==1?'s':''}?\n${nomes.join(', ')}\n\nEsta ação não pode ser desfeita.`))return;
+  for(const id of ids){
+    await sb.from('parcelas').delete().eq('emprestimo_id',id);
+    await sb.from('emprestimos').delete().eq('id',id);
+    emprestimos=emprestimos.filter(e=>e.id!==id);
+    parcelas=parcelas.filter(p=>p.emprestimo_id!==id);
+  }
+  toast(`✓ ${ids.length} empréstimo${ids.length!==1?'s':''} excluído${ids.length!==1?'s':''}`);
+  _selectMode=false;
+  renderEmprestimos();
+}
+
 function renderEmprestimos(){
   const mc=document.getElementById('main-content');
   mc.innerHTML=`
@@ -521,10 +564,15 @@ function renderEmprestimos(){
       <span class="sec-title">Empréstimos</span>
       <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
     </div>
-    <div style="margin-bottom:1rem"><input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:380px"/></div>
+    <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+      <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:380px"/>
+      <button class="btn btn-d btn-sm" onclick="deleteSelectedEmps()" id="btn-del-all" style="display:none">🗑 Excluir selecionados</button>
+      <button class="btn btn-g btn-sm" onclick="toggleSelectMode()" id="btn-select-mode">☑ Selecionar</button>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr>
+          <th id="th-check" style="display:none;width:36px"><input type="checkbox" id="chk-all" onclick="toggleAllChk(this)"/></th>
           <th>Nº</th><th>Tomador</th><th>Responsável</th><th>Garantia</th><th>Local</th>
           <th>Valor</th><th>Juros</th><th>Total</th><th>Data</th><th>Parcelas</th><th></th>
         </tr></thead>
@@ -550,7 +598,8 @@ function empTbodyHTML(list){
     const pgCnt=parcsEmp.filter(p=>p.status==='pago').length;
     const atCnt=parcsEmp.filter(p=>isAtrasada(p)).length;
     const allPago=parcsEmp.length>0&&pgCnt===parcsEmp.length;
-    return`<tr>
+    return`<tr id="row-${e.id}">
+      <td class="chk-cell" style="display:none;text-align:center"><input type="checkbox" class="emp-chk" value="${e.id}" onchange="onChkChange()"/></td>
       <td style="color:var(--n4);font-size:12px">${i+1}</td>
       <td style="font-weight:600">${tom?.nome||'—'}</td>
       <td style="color:var(--n3)">${e.responsavel||'—'}</td>
