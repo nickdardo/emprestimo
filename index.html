@@ -1261,7 +1261,6 @@ function renderSimulador(){
 
 function updateRefTable(highlightVal=null){
   const jur=parseFloat(document.getElementById('ref-jur')?.value)||0.2;
-  const pct=(jur*100)%1===0?(jur*100).toFixed(0):(jur*100).toFixed(1);
   const wrap=document.getElementById('ref-table-wrap');
   if(!wrap)return;
 
@@ -1277,29 +1276,34 @@ function updateRefTable(highlightVal=null){
     return`<td style="text-align:center;padding:.4rem .25rem;color:var(--grn);font-weight:600;font-size:12px">${fmtR(cumul)}</td>`;
   }).join('');
 
-  // Highlighted row from simulator (if value typed)
-  let simRow='';
+  // Se tiver valor digitado: mostra só ele. Senão, mostra tabela completa.
   if(highlightVal&&highlightVal>0){
-    simRow=`<tr style="background:#EFF6FF;border-top:2px solid #2563EB;border-bottom:2px solid #2563EB">
-      <td style="font-weight:800;color:var(--blu);font-size:13px">${fmtR(highlightVal)} ★</td>
-      <td style="color:var(--n2);font-weight:600">${fmtR(highlightVal)}</td>
-      ${buildCells(highlightVal)}
-    </tr>`;
+    wrap.innerHTML=`<table>
+      <thead><tr>
+        <th>Valor emprestado</th><th>Saída (capital)</th>${hdrCols}
+      </tr></thead>
+      <tbody>
+        <tr style="background:#EFF6FF">
+          <td style="font-weight:800;color:var(--blu);font-size:13px">${fmtR(highlightVal)}</td>
+          <td style="color:var(--n2);font-weight:600">${fmtR(highlightVal)}</td>
+          ${buildCells(highlightVal)}
+        </tr>
+      </tbody>
+    </table>`;
+  } else {
+    const valores=[300,400,500,600,700,800,900,1000,2000,3000,4000,5000,10000,20000,50000];
+    const rows=valores.map(v=>`<tr>
+      <td style="font-weight:700;color:var(--blu)">${fmtR(v)}</td>
+      <td style="color:var(--n3);font-weight:500">${fmtR(v)}</td>
+      ${buildCells(v)}
+    </tr>`).join('');
+    wrap.innerHTML=`<table>
+      <thead><tr>
+        <th>Valor emprestado</th><th>Saída (capital)</th>${hdrCols}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
   }
-
-  const valores=[300,400,500,600,700,800,900,1000,2000,3000,4000,5000,10000,20000,50000];
-  const rows=valores.map(v=>`<tr>
-    <td style="font-weight:700;color:var(--blu)">${fmtR(v)}</td>
-    <td style="color:var(--n3);font-weight:500">${fmtR(v)}</td>
-    ${buildCells(v)}
-  </tr>`).join('');
-
-  wrap.innerHTML=`<table>
-    <thead><tr>
-      <th>Valor emprestado</th><th>Saída (capital)</th>${hdrCols}
-    </tr></thead>
-    <tbody>${simRow}${rows}</tbody>
-  </table>`;
 }
 
 function calcSim(){
