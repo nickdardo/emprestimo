@@ -467,15 +467,18 @@ function doLogout(){
 }
 
 async function loadAll(){
-  const[tr,er,pr,ur]=await Promise.all([
-    sb.from('tomadores').select('*').order('nome'),
-    sb.from('emprestimos').select('*').order('created_at',{ascending:false}),
-    sb.from('parcelas').select('*').order('numero'),
-    sb.from('users').select('*').order('nome'),
-  ]);
+  let tq=sb.from('tomadores').select('*').order('nome');
+  let eq=sb.from('emprestimos').select('*').order('created_at',{ascending:false});
+  if(session.role!=='admin'){
+    tq=tq.eq('owner_id',session.id);
+    eq=eq.eq('owner_id',session.id);
+  }
+  const[tr,er,pr,ur]=await Promise.all([tq,eq,sb.from('parcelas').select('*').order('numero'),sb.from('users').select('*').order('nome')]);
   tomadores=tr.data||[];emprestimos=er.data||[];users=ur.data||[];
+  // Filtrar parcelas apenas dos empréstimos visíveis
+  const empIds=new Set(emprestimos.map(e=>e.id));
   // Garantir que o valor de cada parcela é só o juros mensal (sem o capital)
-  parcelas=(pr.data||[]).map(p=>{
+  parcelas=(pr.data||[]).filter(p=>empIds.has(p.emprestimo_id)).map(p=>{
     const emp=emprestimos.find(e=>e.id===p.emprestimo_id);
     if(emp&&!p.abatimento){
       const jurosCorreto=parseFloat((emp.valor*emp.juros).toFixed(2));
@@ -659,7 +662,7 @@ async function executeImport(dataRows){
       const nomeKey=nome.toUpperCase();
       let tom=tomCache[nomeKey];
       if(!tom){
-        const{data:td,error:te}=await sb.from('tomadores').insert({nome,contato:telefone||null}).select().single();
+        const{data:td,error:te}=await sb.from('tomadores').insert({nome,contato:telefone||null,owner_id:session.id}).select().single();
         if(te||!td){erros++;continue;}
         tom=td;tomadores.push(td);tomCache[nomeKey]=td;tomCriados++;
       }
@@ -668,7 +671,8 @@ async function executeImport(dataRows){
       const{data:emp,error:ee}=await sb.from('emprestimos').insert({
         tomador_id:tom.id,valor,juros,
         data_emprestimo:dataEmp,
-        created_by:session.id
+        created_by:session.id,
+        owner_id:session.id
       }).select().single();
       if(ee||!emp){erros++;continue;}
       emprestimos.unshift(emp);empCriados++;
@@ -918,7 +922,8 @@ async function saveEmp(){
     juros:parseFloat(juros.toFixed(4)),
     data_emprestimo:data,
     obs:document.getElementById('emp-obs').value.trim()||null,
-    created_by:session.id
+    created_by:session.id,
+    owner_id:session.id
   };
   const btn=document.querySelector('#emp-modal .btn-grn');btn.textContent='Salvando...';btn.disabled=true;
   try{
@@ -1393,7 +1398,7 @@ function openTomModal(id){
 async function saveTom(){
   const nome=document.getElementById('tom-nome').value.trim();
   if(!nome){toast('⚠ Informe o nome',true);return;}
-  const payload={nome,contato:document.getElementById('tom-cont').value.trim()||null};
+  const payload={nome,contato:document.getElementById('tom-cont').value.trim()||null,owner_id:session.id};
   if(editTom){
     const{data,error}=await sb.from('tomadores').update(payload).eq('id',editTom.id).select().single();
     if(error){toast('Erro ao salvar',true);return;}
