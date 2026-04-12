@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>EmprestimoPainel</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23111827'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='%2310B981'>$</text></svg>"/>
+<title>AGPainel</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23111827'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='%23F97316'>$</text></svg>"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -13,7 +13,7 @@
 :root{
   --bg:#F0FDF4;--card:#fff;--border:#D1FAE5;--border2:#A7F3D0;
   --n1:#111827;--n2:#374151;--n3:#6B7280;--n4:#9CA3AF;
-  --grn:#059669;--grn0:#ECFDF5;--grn1:#A7F3D0;--grn2:#10B981;
+  --grn:#EA580C;--grn0:#FFF7ED;--grn1:#FED7AA;--grn2:#F97316;
   --red:#DC2626;--red0:#FEF2F2;--red1:#FECACA;
   --amb:#D97706;--amb0:#FFFBEB;--amb1:#FDE68A;
   --blu:#2563EB;--blu0:#EFF6FF;
@@ -24,7 +24,7 @@
 body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh;font-size:15px}
 
 /* LOGIN */
-.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#064E3B 0%,#111827 60%,#064E3B 100%);padding:1rem}
+.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#431407 0%,#111827 60%,#431407 100%);padding:1rem}
 .login-card{background:#fff;border-radius:20px;padding:2.5rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
 .login-logo{font-family:var(--FT);font-size:2rem;color:var(--n1);margin-bottom:.2rem}
 .login-logo span{color:var(--grn)}
@@ -32,14 +32,14 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .login-field{margin-bottom:1rem}
 .login-field label{display:block;font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
 .login-field input{width:100%;padding:.7rem 1rem;border:1px solid #D1D5DB;border-radius:var(--rs);font-family:var(--FB);font-size:14px;color:var(--n1);background:#F9FAFB;outline:none;transition:border-color .15s}
-.login-field input:focus{border-color:var(--grn);background:#fff}
+.login-field input:focus{border-color:#EA580C;background:#fff}
 .login-error{background:var(--red0);color:var(--red);font-size:13px;padding:.6rem .85rem;border-radius:var(--rs);margin-bottom:1rem;display:none;border-left:3px solid var(--red)}
 .login-hint{font-size:11px;color:var(--n4);text-align:center;margin-top:1rem}
 
 /* NAV */
 .nav{background:var(--blk);border-bottom:1px solid var(--blk2);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .nav-brand{font-family:var(--FT);font-size:1.3rem;color:#fff}
-.nav-brand span{color:#10B981}
+.nav-brand span{color:#F97316}
 .nav-right{display:flex;align-items:center;gap:.75rem}
 .nav-user{font-size:13px;color:#9CA3AF;display:flex;align-items:center;gap:8px}
 .nav-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
@@ -56,8 +56,8 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .sidebar{width:220px;min-width:220px;background:#fff;border-right:1px solid #E5E7EB;padding:1rem 0;display:flex;flex-direction:column;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;transition:left .25s}
 .sidebar-section{padding:0 1rem .4rem;font-size:10px;font-weight:700;color:var(--n4);letter-spacing:.08em;text-transform:uppercase;margin-top:.5rem}
 .sidebar-item{display:flex;align-items:center;gap:10px;padding:.65rem 1.25rem;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--FB);font-size:14px;color:var(--n3);border-right:3px solid transparent;transition:all .12s}
-.sidebar-item:hover{background:#F0FDF4;color:var(--n1)}
-.sidebar-item.active{background:#ECFDF5;color:var(--grn);font-weight:600;border-right-color:var(--grn)}
+.sidebar-item:hover{background:#FFF7ED;color:var(--n1)}
+.sidebar-item.active{background:#FFF7ED;color:var(--grn);font-weight:600;border-right-color:var(--grn)}
 .sidebar-icon{width:18px;text-align:center;font-size:15px}
 .sidebar-footer{margin-top:auto;padding:1rem;border-top:1px solid #E5E7EB;font-size:11px;color:var(--n4);line-height:1.6}
 .content{flex:1;padding:1.5rem;min-width:0}
@@ -88,7 +88,7 @@ select option{background:#fff;color:var(--n1)}
 /* BTNS */
 .btn{padding:.6rem 1.25rem;border-radius:var(--rs);font-family:var(--FB);font-size:14px;font-weight:500;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .12s;white-space:nowrap}
 .btn-p{background:var(--blk);color:#fff}.btn-p:hover{background:var(--blk2)}
-.btn-grn{background:var(--grn);color:#fff}.btn-grn:hover{background:#047857}
+.btn-grn{background:#EA580C;color:#fff}.btn-grn:hover{background:#C2410C}
 .btn-g{background:transparent;color:var(--n3);border:1px solid #D1D5DB}.btn-g:hover{background:#F9FAFB}
 .btn-d{background:transparent;color:var(--red);border:1px solid var(--red1)}.btn-d:hover{background:var(--red0)}
 .btn-amb{background:var(--amb0);color:var(--amb);border:1px solid var(--amb1)}.btn-amb:hover{opacity:.85}
@@ -102,7 +102,7 @@ select option{background:#fff;color:var(--n1)}
 .bdg-pend{background:var(--amb0);color:var(--amb)}
 .bdg-cancel{background:var(--red0);color:var(--red)}
 .bdg-admin{background:#EDE9FE;color:#5B21B6}
-.bdg-op{background:var(--grn0);color:var(--grn)}
+.bdg-op{background:#FFF7ED;color:#EA580C}
 .bdg-atras{background:var(--red0);color:var(--red)}
 
 /* TABLE */
@@ -111,7 +111,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 thead th{padding:.7rem 1rem;text-align:left;font-size:10px;font-weight:700;color:var(--n4);text-transform:uppercase;letter-spacing:.06em;background:#F9FAFB;border-bottom:1px solid #E5E7EB;white-space:nowrap}
 tbody tr{border-bottom:1px solid #F3F4F6;transition:background .1s}
 tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:#F0FDF4}
+tbody tr:hover{background:#FFF7ED}
 tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
 
 /* MODAL */
@@ -143,8 +143,8 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
 .empty-text{font-size:14px;color:var(--n3)}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;color:#fff;padding:.75rem 1.25rem;border-radius:var(--r);font-size:14px;font-weight:500;z-index:999;box-shadow:var(--shm);animation:sup .2s ease;max-width:320px}
 @keyframes sup{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes blink-grn{0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,.5)}50%{box-shadow:0 0 0 6px rgba(5,150,105,0)}}
-.info-box{padding:.75rem 1rem;background:var(--grn0);border-radius:var(--rs);font-size:13px;color:#065F46;border:1px solid var(--grn1);margin-bottom:1rem}
+@keyframes blink-grn{0%,100%{box-shadow:0 0 0 0 rgba(234,88,12,.5)}50%{box-shadow:0 0 0 6px rgba(234,88,12,0)}}
+.info-box{padding:.75rem 1rem;background:#FFF7ED;border-radius:var(--rs);font-size:13px;color:#9A3412;border:1px solid #FED7AA;margin-bottom:1rem}
 .warn-box{padding:.75rem 1rem;background:var(--amb0);border-radius:var(--rs);font-size:13px;color:#78350F;border:1px solid var(--amb1);margin-bottom:1rem}
 
 @media(max-width:900px){.hamburger{display:flex}.sidebar{position:fixed;top:56px;left:-240px;height:calc(100vh - 56px);z-index:95}.sidebar.open{left:0;box-shadow:var(--shm)}.stats{grid-template-columns:1fr 1fr}.fgrid{grid-template-columns:1fr}.full{grid-column:1}}
@@ -158,12 +158,12 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
   <div class="login-bg">
     <div class="login-card">
       <div id="login-panel">
-        <div class="login-logo">Emprestimo<span>Painel</span></div>
+        <div class="login-logo">AG<span>Painel</span></div>
         <div class="login-sub">Sistema de Gestão de Empréstimos</div>
         <div class="login-error" id="login-error"></div>
         <div class="login-field"><label>Usuário</label><input type="text" id="lu" placeholder="seu.usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/></div>
         <div class="login-field"><label>Senha</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-        <button onclick="doLogin()" id="login-btn" class="btn btn-grn btn-full">Entrar →</button>
+        <button onclick="doLogin()" id="login-btn" class="btn btn-grn btn-full" style="background:#EA580C">Entrar →</button>
         <div style="display:flex;align-items:center;gap:.75rem;margin-top:1.25rem">
           <div style="flex:1;height:1px;background:#E5E7EB"></div>
           <span style="font-size:12px;color:var(--n4)">ou</span>
@@ -173,14 +173,14 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
         <p class="login-hint">Desenvolvido por Eduardo Ribeiro</p>
       </div>
       <div id="register-panel" style="display:none">
-        <div class="login-logo">Emprestimo<span>Painel</span></div>
+        <div class="login-logo">AG<span>Painel</span></div>
         <div class="login-sub">Criar nova conta</div>
         <div class="login-error" id="reg-error"></div>
         <div class="login-field"><label>Nome completo *</label><input type="text" id="reg-nome" placeholder="Seu nome completo" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field"><label>Usuário *</label><input type="text" id="reg-login" placeholder="Ex: joao.silva" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field"><label>Senha *</label><input type="password" id="reg-pass" placeholder="Mínimo 4 caracteres" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field"><label>Confirmar senha *</label><input type="password" id="reg-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')doRegister()"/></div>
-        <button onclick="doRegister()" id="register-btn" class="btn btn-grn btn-full">Criar conta →</button>
+        <button onclick="doRegister()" id="register-btn" class="btn btn-grn btn-full" style="background:#EA580C">Criar conta →</button>
         <button onclick="showLogin()" style="margin-top:.75rem;width:100%;padding:.6rem;background:transparent;color:var(--n4);border:none;font-family:var(--FB);font-size:13px;cursor:pointer">← Voltar para o login</button>
       </div>
     </div>
@@ -193,7 +193,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
   <nav class="nav">
     <div style="display:flex;align-items:center;gap:.75rem">
       <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
-      <span class="nav-brand">Emprestimo<span>Painel</span></span>
+      <span class="nav-brand">AG<span>Painel</span></span>
     </div>
     <div class="nav-right">
       <div class="nav-user">
@@ -244,7 +244,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
         </div>
       </div>
       <!-- CÁLCULO AUTOMÁTICO -->
-      <div id="emp-calc" style="display:none;margin-top:.75rem;background:var(--grn0);border-radius:var(--rs);padding:1rem;border:1px solid var(--grn1)">
+      <div id="emp-calc" style="display:none;margin-top:.75rem;background:#FFF7ED;border-radius:var(--rs);padding:1rem;border:1px solid #FED7AA">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;text-align:center">
           <div><div style="font-size:10px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:3px">Total a receber</div><div style="font-family:var(--FT);font-size:1.3rem;color:#065F46" id="calc-total">R$ 0,00</div></div>
           <div><div style="font-size:10px;color:var(--blu);font-weight:700;text-transform:uppercase;margin-bottom:3px">Juros</div><div style="font-family:var(--FT);font-size:1.3rem;color:var(--blu)" id="calc-parc">R$ 0,00</div></div>
@@ -338,7 +338,7 @@ const fmtDate=d=>d?new Date(d+'T12:00:00').toLocaleDateString('pt-BR'):'—';
 const today=()=>new Date().toISOString().split('T')[0];
 const fmtR=v=>v!=null?'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
 const can=p=>{if(!session)return false;if(session.role==='admin')return true;return['dashboard','emprestimos','tomadores','simulador'].includes(p);};
-const AV_STYLE={admin:'background:#FDE68A;color:#78350F',op:'background:#D1FAE5;color:#065F46'};
+const AV_STYLE={admin:'background:#FDE68A;color:#78350F',op:'background:#FFF7ED;color:#EA580C'};
 const isAtrasada=v=>v&&v.status==='pendente'&&new Date(v.vencimento+'T12:00:00')<new Date();
 
 function maskCurrency(el){
@@ -356,7 +356,7 @@ function parseCurrency(s){
 }
 
 function maskTel(el){let v=el.value.replace(/[^\d]/g,'');if(v.length>0)v='('+v;if(v.length>3)v=v.slice(0,3)+') '+v.slice(3);if(v.length>10)v=v.slice(0,10)+'-'+v.slice(10);el.value=v.slice(0,15);}
-function toast(msg,err=false){const t=document.createElement('div');t.className='toast';t.textContent=msg;t.style.background=err?'#991B1B':'#065F46';document.body.appendChild(t);setTimeout(()=>t.remove(),2800);}
+function toast(msg,err=false){const t=document.createElement('div');t.className='toast';t.textContent=msg;t.style.background=err?'#991B1B':'#9A3412';document.body.appendChild(t);setTimeout(()=>t.remove(),2800);}
 function openM(id){document.getElementById(id).style.display='flex';}
 function closeM(id){document.getElementById(id).style.display='none';}
 
@@ -379,7 +379,7 @@ function buildSidebar(){
         <span class="sidebar-icon">${t.icon}</span>${t.label}
       </button>`
     ).join('')+
-    `<div class="sidebar-footer">EmprestimoPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`;
+    `<div class="sidebar-footer">AGPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`;
 }
 
 function showPage(p){
@@ -707,7 +707,7 @@ function exportExcel(){
   const ws=XLSX.utils.aoa_to_sheet(rows);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,'BANCO DE DADOS',ws);
-  XLSX.writeFile(wb,`EmprestimoPainel_${today()}.xlsx`);
+  XLSX.writeFile(wb,`AGPainel_${today()}.xlsx`);
   toast('✓ Arquivo exportado!');
 }
 
@@ -1181,7 +1181,7 @@ function openTomModal(id){
 async function saveTom(){
   const nome=document.getElementById('tom-nome').value.trim();
   if(!nome){toast('⚠ Informe o nome',true);return;}
-  const payload={nome,contato:document.getElementById('tom-cont').value.trim()||null,local:document.getElementById('tom-loc').value.trim()||null,garantia:document.getElementById('tom-gar').value.trim()||null};
+  const payload={nome,contato:document.getElementById('tom-cont').value.trim()||null};
   if(editTom){
     const{data,error}=await sb.from('tomadores').update(payload).eq('id',editTom.id).select().single();
     if(error){toast('Erro ao salvar',true);return;}
@@ -1271,7 +1271,7 @@ function updateRefTable(highlightVal=null){
   const buildCells=(v)=>Array.from({length:maxMonths},(_,i)=>{
     const mes=i+1;const cumul=v*jur*mes;
     const isRec=mes===recoveryMonth;const past=mes>recoveryMonth;
-    if(isRec)return`<td style="text-align:center;padding:.4rem .25rem"><div style="background:#059669;color:#fff;font-weight:800;font-size:12px;border-radius:6px;padding:3px 6px;animation:blink-grn 1.2s ease-in-out infinite;display:inline-block">${fmtR(cumul)}<div style="font-size:9px;opacity:.9">✓ Recuperado!</div></div></td>`;
+    if(isRec)return`<td style="text-align:center;padding:.4rem .25rem"><div style="background:#EA580C;color:#fff;font-weight:800;font-size:12px;border-radius:6px;padding:3px 6px;animation:blink-grn 1.2s ease-in-out infinite;display:inline-block">${fmtR(cumul)}<div style="font-size:9px;opacity:.9">✓ Recuperado!</div></div></td>`;
     if(past)return`<td style="text-align:center;padding:.4rem .25rem"><div style="color:var(--grn);font-weight:600;font-size:12px;background:var(--grn0);border-radius:4px;padding:2px 5px;display:inline-block">${fmtR(cumul)}</div></td>`;
     return`<td style="text-align:center;padding:.4rem .25rem;color:var(--grn);font-weight:600;font-size:12px">${fmtR(cumul)}</td>`;
   }).join('');
