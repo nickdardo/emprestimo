@@ -219,7 +219,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
           <span class="lbl">Tomador *</span>
           <div style="display:flex;gap:.5rem">
             <select id="emp-tom" style="flex:1" onchange="updateEmpCalc()"><option value="">Selecione ou crie</option></select>
-            <button class="btn btn-g btn-sm" onclick="openTomModal(null)">+ Novo</button>
+            <button class="btn btn-g btn-sm" onclick="openTomModal(null)" style="z-index:250;position:relative">+ Criar novo cliente</button>
           </div>
         </div>
         <div class="fg"><span class="lbl">Responsável</span><input id="emp-resp" placeholder="Ex: Nicole"/></div>
@@ -269,7 +269,7 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
 </div>
 
 <!-- MODAL TOMADOR -->
-<div class="mbd" id="tom-modal" style="display:none;z-index:300" onclick="if(event.target===this)closeM('tom-modal')">
+<div class="mbd" id="tom-modal" style="display:none;z-index:400" onclick="if(event.target===this)closeM('tom-modal')">
   <div class="modal" style="max-width:440px">
     <div class="mhdr"><span class="mtitle" id="tom-modal-title">Novo Tomador</span><button class="mclose" onclick="closeM('tom-modal')">✕</button></div>
     <div class="mbody">
@@ -1155,9 +1155,12 @@ function openTomModal(id){
   document.getElementById('tom-modal-title').textContent=editTom?'Editar Tomador':'Novo Tomador';
   document.getElementById('tom-nome').value=editTom?.nome||'';
   document.getElementById('tom-cont').value=editTom?.contato||'';
-  document.getElementById('tom-loc').value=editTom?.local||'';
-  document.getElementById('tom-gar').value=editTom?.garantia||'';
-  openM('tom-modal');
+  const locEl=document.getElementById('tom-loc');if(locEl)locEl.value=editTom?.local||'';
+  const garEl=document.getElementById('tom-gar');if(garEl)garEl.value=editTom?.garantia||'';
+  const modal=document.getElementById('tom-modal');
+  modal.style.display='flex';
+  modal.style.zIndex='400';
+  setTimeout(()=>document.getElementById('tom-nome').focus(),100);
 }
 
 async function saveTom(){
