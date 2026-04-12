@@ -1259,57 +1259,46 @@ function renderSimulador(){
   calcSim();
 }
 
-function updateRefTable(){
-  const jur=parseFloat(document.getElementById('ref-jur')?.value)||0.3;
+function updateRefTable(highlightVal=null){
+  const jur=parseFloat(document.getElementById('ref-jur')?.value)||0.2;
   const pct=(jur*100)%1===0?(jur*100).toFixed(0):(jur*100).toFixed(1);
-  const valores=[300,400,500,600,700,800,900,1000,2000,3000,4000,5000,10000,20000,50000];
   const wrap=document.getElementById('ref-table-wrap');
   if(!wrap)return;
 
-  // Months to recover capital = ceil(1/jur)
   const recoveryMonth=Math.ceil(1/jur);
-  // Show up to recovery + 2 extra months, max 20
   const maxMonths=Math.min(recoveryMonth+2,20);
+  const hdrCols=Array.from({length:maxMonths},(_,i)=>`<th style="text-align:center;min-width:82px">${i+1}° mês</th>`).join('');
 
-  // Build header
-  const hdrCols=Array.from({length:maxMonths},(_,i)=>`<th style="text-align:center;min-width:80px">${i+1}° mês</th>`).join('');
-
-  // Build rows
-  const rows=valores.map(v=>{
-    const jurosM=v*jur; // interest per month (fixed)
-    const cells=Array.from({length:maxMonths},(_,i)=>{
-      const mes=i+1;
-      const cumul=jurosM*mes; // cumulative interest collected
-      const isRecovery=mes===recoveryMonth;
-      const pastRecovery=mes>recoveryMonth;
-      let bg='',color='var(--grn)',fw='600',extra='';
-      if(isRecovery){
-        bg='background:#059669;border-radius:6px;padding:3px 6px;animation:blink-grn 1.2s ease-in-out infinite;';
-        color='#fff';fw='800';
-        extra=`<div style="font-size:9px;font-weight:600;opacity:.9">✓ Capital recuperado!</div>`;
-      } else if(pastRecovery){
-        bg='background:var(--grn0);border-radius:4px;padding:2px 4px;';
-        color='var(--grn)';
-      }
-      return`<td style="text-align:center">
-        <div style="${bg}color:${color};font-weight:${fw};font-size:12px">${fmtR(cumul)}</div>
-        ${extra}
-      </td>`;
-    }).join('');
-    return`<tr>
-      <td style="font-weight:700;color:var(--blu)">${fmtR(v)}</td>
-      <td style="color:var(--n3);font-weight:500">${fmtR(v)}</td>
-      ${cells}
-    </tr>`;
+  const buildCells=(v)=>Array.from({length:maxMonths},(_,i)=>{
+    const mes=i+1;const cumul=v*jur*mes;
+    const isRec=mes===recoveryMonth;const past=mes>recoveryMonth;
+    if(isRec)return`<td style="text-align:center;padding:.4rem .25rem"><div style="background:#059669;color:#fff;font-weight:800;font-size:12px;border-radius:6px;padding:3px 6px;animation:blink-grn 1.2s ease-in-out infinite;display:inline-block">${fmtR(cumul)}<div style="font-size:9px;opacity:.9">✓ Recuperado!</div></div></td>`;
+    if(past)return`<td style="text-align:center;padding:.4rem .25rem"><div style="color:var(--grn);font-weight:600;font-size:12px;background:var(--grn0);border-radius:4px;padding:2px 5px;display:inline-block">${fmtR(cumul)}</div></td>`;
+    return`<td style="text-align:center;padding:.4rem .25rem;color:var(--grn);font-weight:600;font-size:12px">${fmtR(cumul)}</td>`;
   }).join('');
+
+  // Highlighted row from simulator (if value typed)
+  let simRow='';
+  if(highlightVal&&highlightVal>0){
+    simRow=`<tr style="background:#EFF6FF;border-top:2px solid #2563EB;border-bottom:2px solid #2563EB">
+      <td style="font-weight:800;color:var(--blu);font-size:13px">${fmtR(highlightVal)} ★</td>
+      <td style="color:var(--n2);font-weight:600">${fmtR(highlightVal)}</td>
+      ${buildCells(highlightVal)}
+    </tr>`;
+  }
+
+  const valores=[300,400,500,600,700,800,900,1000,2000,3000,4000,5000,10000,20000,50000];
+  const rows=valores.map(v=>`<tr>
+    <td style="font-weight:700;color:var(--blu)">${fmtR(v)}</td>
+    <td style="color:var(--n3);font-weight:500">${fmtR(v)}</td>
+    ${buildCells(v)}
+  </tr>`).join('');
 
   wrap.innerHTML=`<table>
     <thead><tr>
-      <th>Valor emprestado</th>
-      <th>Saída (capital)</th>
-      ${hdrCols}
+      <th>Valor emprestado</th><th>Saída (capital)</th>${hdrCols}
     </tr></thead>
-    <tbody>${rows}</tbody>
+    <tbody>${simRow}${rows}</tbody>
   </table>`;
 }
 
@@ -1318,16 +1307,23 @@ function calcSim(){
   const jur=parseFloat(document.getElementById('sim-jur')?.value)||0.2;
   const res=document.getElementById('sim-result');
   if(!res)return;
-  if(!val){res.innerHTML='';return;}
+
+  if(!val){
+    res.innerHTML='';
+    // Sync ref table juros
+    const refJur=document.getElementById('ref-jur');
+    if(refJur&&refJur.value!==String(jur)){refJur.value=String(jur);}
+    updateRefTable();
+    return;
+  }
 
   const jurosM=val*jur;
   const recoveryMonth=Math.ceil(1/jur);
-  const maxMonths=Math.min(recoveryMonth+2,20);
   const pct=(jur*100)%1===0?(jur*100).toFixed(0):(jur*100).toFixed(1);
 
-  // Summary cards
-  const cards=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+  // Show only 2 summary cards in sim-result
+  res.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
       <div style="background:var(--blu0);border-radius:var(--rs);padding:.85rem;text-align:center">
         <div style="font-size:10px;color:var(--blu);font-weight:700;text-transform:uppercase;margin-bottom:3px">Juros por mês</div>
         <div style="font-family:var(--FT);font-size:1.4rem;color:var(--blu)">${fmtR(jurosM)}</div>
@@ -1338,43 +1334,10 @@ function calcSim(){
       </div>
     </div>`;
 
-  // Month cells
-  const hdrCols=Array.from({length:maxMonths},(_,i)=>`<th style="text-align:center;min-width:80px;font-size:11px">${i+1}° mês</th>`).join('');
-  const cells=Array.from({length:maxMonths},(_,i)=>{
-    const mes=i+1;
-    const cumul=jurosM*mes;
-    const isRecovery=mes===recoveryMonth;
-    const pastRecovery=mes>recoveryMonth;
-    let style='text-align:center;padding:.5rem .25rem';
-    if(isRecovery) return`<td style="${style}"><div style="background:#059669;color:#fff;font-weight:800;font-size:12px;border-radius:6px;padding:4px 6px;animation:blink-grn 1.2s ease-in-out infinite">${fmtR(cumul)}<div style="font-size:9px;margin-top:2px">✓ Recuperado!</div></div></td>`;
-    if(pastRecovery) return`<td style="${style}"><div style="color:var(--grn);font-weight:600;font-size:12px;background:var(--grn0);border-radius:4px;padding:3px 5px">${fmtR(cumul)}</div></td>`;
-    return`<td style="${style}"><div style="color:var(--grn);font-weight:600;font-size:12px">${fmtR(cumul)}</div></td>`;
-  }).join('');
-
-  const table=`
-    <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">
-      Evolução dos juros — ${fmtR(val)} a ${pct}% ao mês
-    </div>
-    <div style="overflow-x:auto;border-radius:var(--r);border:1px solid #E5E7EB">
-      <table>
-        <thead><tr>
-          <th style="min-width:130px">Valor emprestado</th>
-          <th style="min-width:100px">Saída (capital)</th>
-          ${hdrCols}
-        </tr></thead>
-        <tbody><tr>
-          <td style="font-weight:700;color:var(--blu)">${fmtR(val)}</td>
-          <td style="color:var(--n3);font-weight:500">${fmtR(val)}</td>
-          ${cells}
-        </tr></tbody>
-      </table>
-    </div>`;
-
-  res.innerHTML=cards+table;
-
-  // Sync ref-jur select
+  // Sync ref-jur and update table (highlighted row appears there)
   const refJur=document.getElementById('ref-jur');
-  if(refJur&&refJur.value!==String(jur)){refJur.value=String(jur);updateRefTable();}
+  if(refJur&&refJur.value!==String(jur)){refJur.value=String(jur);}
+  updateRefTable(val);
 }
 
 // ══ USUÁRIOS ══
