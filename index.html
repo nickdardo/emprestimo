@@ -660,7 +660,7 @@ async function executeImport(dataRows){
         }
       }
       if(vencDates.length>0){
-        const valorParc=parseFloat(((valor+valor*juros)/vencDates.length).toFixed(2));
+        const valorParc=parseFloat((valor*juros).toFixed(2)); // apenas juros mensal
         const parcsPayload=vencDates.map((venc,i)=>({
           emprestimo_id:emp.id,numero:i+1,
           vencimento:venc,valor:valorParc,status:'pendente'
@@ -1033,7 +1033,7 @@ function openClientView(tomId){
 async function addParcela(empId){
   const emp=emprestimos.find(e=>e.id===empId);
   if(!emp)return;
-  const valorTotal=parseFloat((emp.valor+emp.valor*emp.juros).toFixed(2));
+  const valorJuros=parseFloat((emp.valor*emp.juros).toFixed(2)); // apenas juros mensal
   const dataBase=new Date(emp.data_emprestimo+'T12:00:00');
   const parcsExist=parcelas.filter(p=>p.emprestimo_id===empId);
   const nextNum=parcsExist.length+1;
@@ -1041,7 +1041,7 @@ async function addParcela(empId){
   const{data,error}=await sb.from('parcelas').insert({
     emprestimo_id:empId,numero:nextNum,
     vencimento:venc.toISOString().split('T')[0],
-    valor:parseFloat(valorTotal.toFixed(2)),status:'pendente'
+    valor:valorJuros,status:'pendente'
   }).select().single();
   if(error){toast('Erro ao adicionar parcela',true);return;}
   parcelas.push(data);toast('✓ Parcela adicionada!');
