@@ -167,6 +167,15 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
         <div class="login-error" id="login-error"></div>
         <div class="login-field"><label>Usuário</label><input type="text" id="lu" placeholder="seu.usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/></div>
         <div class="login-field"><label>Senha</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
+            <div id="remember-toggle" onclick="toggleRemember()" style="width:40px;height:22px;border-radius:999px;background:#D1D5DB;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">
+              <div id="remember-knob" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
+            </div>
+            <span style="font-size:13px;color:var(--n3)">Lembrar acesso</span>
+          </label>
+          <span id="remember-status" style="font-size:11px;color:var(--n4)"></span>
+        </div>
         <button onclick="doLogin()" id="login-btn" class="btn btn-grn btn-full" style="background:#EA580C">Entrar →</button>
         <div style="display:flex;align-items:center;gap:.75rem;margin-top:1.25rem">
           <div style="flex:1;height:1px;background:#E5E7EB"></div>
@@ -415,6 +424,44 @@ function showLogin(){document.getElementById('register-panel').style.display='no
 function showErr(msg){const e=document.getElementById('login-error');e.textContent=msg;e.style.display='block';}
 function showRegErr(msg){const e=document.getElementById('reg-error');e.textContent=msg;e.style.display='block';}
 
+// ── LEMBRAR ACESSO ──
+let _remember=false;
+function toggleRemember(){
+  _remember=!_remember;
+  const tog=document.getElementById('remember-toggle');
+  const knob=document.getElementById('remember-knob');
+  const st=document.getElementById('remember-status');
+  if(_remember){
+    tog.style.background='#EA580C';
+    knob.style.left='20px';
+    st.textContent='Ativo';st.style.color='#EA580C';
+  } else {
+    tog.style.background='#D1D5DB';
+    knob.style.left='2px';
+    st.textContent='';
+    // Ao desativar, limpa o que estava salvo
+    try{localStorage.removeItem('ep_cred');}catch(e){}
+  }
+}
+function loadSavedCreds(){
+  try{
+    const raw=localStorage.getItem('ep_cred');
+    if(!raw)return;
+    const c=JSON.parse(atob(raw));
+    if(c&&c.l&&c.p){
+      document.getElementById('lu').value=c.l;
+      document.getElementById('lp').value=c.p;
+      _remember=true;
+      const tog=document.getElementById('remember-toggle');
+      const knob=document.getElementById('remember-knob');
+      const st=document.getElementById('remember-status');
+      if(tog)tog.style.background='#EA580C';
+      if(knob)knob.style.left='20px';
+      if(st){st.textContent='Ativo';st.style.color='#EA580C';}
+    }
+  }catch(e){}
+}
+
 async function doLogin(){
   const login=document.getElementById('lu').value.trim().toLowerCase();
   const pass=document.getElementById('lp').value;
@@ -425,6 +472,11 @@ async function doLogin(){
     btn.textContent='Entrar →';btn.disabled=false;
     if(error||!data){showErr('Usuário ou senha incorretos.');return;}
     if(data.ativo===false){showErr('Conta suspensa. Contate o administrador.');return;}
+    // Salva ou limpa credenciais conforme toggle
+    try{
+      if(_remember){localStorage.setItem('ep_cred',btoa(JSON.stringify({l:login,p:pass})));}
+      else{localStorage.removeItem('ep_cred');}
+    }catch(e){}
     session=data;saveSession(session);await bootApp();
   }catch(e){btn.textContent='Entrar →';btn.disabled=false;showErr('Erro de conexão.');}
 }
@@ -1803,6 +1855,7 @@ async function deleteUsr(id){
 
 // ══ INIT ══
 window.addEventListener('DOMContentLoaded',async()=>{
+  loadSavedCreds();
   session=readSession();
   if(session){
     document.getElementById('login-page').style.display='none';
