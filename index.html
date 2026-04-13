@@ -804,8 +804,17 @@ function downloadModelo(){
   wsI['!cols']=[{wch:80}];
   XLSX.utils.book_append_sheet(wb,'INSTRUÇÕES',wsI);
 
-  XLSX.writeFile(wb,'AGPainel_Modelo_Importacao.xlsx');
-  toast('✓ Modelo baixado!');
+  // Download via Blob — funciona em todos os navegadores
+  try{
+    const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='AGPainel_Modelo_Importacao.xlsx';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},200);
+    toast('✓ Modelo baixado!');
+  }catch(e){toast('⚠ Erro ao gerar o arquivo',true);console.error(e);}
 }
 
 function exportExcel(){
