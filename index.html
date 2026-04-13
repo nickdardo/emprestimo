@@ -1975,11 +1975,37 @@ async function confirmarPagamentoLote(empId){
 }
 
 // ══ TOMADORES ══
+function exportTomadoresExcel(){
+  if(!tomadores.length){toast('⚠ Nenhum tomador para exportar.',true);return;}
+  const rows=[['#','NOME','CONTATO','OCUPAÇÃO','EMPRÉSTIMOS','TOTAL EMPRESTADO','SALDO DEVEDOR']];
+  tomadores.forEach((t,i)=>{
+    const emps=emprestimos.filter(e=>e.tomador_id===t.id);
+    const totalEmp=emps.reduce((s,e)=>s+Number(e.valor||0),0);
+    const saldo=emps.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
+    rows.push([i+1,t.nome,t.contato||'',t.ocupacao||'',emps.length,totalEmp,saldo]);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:4},{wch:32},{wch:18},{wch:20},{wch:14},{wch:18},{wch:18}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,'Tomadores',ws);
+  try{
+    const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`AGPainel_Tomadores_${today()}.xlsx`;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},200);
+    toast('✓ Tomadores exportados!');
+  }catch(e){toast('⚠ Erro ao exportar',true);}
+}
+
 function renderTomadores(){
   const mc=document.getElementById('main-content');
   mc.innerHTML=`
     <div class="sec-hdr">
       <span class="sec-title">Tomadores</span>
+      <button class="btn btn-g btn-sm" onclick="exportTomadoresExcel()">Exportar Excel</button>
       <button class="btn btn-p btn-sm" onclick="openTomModal(null)">+ Novo Tomador</button>
     </div>
     <div style="margin-bottom:1rem"><input type="text" id="tom-s" placeholder="🔍  Buscar tomador..." oninput="filterTom()" style="max-width:360px"/></div>
