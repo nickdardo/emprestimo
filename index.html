@@ -172,8 +172,53 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
 .info-box{padding:.75rem 1rem;background:#FFF7ED;border-radius:var(--rs);font-size:13px;color:#9A3412;border:1px solid #FED7AA;margin-bottom:1rem}
 .warn-box{padding:.75rem 1rem;background:var(--amb0);border-radius:var(--rs);font-size:13px;color:#78350F;border:1px solid var(--amb1);margin-bottom:1rem}
 
-@media(max-width:900px){.hamburger{display:flex}.sidebar{position:fixed;top:56px;left:-240px;height:calc(100vh - 56px);z-index:95}.sidebar.open{left:0;box-shadow:var(--shm)}.stats{grid-template-columns:1fr 1fr}.fgrid{grid-template-columns:1fr}.full{grid-column:1}}
-@media(max-width:600px){.content{padding:1rem}.stats{grid-template-columns:1fr 1fr}.nav-user span:not(.nav-badge){display:none}}
+@media(max-width:900px){
+  .hamburger{display:flex}
+  .sidebar{position:fixed;top:56px;left:-240px;height:calc(100vh - 56px);z-index:95}
+  .sidebar.open{left:0;box-shadow:var(--shm)}
+  .stats{grid-template-columns:1fr 1fr}
+  .fgrid{grid-template-columns:1fr}
+  .full{grid-column:1}
+}
+@media(max-width:768px){
+  /* Nav — esconde itens secundários */
+  .wa-nav-btn span#wa-nav-label{display:none}
+  .wa-nav-btn{padding:.3rem .5rem;min-width:32px;justify-content:center}
+  .logout-btn{padding:.3rem .5rem;font-size:11px}
+  .nav-user #nav-name{display:none}
+  .dark-btn,.search-nav-btn{width:28px;height:28px}
+  /* Dashboard — cards em coluna única */
+  .stats{grid-template-columns:1fr 1fr}
+  /* Perfil — coluna única */
+  #main-content .sec-hdr + div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+}
+@media(max-width:600px){
+  .dash-grid{grid-template-columns:1fr!important}
+  
+  .content{padding:.75rem}
+  .stats{grid-template-columns:1fr 1fr}
+  .nav-user span:not(.nav-badge){display:none}
+  /* Tabelas — scroll horizontal suave */
+  .tbl-wrap{border-radius:var(--rs);-webkit-overflow-scrolling:touch}
+  table{font-size:12px}
+  thead th{padding:.5rem .6rem;font-size:9px}
+  tbody td{padding:.6rem .6rem}
+  /* Botões menores */
+  .btn-sm{padding:.35rem .7rem;font-size:12px}
+  .btn-xs{padding:.2rem .5rem;font-size:11px}
+  /* Filter pills */
+  .filter-pills{gap:.3rem}
+  .pill{padding:.25rem .7rem;font-size:11px}
+  /* Sec header */
+  .sec-hdr{gap:.4rem}
+  .sec-title{font-size:1.1rem}
+  /* Modal */
+  .modal{max-width:100%!important;margin:.5rem}
+  .mbody{padding:1rem}
+  .mfooter{padding:.75rem 1rem;flex-wrap:wrap}
+  /* WA modal */
+  .wa-modal-inner{padding:1.25rem;margin:.5rem}
+}
 /* ── DARK MODE ─────────────────────────────────────────────── */
 body.dark{--bg:#0F172A;--card:#1E293B;--border:#334155;--border2:#475569;--n1:#F1F5F9;--n2:#CBD5E1;--n3:#94A3B8;--n4:#64748B;--grn0:#1C0E04;--grn1:#431407;--red0:#1F0808;--red1:#7F1D1D;--amb0:#1A1003;--amb1:#78350F;--blu0:#0F1E3D}
 body.dark .nav{background:#020617;border-color:#1E293B}
@@ -227,6 +272,16 @@ body.dark .info-box{background:#1C0E04;border-color:#431407}
 
 /* ── PRINT ──────────────────────────────────────────────────── */
 
+
+/* ── MOBILE TABLE COLUMNS ───────────────────────────────────── */
+@media(max-width:640px){
+  .hide-mobile{display:none!important}
+  /* Juros e Total também ficam menores */
+  #th-sort-juros,#th-sort-total{display:none!important}
+  .hide-mobile-juros{display:none!important}
+}
+
+@media(max-width:640px){.perfil-grid{grid-template-columns:1fr!important}}
 /* ── SORT HEADERS ───────────────────────────────────────────── */
 th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
 th.sortable:hover{background:#F3F4F6;color:var(--n1)}
@@ -820,7 +875,7 @@ function renderDashboard(){
       if(venc7.length)out+=`<div class="info-box">📅 <strong>${venc7.length} parcela${venc7.length!==1?'s':''}</strong> vence${venc7.length===1?'':'m'} em até 7 dias.</div>`;
       return out;
     })()}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+    <div class="dash-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
       <div class="card">
         <div class="card-title">Últimos Empréstimos</div>
         ${emps.slice(0,6).map(e=>{
@@ -1118,7 +1173,7 @@ function renderEmprestimos(){
   mc.innerHTML=`
     <div class="sec-hdr">
       <span class="sec-title">Empréstimos</span>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
         <button class="btn btn-g btn-sm" onclick="exportExcel()">Exportar</button>
         <label class="btn btn-g btn-sm" style="cursor:pointer">
           Importar Excel
@@ -1149,9 +1204,9 @@ function renderEmprestimos(){
           <th id="th-check" style="display:none;width:36px"><input type="checkbox" id="chk-all" onclick="toggleAllChk(this)"/></th>
           <th style="width:36px">Nº</th>
           <th class="sortable" id="th-sort-nome" onclick="sortEmp('nome')">Tomador<span class="sort-icon"></span></th>
-          <th class="sortable" id="th-sort-responsavel" onclick="sortEmp('responsavel')">Responsável<span class="sort-icon"></span></th>
-          <th>Garantia</th>
-          <th class="sortable" id="th-sort-local" onclick="sortEmp('local')">Local<span class="sort-icon"></span></th>
+          <th class="hide-mobile sortable" id="th-sort-responsavel" onclick="sortEmp('responsavel')">Responsável<span class="sort-icon"></span></th>
+          <th class="hide-mobile">Garantia</th>
+          <th class="hide-mobile sortable" id="th-sort-local" onclick="sortEmp('local')">Local<span class="sort-icon"></span></th>
           <th class="sortable" id="th-sort-valor" onclick="sortEmp('valor')">Valor<span class="sort-icon"></span></th>
           <th class="sortable" id="th-sort-juros" onclick="sortEmp('juros')">Juros<span class="sort-icon"></span></th>
           <th class="sortable" id="th-sort-total" onclick="sortEmp('total')">Total<span class="sort-icon"></span></th>
@@ -1260,12 +1315,12 @@ function empTbodyHTML(list){
       <td class="chk-cell" style="display:none;text-align:center"><input type="checkbox" class="emp-chk" value="${e.id}" onchange="onChkChange()"/></td>
       <td style="color:var(--n4);font-size:12px">${i+1}</td>
       <td style="font-weight:600">${tom?.nome||'—'}</td>
-      <td style="color:var(--n3)">${e.responsavel||'—'}</td>
-      <td style="color:var(--n3)">${e.garantia||'—'}</td>
-      <td style="color:var(--n3)">${e.local||'—'}</td>
+      <td class="hide-mobile" style="color:var(--n3)">${e.responsavel||'—'}</td>
+      <td class="hide-mobile" style="color:var(--n3)">${e.garantia||'—'}</td>
+      <td class="hide-mobile" style="color:var(--n3)">${e.local||'—'}</td>
       <td style="font-weight:600;color:var(--blu)">${fmtR(e.valor)}</td>
-      <td style="color:var(--n3)">${(e.juros*100).toFixed(0)}%</td>
-      <td style="font-weight:600;color:var(--grn)">${fmtR(e.valor_total)}</td>
+      <td class="hide-mobile-juros" style="color:var(--n3)">${(e.juros*100).toFixed(0)}%</td>
+      <td class="hide-mobile-juros" style="font-weight:600;color:var(--grn)">${fmtR(e.valor_total)}</td>
       <td style="color:var(--n4);font-size:12px">${fmtDate(e.data_emprestimo)}</td>
       <td>
         ${parcsEmp.length===0
@@ -1848,7 +1903,7 @@ function renderTomadores(){
           <th style="width:36px">Nº</th>
           <th class="sortable" id="th-tom-nome" onclick="sortTom('nome')">Nome<span class="sort-icon"></span></th>
           <th class="sortable" id="th-tom-contato" onclick="sortTom('contato')">Contato<span class="sort-icon"></span></th>
-          <th class="sortable" id="th-tom-ocupacao" onclick="sortTom('ocupacao')">Ocupação<span class="sort-icon"></span></th>
+          <th class="hide-mobile sortable" id="th-tom-ocupacao" onclick="sortTom('ocupacao')">Ocupação<span class="sort-icon"></span></th>
           <th class="sortable" id="th-tom-emps" onclick="sortTom('emps')">Empréstimos<span class="sort-icon"></span></th>
           <th class="sortable" id="th-tom-devido" onclick="sortTom('devido')">Total Devido<span class="sort-icon"></span></th>
           <th></th>
@@ -1875,7 +1930,7 @@ function tomTbodyHTML(list){
       <td style="color:var(--n4);font-size:12px">${i+1}</td>
       <td style="font-weight:600">${t.nome}</td>
       <td style="color:var(--n3)">${t.contato?`<a href="https://wa.me/55${t.contato.replace(/\D/g,'')}" target="_blank" style="color:var(--grn);text-decoration:none">${t.contato}</a>`:'—'}</td>
-      <td style="color:var(--n3)">${t.ocupacao||'—'}</td>
+      <td class="hide-mobile" style="color:var(--n3)">${t.ocupacao||'—'}</td>
       <td style="font-weight:600;color:var(--blu)">${emps.length}</td>
       <td style="font-weight:700;color:${devido>0?'var(--amb)':'var(--grn)'}">${fmtR(devido)}</td>
       <td><div style="display:flex;gap:.3rem">
@@ -2100,7 +2155,7 @@ function renderPerfil(){
   const avStyle=session.avatar_url?'background:transparent':'background:#FFF7ED';
   mc.innerHTML=`
     <div class="sec-hdr"><span class="sec-title">Meu Perfil</span></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:800px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;max-width:800px" class="perfil-grid">
       <div class="card">
         <div class="card-title">Foto de Perfil</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:1.25rem">
@@ -2686,6 +2741,16 @@ function printFicha(tomId){
   const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ficha — ${tom.nome}</title>
   <style>body{font-family:Arial,sans-serif;padding:2rem;color:#111;max-width:800px;margin:0 auto}h1{font-size:1.5rem;margin-bottom:.25rem}h2{font-size:1rem;color:#666;font-weight:400;margin:0 0 1.5rem}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;padding:6px 8px;text-align:left;border-bottom:2px solid #ddd}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.stat{border:1px solid #ddd;border-radius:8px;padding:.75rem;text-align:center}.stat-label{font-size:10px;text-transform:uppercase;color:#666;margin-bottom:4px}.stat-val{font-size:1.2rem;font-weight:700}.footer{margin-top:2rem;font-size:11px;color:#999;text-align:right}
+
+/* ── MOBILE TABLE COLUMNS ───────────────────────────────────── */
+@media(max-width:640px){
+  .hide-mobile{display:none!important}
+  /* Juros e Total também ficam menores */
+  #th-sort-juros,#th-sort-total{display:none!important}
+  .hide-mobile-juros{display:none!important}
+}
+
+@media(max-width:640px){.perfil-grid{grid-template-columns:1fr!important}}
 /* ── SORT HEADERS ───────────────────────────────────────────── */
 th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
 th.sortable:hover{background:#F3F4F6;color:var(--n1)}
