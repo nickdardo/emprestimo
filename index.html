@@ -861,7 +861,7 @@ function renderDashboard(){
       <div class="stat"><div class="stat-label">Total Emprestado</div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${emps.length} empréstimo${emps.length!==1?'s':''}</div></div>
       <div class="stat"><div class="stat-label">Lucro Esperado</div><div class="stat-value" style="color:var(--grn)">${fmtR(totalLucro)}</div><div class="stat-sub">em juros</div></div>
       <div class="stat"><div class="stat-label">Recebido</div><div class="stat-value" style="color:var(--grn)">${fmtR(pRecebido)}</div><div class="stat-sub">em parcelas pagas</div></div>
-      <div class="stat"><div class="stat-label">Pendente</div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${parcs.filter(p=>p.status==='pendente').length} parcelas</div></div>
+      <div class="stat"><div class="stat-label">Próximas Parcelas</div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${parcs.filter(p=>p.status==='pendente').length} parcelas</div></div>
     </div>
     ${(()=>{
       const em3=new Date();em3.setDate(em3.getDate()+3);
@@ -1182,7 +1182,6 @@ function renderEmprestimos(){
     <div class="sec-hdr">
       <span class="sec-title">Empréstimos</span>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
-        <button class="btn btn-g btn-sm" onclick="exportExcel()">Exportar</button>
         <label class="btn btn-g btn-sm" style="cursor:pointer">
           Importar Excel
           <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
@@ -2811,7 +2810,7 @@ function renderRelatorio(){
           <div style="font-family:var(--FT);font-size:1.1rem;color:var(--grn)">${fmtR(totalRec)}</div>
         </div>
         <div style="text-align:center;background:#F9FAFB;border-radius:var(--rs);padding:.75rem">
-          <div style="font-size:9px;color:var(--n4);font-weight:700;text-transform:uppercase;margin-bottom:3px">Pendente</div>
+          <div style="font-size:9px;color:var(--n4);font-weight:700;text-transform:uppercase;margin-bottom:3px">Próx. Parcelas</div>
           <div style="font-family:var(--FT);font-size:1.1rem;color:var(--amb)">${fmtR(totalPend)}</div>
         </div>
         <div style="text-align:center;background:${atras?'var(--red0)':'#F9FAFB'};border-radius:var(--rs);padding:.75rem">
