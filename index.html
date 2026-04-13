@@ -196,7 +196,25 @@ body.dark .info-box{background:#1C0E04;border-color:#431407}
 .gsearch-empty{padding:2rem;text-align:center;color:var(--n4);font-size:14px}
 .gsearch-tag{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;flex-shrink:0}
 
+
+/* ── WHATSAPP GESTOR ────────────────────────────────────────── */
+.wa-nav-btn{display:flex;align-items:center;gap:6px;padding:.3rem .75rem;border-radius:var(--rs);background:#16A34A;color:#fff;border:none;font-family:var(--FB);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;white-space:nowrap}
+.wa-nav-btn:hover{background:#15803D}
+.wa-nav-btn.unset{background:transparent;border:1px solid #374151;color:#9CA3AF}
+.wa-nav-btn.unset:hover{background:#1F2937;color:#fff}
+.wa-modal-inner{background:#fff;border-radius:var(--r);padding:1.75rem;max-width:400px;width:100%;box-shadow:var(--shm)}
+
 /* ── PRINT ──────────────────────────────────────────────────── */
+
+/* ── SORT HEADERS ───────────────────────────────────────────── */
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{background:#F3F4F6;color:var(--n1)}
+th.sortable .sort-icon{display:inline-block;margin-left:4px;opacity:.35;font-size:10px;transition:opacity .15s}
+th.sortable.asc .sort-icon::after{content:'↑';opacity:1}
+th.sortable.desc .sort-icon::after{content:'↓';opacity:1}
+th.sortable:not(.asc):not(.desc) .sort-icon::after{content:'↕'}
+th.sortable.asc,th.sortable.desc{color:var(--grn)}
+
 @media print{
   .nav,.sidebar,.sb-overlay,.filter-pills,.btn,button,.mbd,.toast{display:none!important}
   .app-body{display:block!important}
@@ -266,6 +284,7 @@ body.dark .info-box{background:#1C0E04;border-color:#431407}
         <span id="nav-name"></span>
         <span class="nav-badge" id="nav-role"></span>
       </div>
+      <button class="wa-nav-btn unset" id="wa-nav-btn" onclick="openWaModal()" title="Configurar WhatsApp para avisos">📱 <span id="wa-nav-label">Seu WhatsApp</span></button>
       <button class="search-nav-btn" onclick="openGlobalSearch()" title="Busca global"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button class="dark-btn" id="dark-toggle" onclick="toggleDarkMode()" title="Alternar tema"></button>
       <button class="logout-btn" onclick="doLogout()">Sair</button>
@@ -285,6 +304,24 @@ body.dark .info-box{background:#1C0E04;border-color:#431407}
   <div class="app-body">
     <aside class="sidebar" id="sidebarEl"></aside>
     <main class="content" id="main-content"></main>
+  </div>
+</div>
+
+<!-- MODAL WHATSAPP GESTOR -->
+<div class="mbd" id="wa-modal" style="display:none" onclick="if(event.target===this)closeM('wa-modal')">
+  <div class="wa-modal-inner">
+    <div style="font-family:var(--FT);font-size:1.2rem;margin-bottom:.25rem">Seu WhatsApp</div>
+    <div style="font-size:13px;color:var(--n3);margin-bottom:1.25rem">Adicione seu número para receber avisos de parcelas próximas do vencimento.</div>
+    <div class="fg" style="margin-bottom:1rem">
+      <span class="lbl">Número com DDD</span>
+      <input id="wa-num-input" placeholder="(91) 99999-0000" maxlength="15" oninput="maskTel(this)" inputmode="numeric"/>
+      <div style="font-size:11px;color:var(--n4);margin-top:4px">Será aberto o WhatsApp com o resumo das cobranças.</div>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+      <button class="btn btn-g btn-sm" onclick="closeM('wa-modal')">Cancelar</button>
+      <button class="btn btn-sm" style="background:#DC2626;color:#fff" onclick="clearWaNumber()">Remover</button>
+      <button class="btn btn-sm" style="background:#16A34A;color:#fff" onclick="saveWaNumber()">Salvar</button>
+    </div>
   </div>
 </div>
 
@@ -587,7 +624,7 @@ async function bootApp(){
     document.getElementById('nav-role').textContent=session.role==='admin'?'Admin':'3°JOB';
   }catch(e){}
   try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
-  buildSidebar();showPage('dashboard');setTimeout(renderDashChart,200);
+  buildSidebar();showPage('dashboard');
 }
 
 function doLogout(){
@@ -639,7 +676,10 @@ function renderDashboard(){
 
   mc.innerHTML=`
     <div class="sec-hdr"><span class="sec-title">Dashboard</span>
-      <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-sm" style="background:#16A34A;color:#fff;border:none" onclick="enviarAvisosWa()">📱 Enviar Avisos WhatsApp</button>
+        <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
+      </div>
     </div>
     <div class="stats">
       <div class="stat"><div class="stat-label">Total Emprestado</div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${emprestimos.length} empréstimo${emprestimos.length!==1?'s':''}</div></div>
@@ -659,7 +699,6 @@ function renderDashboard(){
       if(venc7.length)out+=`<div class="info-box">📅 <strong>${venc7.length} parcela${venc7.length!==1?'s':''}</strong> vence${venc7.length===1?'':'m'} em até 7 dias.</div>`;
       return out;
     })()}
-    <div id="dash-chart-wrap" style="margin-bottom:1rem"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
       <div class="card">
         <div class="card-title">Últimos Empréstimos</div>
@@ -702,27 +741,6 @@ function renderDashboard(){
 }
 
 // ══ EMPRÉSTIMOS ══
-
-// ══ GRÁFICO DASHBOARD ══
-function renderDashChart(){
-  const wrap=document.getElementById('dash-chart-wrap');
-  if(!wrap)return;
-  const meses=[];
-  for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);meses.push({label:d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}),m:d.getMonth(),y:d.getFullYear()});}
-  const empData=meses.map(m=>emprestimos.filter(e=>{const d=new Date(e.data_emprestimo+'T12:00:00');return d.getMonth()===m.m&&d.getFullYear()===m.y;}).reduce((s,e)=>s+Number(e.valor||0),0));
-  const recData=meses.map(m=>parcelas.filter(p=>p.status==='pago'&&p.pago_em).filter(p=>{const d=new Date(p.pago_em+'T12:00:00');return d.getMonth()===m.m&&d.getFullYear()===m.y;}).reduce((s,p)=>s+Number(p.valor_pago||p.valor||0),0));
-  const maxV=Math.max(...empData,...recData,1);
-  const barW=60;const gap=18;const h=140;const padL=10;const totalW=meses.length*(barW+gap)+padL;
-  const toY=v=>h-Math.round((v/maxV)*h);
-  const bars=meses.map((m,i)=>{
-    const x=padL+i*(barW+gap);
-    const eH=Math.round((empData[i]/maxV)*h)||2;
-    const rH=Math.round((recData[i]/maxV)*h)||2;
-    return`<rect x="${x}" y="${h-eH}" width="${barW/2-2}" height="${eH}" fill="#2563EB" rx="3" opacity=".85"/><rect x="${x+barW/2}" y="${h-rH}" width="${barW/2-2}" height="${rH}" fill="#16A34A" rx="3" opacity=".85"/><text x="${x+barW/2}" y="${h+14}" text-anchor="middle" font-size="10" fill="#9CA3AF">${m.label}</text>`;
-  }).join('');
-  wrap.innerHTML=`<div class="card" style="padding:1rem 1.25rem"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem"><span style="font-family:var(--FT);font-size:1.05rem">Últimos 6 meses</span><div style="display:flex;gap:1rem;font-size:11px"><span><span style="display:inline-block;width:10px;height:10px;background:#2563EB;border-radius:2px;margin-right:4px"></span>Emprestado</span><span><span style="display:inline-block;width:10px;height:10px;background:#16A34A;border-radius:2px;margin-right:4px"></span>Recebido</span></div></div><div style="overflow-x:auto"><svg width="${totalW}" height="${h+22}" xmlns="http://www.w3.org/2000/svg">${bars}</svg></div></div>`;
-}
-setTimeout(()=>{if(document.getElementById('dash-chart-wrap'))renderDashChart();},100);
 
 // ══ IMPORT / EXPORT ══
 
@@ -1008,12 +1026,83 @@ function renderEmprestimos(){
       <table>
         <thead><tr>
           <th id="th-check" style="display:none;width:36px"><input type="checkbox" id="chk-all" onclick="toggleAllChk(this)"/></th>
-          <th>Nº</th><th>Tomador</th><th>Responsável</th><th>Garantia</th><th>Local</th>
-          <th>Valor</th><th>Juros</th><th>Total</th><th>Data</th><th>Parcelas</th><th></th>
+          <th style="width:36px">Nº</th>
+          <th class="sortable" id="th-sort-nome" onclick="sortEmp('nome')">Tomador<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-responsavel" onclick="sortEmp('responsavel')">Responsável<span class="sort-icon"></span></th>
+          <th>Garantia</th>
+          <th class="sortable" id="th-sort-local" onclick="sortEmp('local')">Local<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-valor" onclick="sortEmp('valor')">Valor<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-juros" onclick="sortEmp('juros')">Juros<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-total" onclick="sortEmp('total')">Total<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-data" onclick="sortEmp('data')">Data<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-parcelas" onclick="sortEmp('parcelas')">Parcelas<span class="sort-icon"></span></th>
+          <th></th>
         </tr></thead>
         <tbody id="emp-tbody">${empTbodyHTML(emprestimos)}</tbody>
       </table>
     </div>`;
+}
+
+
+let _empSort={col:null,dir:'asc'};
+function sortEmp(col){
+  if(_empSort.col===col){_empSort.dir=_empSort.dir==='asc'?'desc':'asc';}
+  else{_empSort.col=col;_empSort.dir='asc';}
+  document.querySelectorAll('th.sortable').forEach(th=>{th.classList.remove('asc','desc');});
+  const th=document.getElementById('th-sort-'+col);
+  if(th)th.classList.add(_empSort.dir);
+  filterEmp();
+}
+function applySortEmp(list){
+  const{col,dir}=_empSort;
+  if(!col)return list;
+  return [...list].sort((a,b)=>{
+    let va,vb;
+    if(col==='nome'){const ta=tomadores.find(t=>t.id===a.tomador_id);const tb2=tomadores.find(t=>t.id===b.tomador_id);va=(ta?.nome||'').toLowerCase();vb=(tb2?.nome||'').toLowerCase();}
+    else if(col==='valor'){va=Number(a.valor);vb=Number(b.valor);}
+    else if(col==='juros'){va=Number(a.juros);vb=Number(b.juros);}
+    else if(col==='total'){va=Number(a.valor_total||a.valor);vb=Number(b.valor_total||b.valor);}
+    else if(col==='data'){va=a.data_emprestimo||'';vb=b.data_emprestimo||'';}
+    else if(col==='responsavel'){va=(a.responsavel||'').toLowerCase();vb=(b.responsavel||'').toLowerCase();}
+    else if(col==='local'){va=(a.local||'').toLowerCase();vb=(b.local||'').toLowerCase();}
+    else if(col==='parcelas'){
+      const pa=parcelas.filter(p=>p.emprestimo_id===a.id);
+      const pb2=parcelas.filter(p=>p.emprestimo_id===b.id);
+      va=pa.filter(p=>isAtrasada(p)).length*1000+pa.filter(p=>p.status==='pendente').length;
+      vb=pb2.filter(p=>isAtrasada(p)).length*1000+pb2.filter(p=>p.status==='pendente').length;
+    }
+    if(va<vb)return dir==='asc'?-1:1;
+    if(va>vb)return dir==='asc'?1:-1;
+    return 0;
+  });
+}
+
+
+let _tomSort={col:null,dir:'asc'};
+function sortTom(col){
+  if(_tomSort.col===col){_tomSort.dir=_tomSort.dir==='asc'?'desc':'asc';}
+  else{_tomSort.col=col;_tomSort.dir='asc';}
+  document.querySelectorAll('#tom-thead th.sortable').forEach(th=>{th.classList.remove('asc','desc');});
+  const th=document.getElementById('th-tom-'+col);if(th)th.classList.add(_tomSort.dir);
+  filterTom();
+}
+function applySortTom(list){
+  const{col,dir}=_tomSort;
+  if(!col)return list;
+  return [...list].sort((a,b)=>{
+    let va,vb;
+    if(col==='nome'){va=a.nome.toLowerCase();vb=b.nome.toLowerCase();}
+    else if(col==='contato'){va=(a.contato||'').toLowerCase();vb=(b.contato||'').toLowerCase();}
+    else if(col==='ocupacao'){va=(a.ocupacao||'').toLowerCase();vb=(b.ocupacao||'').toLowerCase();}
+    else if(col==='emps'){va=emprestimos.filter(e=>e.tomador_id===a.id).length;vb=emprestimos.filter(e=>e.tomador_id===b.id).length;}
+    else if(col==='devido'){
+      const getDevido=t=>{const emps=emprestimos.filter(e=>e.tomador_id===t.id);return parcelas.filter(p=>emps.some(e=>e.id===p.emprestimo_id)&&p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);};
+      va=getDevido(a);vb=getDevido(b);
+    }
+    if(va<vb)return dir==='asc'?-1:1;
+    if(va>vb)return dir==='asc'?1:-1;
+    return 0;
+  });
 }
 
 let _empFilter='todos';
@@ -1034,7 +1123,8 @@ function filterEmp(){
   else if(_empFilter==='quitado'){f=f.filter(e=>{const ep=parcelas.filter(p=>p.emprestimo_id===e.id);return ep.length>0&&ep.every(p=>p.status==='pago');});}
   else if(_empFilter==='ativo'){f=f.filter(e=>{const ep=parcelas.filter(p=>p.emprestimo_id===e.id);return ep.length===0||ep.some(p=>p.status==='pendente');});}
   else if(_empFilter==='semparc'){f=f.filter(e=>parcelas.filter(p=>p.emprestimo_id===e.id).length===0);}
-  const tb=document.getElementById('emp-tbody');if(tb)tb.innerHTML=empTbodyHTML(f);
+  const sorted=applySortEmp(f);
+  const tb=document.getElementById('emp-tbody');if(tb)tb.innerHTML=empTbodyHTML(sorted);
 }
 
 function empTbodyHTML(list){
@@ -1581,7 +1671,15 @@ function renderTomadores(){
     <div style="margin-bottom:1rem"><input type="text" id="tom-s" placeholder="🔍  Buscar tomador..." oninput="filterTom()" style="max-width:360px"/></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Nº</th><th>Nome</th><th>Contato</th><th>Ocupação</th><th>Empréstimos</th><th>Total Devido</th><th></th></tr></thead>
+        <thead id="tom-thead"><tr>
+          <th style="width:36px">Nº</th>
+          <th class="sortable" id="th-tom-nome" onclick="sortTom('nome')">Nome<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-tom-contato" onclick="sortTom('contato')">Contato<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-tom-ocupacao" onclick="sortTom('ocupacao')">Ocupação<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-tom-emps" onclick="sortTom('emps')">Empréstimos<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-tom-devido" onclick="sortTom('devido')">Total Devido<span class="sort-icon"></span></th>
+          <th></th>
+        </tr></thead>
         <tbody id="tom-tbody">${tomTbodyHTML(tomadores)}</tbody>
       </table>
     </div>`;
@@ -1589,8 +1687,9 @@ function renderTomadores(){
 
 function filterTom(){
   const q=(document.getElementById('tom-s')?.value||'').toLowerCase();
-  const f=tomadores.filter(t=>t.nome.toLowerCase().includes(q)||(t.contato||'').includes(q)||(t.local||'').toLowerCase().includes(q));
-  const tb=document.getElementById('tom-tbody');if(tb)tb.innerHTML=tomTbodyHTML(f);
+  const f=tomadores.filter(t=>t.nome.toLowerCase().includes(q)||(t.contato||'').includes(q)||(t.ocupacao||'').toLowerCase().includes(q));
+  const sorted=applySortTom(f);
+  const tb=document.getElementById('tom-tbody');if(tb)tb.innerHTML=tomTbodyHTML(sorted);
 }
 
 function tomTbodyHTML(list){
@@ -1993,6 +2092,93 @@ async function deleteUsr(id){
 }
 
 
+
+// ══ WHATSAPP GESTOR ══
+function loadWaNumber(){
+  try{
+    const num=localStorage.getItem('ep_wa_num');
+    const btn=document.getElementById('wa-nav-btn');
+    const lbl=document.getElementById('wa-nav-label');
+    if(num&&btn&&lbl){
+      btn.classList.remove('unset');
+      lbl.textContent=num;
+    }
+  }catch(e){}
+}
+
+function openWaModal(){
+  try{
+    const saved=localStorage.getItem('ep_wa_num')||'';
+    document.getElementById('wa-num-input').value=saved;
+  }catch(e){}
+  openM('wa-modal');
+}
+
+function saveWaNumber(){
+  const num=document.getElementById('wa-num-input').value.trim();
+  if(!num){toast('⚠ Informe o número',true);return;}
+  try{localStorage.setItem('ep_wa_num',num);}catch(e){}
+  const btn=document.getElementById('wa-nav-btn');
+  const lbl=document.getElementById('wa-nav-label');
+  if(btn)btn.classList.remove('unset');
+  if(lbl)lbl.textContent=num;
+  closeM('wa-modal');
+  toast('✓ WhatsApp salvo!');
+}
+
+function clearWaNumber(){
+  try{localStorage.removeItem('ep_wa_num');}catch(e){}
+  const btn=document.getElementById('wa-nav-btn');
+  const lbl=document.getElementById('wa-nav-label');
+  if(btn)btn.classList.add('unset');
+  if(lbl)lbl.textContent='Seu WhatsApp';
+  document.getElementById('wa-num-input').value='';
+  closeM('wa-modal');
+  toast('WhatsApp removido');
+}
+
+function enviarAvisosWa(){
+  const num=localStorage.getItem('ep_wa_num');
+  if(!num){toast('⚠ Configure seu número primeiro',true);openWaModal();return;}
+
+  const hoje=new Date();
+  const em3=new Date();em3.setDate(hoje.getDate()+3);
+  const em7=new Date();em7.setDate(hoje.getDate()+7);
+
+  const linhas3=[];const linhas7=[];
+
+  parcelas.filter(p=>p.status==='pendente').forEach(p=>{
+    const venc=new Date(p.vencimento+'T12:00:00');
+    const emp=emprestimos.find(e=>e.id===p.emprestimo_id);
+    const tom=tomadores.find(t=>t.id===emp?.tomador_id);
+    if(!emp||!tom)return;
+    const linha=`• ${tom.nome} — ${fmtR(p.valor)} (vence ${fmtDate(p.vencimento)})`;
+    if(venc>=hoje&&venc<=em3)linhas3.push(linha);
+    else if(venc>em3&&venc<=em7)linhas7.push(linha);
+  });
+
+  if(!linhas3.length&&!linhas7.length){toast('✓ Nenhuma parcela vencendo nos próximos 7 dias!');return;}
+
+  let msg='📊 *AGPainel — Avisos de Cobranças*
+';
+  msg+=`🗓 ${new Date().toLocaleDateString('pt-BR')}
+
+`;
+  if(linhas3.length){msg+=`🔴 *Vencem em até 3 dias (${linhas3.length}):*
+${linhas3.join('
+')}
+
+`;}
+  if(linhas7.length){msg+=`⏰ *Vencem em 4–7 dias (${linhas7.length}):*
+${linhas7.join('
+')}
+`;}
+
+  const tel=num.replace(/\D/g,'');
+  const url=`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+}
+
 // ══ RELATÓRIO ══
 function renderRelatorio(){
   const mc=document.getElementById('main-content');
@@ -2117,7 +2303,17 @@ function printFicha(tomId){
 
   const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ficha — ${tom.nome}</title>
-  <style>body{font-family:Arial,sans-serif;padding:2rem;color:#111;max-width:800px;margin:0 auto}h1{font-size:1.5rem;margin-bottom:.25rem}h2{font-size:1rem;color:#666;font-weight:400;margin:0 0 1.5rem}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;padding:6px 8px;text-align:left;border-bottom:2px solid #ddd}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.stat{border:1px solid #ddd;border-radius:8px;padding:.75rem;text-align:center}.stat-label{font-size:10px;text-transform:uppercase;color:#666;margin-bottom:4px}.stat-val{font-size:1.2rem;font-weight:700}.footer{margin-top:2rem;font-size:11px;color:#999;text-align:right}@media print{button{display:none}}</style>
+  <style>body{font-family:Arial,sans-serif;padding:2rem;color:#111;max-width:800px;margin:0 auto}h1{font-size:1.5rem;margin-bottom:.25rem}h2{font-size:1rem;color:#666;font-weight:400;margin:0 0 1.5rem}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;padding:6px 8px;text-align:left;border-bottom:2px solid #ddd}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.stat{border:1px solid #ddd;border-radius:8px;padding:.75rem;text-align:center}.stat-label{font-size:10px;text-transform:uppercase;color:#666;margin-bottom:4px}.stat-val{font-size:1.2rem;font-weight:700}.footer{margin-top:2rem;font-size:11px;color:#999;text-align:right}
+/* ── SORT HEADERS ───────────────────────────────────────────── */
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{background:#F3F4F6;color:var(--n1)}
+th.sortable .sort-icon{display:inline-block;margin-left:4px;opacity:.35;font-size:10px;transition:opacity .15s}
+th.sortable.asc .sort-icon::after{content:'↑';opacity:1}
+th.sortable.desc .sort-icon::after{content:'↓';opacity:1}
+th.sortable:not(.asc):not(.desc) .sort-icon::after{content:'↕'}
+th.sortable.asc,th.sortable.desc{color:var(--grn)}
+
+@media print{button{display:none}}</style>
   </head><body>
   <h1>${tom.nome}</h1>
   <h2>${tom.contato||''} ${tom.ocupacao?'· '+tom.ocupacao:''} · Impresso em ${new Date().toLocaleDateString('pt-BR')}</h2>
@@ -2139,6 +2335,7 @@ function printFicha(tomId){
 window.addEventListener('DOMContentLoaded',async()=>{
   loadDarkMode();
   loadSavedCreds();
+  loadWaNumber();
   session=readSession();
   if(session){
     document.getElementById('login-page').style.display='none';
