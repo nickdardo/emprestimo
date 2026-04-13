@@ -1781,17 +1781,40 @@ async function saveTom(){
   const nome=document.getElementById('tom-nome').value.trim();
   if(!nome){toast('⚠ Informe o nome',true);return;}
   const ocupEl=document.getElementById('tom-ocup');
-  const payload={nome,contato:document.getElementById('tom-cont').value.trim()||null,ocupacao:ocupEl?.value.trim()||null,owner_id:session.id};
+  const ocupacao=ocupEl?.value.trim()||null;
+  const contato=document.getElementById('tom-cont').value.trim()||null;
+
+  // Tenta salvar com ocupacao; se falhar (coluna não existe), salva sem ela
+  async function tryInsert(payload){
+    if(editTom){
+      const{data,error}=await sb.from('tomadores').update(payload).eq('id',editTom.id).select().single();
+      return{data,error};
+    } else {
+      const{data,error}=await sb.from('tomadores').insert(payload).select().single();
+      return{data,error};
+    }
+  }
+
+  let payload={nome,contato,ocupacao,owner_id:session.id};
+  let{data,error}=await tryInsert(payload);
+
+  // Se deu erro de coluna inexistente, tenta sem ocupacao
+  if(error&&(error.message?.includes('ocupacao')||error.code==='42703')){
+    payload={nome,contato,owner_id:session.id};
+    const res=await tryInsert(payload);
+    data=res.data;error=res.error;
+    if(!error&&data)data.ocupacao=ocupacao; // mantém na memória local
+  }
+
+  if(error){toast('Erro ao salvar: '+error.message,true);return;}
+
   if(editTom){
-    const{data,error}=await sb.from('tomadores').update(payload).eq('id',editTom.id).select().single();
-    if(error){toast('Erro ao salvar',true);return;}
-    tomadores=tomadores.map(t=>t.id===editTom.id?data:t);
+    tomadores=tomadores.map(t=>t.id===editTom.id?{...data,ocupacao}:t);
     toast('✓ Tomador atualizado');
   } else {
-    const{data,error}=await sb.from('tomadores').insert(payload).select().single();
-    if(error){toast('Erro ao salvar',true);return;}
-    tomadores.push(data);tomadores.sort((a,b)=>a.nome.localeCompare(b.nome));
-    // Atualizar select do modal de empréstimo se estiver aberto
+    const tomComOcup={...data,ocupacao};
+    tomadores.push(tomComOcup);
+    tomadores.sort((a,b)=>a.nome.localeCompare(b.nome));
     const sel=document.getElementById('emp-tom');
     if(sel){sel.innerHTML='<option value="">Selecione o tomador</option>'+tomadores.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('');sel.value=data.id;}
     toast('✓ Tomador cadastrado');
