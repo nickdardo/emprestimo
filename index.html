@@ -317,9 +317,11 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
       <input id="wa-num-input" placeholder="(91) 99999-0000" maxlength="15" oninput="maskTel(this)" inputmode="numeric"/>
       <div style="font-size:11px;color:var(--n4);margin-top:4px">Será aberto o WhatsApp com o resumo das cobranças.</div>
     </div>
-    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+    <div id="wa-preview-box" style="display:none;margin-bottom:1rem;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:var(--rs);padding:.85rem;font-size:12px;color:#166534;white-space:pre-wrap;line-height:1.6;max-height:220px;overflow-y:auto;font-family:monospace"></div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap">
       <button class="btn btn-g btn-sm" onclick="closeM('wa-modal')">Cancelar</button>
       <button class="btn btn-sm" style="background:#DC2626;color:#fff" onclick="clearWaNumber()">Remover</button>
+      <button class="btn btn-sm" style="background:#2563EB;color:#fff" onclick="testarMensagemWa()">👁 Prévia</button>
       <button class="btn btn-sm" style="background:#16A34A;color:#fff" onclick="saveWaNumber()">Salvar</button>
     </div>
   </div>
@@ -2186,6 +2188,8 @@ function openWaModal(){
     const saved=localStorage.getItem('ep_wa_num')||'';
     document.getElementById('wa-num-input').value=saved;
   }catch(e){}
+  const box=document.getElementById('wa-preview-box');
+  if(box)box.style.display='none';
   openM('wa-modal');
 }
 
@@ -2212,6 +2216,47 @@ function clearWaNumber(){
   toast('WhatsApp removido');
 }
 
+function testarMensagemWa(){
+  const hoje=new Date();
+  const em3=new Date();em3.setDate(hoje.getDate()+3);
+  const em7=new Date();em7.setDate(hoje.getDate()+7);
+
+  const linhas3=[];const linhas7=[];
+  const linhasAtras=[];
+
+  parcelas.filter(p=>p.status==='pendente').forEach(p=>{
+    const venc=new Date(p.vencimento+'T12:00:00');
+    const emp=emprestimos.find(e=>e.id===p.emprestimo_id);
+    const tom=tomadores.find(t=>t.id===emp?.tomador_id);
+    if(!emp||!tom)return;
+    const linha='• '+tom.nome+' — '+fmtR(p.valor)+' (vence '+fmtDate(p.vencimento)+')';
+    if(isAtrasada(p))linhasAtras.push(linha);
+    else if(venc>=hoje&&venc<=em3)linhas3.push(linha);
+    else if(venc>em3&&venc<=em7)linhas7.push(linha);
+  });
+
+  const box=document.getElementById('wa-preview-box');
+  if(!box)return;
+
+  if(!linhas3.length&&!linhas7.length&&!linhasAtras.length){
+    box.style.display='block';
+    box.style.background='#FFF7ED';box.style.borderColor='#FED7AA';box.style.color='#92400E';
+    box.textContent='✓ Nenhuma parcela em atraso ou vencendo nos próximos 7 dias.';
+    return;
+  }
+
+  const nl='\n';
+  let msg='📊 *AGPainel — Avisos de Cobranças*'+nl;
+  msg+='🗓 '+new Date().toLocaleDateString('pt-BR')+nl+nl;
+  if(linhasAtras.length){msg+='⛔ *Em atraso ('+linhasAtras.length+'):*'+nl+linhasAtras.join(nl)+nl+nl;}
+  if(linhas3.length){msg+='🔴 *Vencem em até 3 dias ('+linhas3.length+'):*'+nl+linhas3.join(nl)+nl+nl;}
+  if(linhas7.length){msg+='⏰ *Vencem em 4–7 dias ('+linhas7.length+'):*'+nl+linhas7.join(nl)+nl;}
+
+  box.style.display='block';
+  box.style.background='#F0FDF4';box.style.borderColor='#BBF7D0';box.style.color='#166534';
+  box.textContent=msg;
+}
+
 function enviarAvisosWa(){
   const num=localStorage.getItem('ep_wa_num');
   if(!num){toast('⚠ Configure seu número primeiro',true);openWaModal();return;}
@@ -2220,23 +2265,25 @@ function enviarAvisosWa(){
   const em3=new Date();em3.setDate(hoje.getDate()+3);
   const em7=new Date();em7.setDate(hoje.getDate()+7);
 
-  const linhas3=[];const linhas7=[];
+  const linhas3=[];const linhas7=[];const linhasAtras=[];
 
   parcelas.filter(p=>p.status==='pendente').forEach(p=>{
     const venc=new Date(p.vencimento+'T12:00:00');
     const emp=emprestimos.find(e=>e.id===p.emprestimo_id);
     const tom=tomadores.find(t=>t.id===emp?.tomador_id);
     if(!emp||!tom)return;
-    const linha=`• ${tom.nome} — ${fmtR(p.valor)} (vence ${fmtDate(p.vencimento)})`;
-    if(venc>=hoje&&venc<=em3)linhas3.push(linha);
+    const linha='• '+tom.nome+' — '+fmtR(p.valor)+' (vence '+fmtDate(p.vencimento)+')';
+    if(isAtrasada(p))linhasAtras.push(linha);
+    else if(venc>=hoje&&venc<=em3)linhas3.push(linha);
     else if(venc>em3&&venc<=em7)linhas7.push(linha);
   });
 
-  if(!linhas3.length&&!linhas7.length){toast('✓ Nenhuma parcela vencendo nos próximos 7 dias!');return;}
+  if(!linhas3.length&&!linhas7.length&&!linhasAtras.length){toast('✓ Nenhuma parcela em atraso ou vencendo nos próximos 7 dias!');return;}
 
   const nl='\n';
   let msg='📊 *AGPainel — Avisos de Cobranças*'+nl;
   msg+='🗓 '+new Date().toLocaleDateString('pt-BR')+nl+nl;
+  if(linhasAtras.length){msg+='⛔ *Em atraso ('+linhasAtras.length+'):*'+nl+linhasAtras.join(nl)+nl+nl;}
   if(linhas3.length){msg+='🔴 *Vencem em até 3 dias ('+linhas3.length+'):*'+nl+linhas3.join(nl)+nl+nl;}
   if(linhas7.length){msg+='⏰ *Vencem em 4–7 dias ('+linhas7.length+'):*'+nl+linhas7.join(nl)+nl;}
 
