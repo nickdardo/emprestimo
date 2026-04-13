@@ -739,6 +739,75 @@ function formatDateForDB(val){
   return null;
 }
 
+function downloadModelo(){
+  const wb=XLSX.utils.book_new();
+
+  // ── Cabeçalhos ──────────────────────────────────────────────
+  const vencs=Array.from({length:20},(_,i)=>`${i+1}ª VENCIMENTO`);
+  const headers=['#','NOME','TELEFONE','VALOR EMPRESTADO','JUROS (%)','LUCRO','VALOR TOTAL','DATA EMPRÉSTIMO',...vencs];
+
+  // ── Instruções (linha 2, índice 1) ──────────────────────────
+  const instrRow=['Deixe vazio','Nome do tomador','(91) 9 9999-0000','Ex: 1500','Ex: 20 para 20%','Automático','Automático','DD/MM/AAAA',...Array(20).fill('DD/MM/AAAA')];
+
+  // ── Exemplos ─────────────────────────────────────────────────
+  const ex=[
+    [1,'João da Silva',  '(91) 98765-4321',1500,20,300,1800,  '15/01/2025','15/02/2025','15/03/2025','15/04/2025'],
+    [2,'Maria Oliveira', '(91) 91234-5678', 800,15,120, 920,  '20/01/2025','20/02/2025','20/03/2025'],
+    [3,'Carlos Mendes',  '(91) 99876-5432',3000,10,300,3300,  '05/02/2025','05/03/2025','05/04/2025','05/05/2025','05/06/2025'],
+    [4,'Ana Souza',      '',               500, 25,125, 625,  '10/02/2025','10/03/2025'],
+    [5,'Pedro Lima',     '(91) 95555-0000',2000,20,400,2400,  '01/03/2025','01/04/2025','01/05/2025','01/06/2025','01/07/2025','01/08/2025'],
+  ];
+
+  const aoa=[headers,instrRow,...ex];
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+
+  // ── Larguras das colunas ─────────────────────────────────────
+  ws['!cols']=[
+    {wch:4},{wch:26},{wch:18},{wch:18},{wch:10},{wch:12},{wch:14},{wch:16},
+    ...Array(20).fill({wch:13})
+  ];
+
+  // ── Estilo do cabeçalho (linha 1) via !sheetFormat ───────────
+  // Nota: xlsx community edition não suporta estilos avançados,
+  // mas a estrutura e os dados ficam corretos para importação.
+
+  XLSX.utils.book_append_sheet(wb,'MODELO',ws);
+
+  // ── Aba de instruções ────────────────────────────────────────
+  const instrData=[
+    ['AGPainel — Instruções de Importação'],
+    [''],
+    ['FORMATO DAS COLUNAS (não altere a ordem!)'],
+    ['Col A  — #              Pode deixar vazio. Ignorado na importação.'],
+    ['Col B  — NOME           Nome completo do tomador.  OBRIGATÓRIO.'],
+    ['Col C  — TELEFONE       Contato. Opcional.'],
+    ['Col D  — VALOR          Valor emprestado em R$.  OBRIGATÓRIO.'],
+    ['Col E  — JUROS(%)       Ex: 20 para 20%, 10 para 10%.  OBRIGATÓRIO.'],
+    ['Col F  — LUCRO          Informativo. Ignorado na importação.'],
+    ['Col G  — VALOR TOTAL    Informativo. Ignorado na importação.'],
+    ['Col H  — DATA           Data do empréstimo DD/MM/AAAA.  OBRIGATÓRIO.'],
+    ['Col I…AB — VENCIMENTOS  Datas de vencimento de cada parcela. Até 20.'],
+    [''],
+    ['REGRAS IMPORTANTES'],
+    ['• Não remova nem renomeie os cabeçalhos da linha 1.'],
+    ['• Remova as linhas de EXEMPLO (linhas 3 a 7) antes de importar.'],
+    ['• Datas no formato DD/MM/AAAA, ex: 15/02/2025.'],
+    ['• Juros aceitos: 5, 7.5, 10, 15, 20, 25, 30, 40, 50.'],
+    [''],
+    ['COMO IMPORTAR'],
+    ['1. Preencha os dados a partir da linha 3.'],
+    ['2. Salve como .xlsx.'],
+    ['3. No AGPainel → Empréstimos → Importar Excel.'],
+    ['4. Confirme a pré-visualização e clique em Importar tudo.'],
+  ];
+  const wsI=XLSX.utils.aoa_to_sheet(instrData);
+  wsI['!cols']=[{wch:80}];
+  XLSX.utils.book_append_sheet(wb,'INSTRUÇÕES',wsI);
+
+  XLSX.writeFile(wb,'AGPainel_Modelo_Importacao.xlsx');
+  toast('✓ Modelo baixado!');
+}
+
 function exportExcel(){
   if(!emprestimos.length){toast('⚠ Nenhum empréstimo para exportar.',true);return;}
   const rows=[['#','NOME','TELEFONE','VALOR EMPRESTADO','JUROS(%)','LUCRO','VALOR TOTAL','DATA DO EMPRÉSTIMO',
@@ -814,6 +883,9 @@ function renderEmprestimos(){
           Importar Excel
           <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
         </label>
+        <button class="btn btn-sm" onclick="downloadModelo()" style="background:#16A34A;color:#fff;border:none" title="Baixar planilha modelo para importação">
+          ↓ Modelo Excel
+        </button>
         <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
       </div>
     </div>
