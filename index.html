@@ -1986,33 +1986,67 @@ async function confirmarPagamentoLote(empId){
 function exportTomadoresExcel(){
   if(!tomadores.length){toast('⚠ Nenhum tomador para exportar.',true);return;}
 
-  const rows=[['#','NOME','CONTATO','OCUPAÇÃO','EMPRÉSTIMOS','TOTAL EMPRESTADO','SALDO DEVEDOR']];
-  tomadores.forEach((t,i)=>{
+  const rows=tomadores.map((t,i)=>{
     const emps=emprestimos.filter(e=>e.tomador_id===t.id);
     const totalEmp=emps.reduce((s,e)=>s+Number(e.valor||0),0);
     const saldo=emps.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
-    rows.push([i+1,t.nome,t.contato||'',t.ocupacao||'',emps.length,totalEmp,saldo]);
-  });
+    return`<tr>
+      <td>${i+1}</td>
+      <td><strong>${t.nome}</strong></td>
+      <td>${t.contato||'—'}</td>
+      <td>${t.ocupacao||'—'}</td>
+      <td style="text-align:center">${emps.length}</td>
+      <td style="text-align:right;color:#2563EB;font-weight:700">${fmtR(totalEmp)}</td>
+      <td style="text-align:right;color:#DC2626;font-weight:700">${fmtR(saldo)}</td>
+    </tr>`;
+  }).join('');
 
-  const ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:4},{wch:32},{wch:18},{wch:20},{wch:14},{wch:18},{wch:18}];
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,'Tomadores',ws);
+  const totalGeral=tomadores.reduce((s,t)=>{
+    const emps=emprestimos.filter(e=>e.tomador_id===t.id);
+    return s+emps.reduce((ss,e)=>ss+Number(e.valor||0),0);
+  },0);
 
-  // Gera base64 e faz download via link — funciona em todos os browsers
-  const b64=XLSX.write(wb,{bookType:'xlsx',type:'base64'});
-  const bin=atob(b64);
-  const buf=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);
-  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='AGPainel_Tomadores_'+today()+'.xlsx';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},300);
-  toast('✓ Dados exportados!');
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>AGPainel — Tomadores</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:2rem;color:#111;font-size:13px}
+    h1{font-size:1.4rem;margin-bottom:.25rem;color:#111827}
+    .sub{font-size:12px;color:#6B7280;margin-bottom:1.5rem}
+    table{width:100%;border-collapse:collapse}
+    thead th{background:#111827;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    tbody tr:nth-child(even){background:#F9FAFB}
+    tbody td{padding:7px 10px;border-bottom:1px solid #E5E7EB;font-size:12px}
+    tfoot td{padding:8px 10px;font-weight:700;background:#F3F4F6;border-top:2px solid #111827}
+    .footer{margin-top:2rem;font-size:11px;color:#9CA3AF;display:flex;justify-content:space-between}
+    @media print{button{display:none!important}}
+  </style></head><body>
+  <h1>AGPainel — Lista de Tomadores</h1>
+  <div class="sub">Gerado em ${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})} · ${tomadores.length} tomadores</div>
+  <table>
+    <thead><tr>
+      <th>#</th><th>Nome</th><th>Contato</th><th>Ocupação</th>
+      <th style="text-align:center">Empréstimos</th>
+      <th style="text-align:right">Total Emprestado</th>
+      <th style="text-align:right">Saldo Devedor</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <td colspan="4">Total geral</td>
+      <td style="text-align:center">${emprestimos.length}</td>
+      <td style="text-align:right;color:#2563EB">${fmtR(totalGeral)}</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+  <div class="footer">
+    <span>AGPainel — Sistema de Gestão de Empréstimos</span>
+    <span>${session?.nome||''}</span>
+  </div>
+  <br>
+  <button onclick="window.print()" style="padding:.5rem 1.5rem;background:#111827;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">🖨 Salvar como PDF</button>
+  </body></html>`);
+  win.document.close();
+  toast('✓ Relatório aberto — clique em "Salvar como PDF"');
 }
 
 function renderTomadores(){
@@ -2021,7 +2055,7 @@ function renderTomadores(){
     <div class="sec-hdr">
       <span class="sec-title">Tomadores</span>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="exportTomadoresExcel()">↓ Exportar Dados</button>
+        <button class="btn btn-g btn-sm" onclick="exportTomadoresExcel()">↓ Exportar PDF</button>
         <button class="btn btn-p btn-sm" onclick="openTomModal(null)">+ Novo Tomador</button>
       </div>
     </div>
