@@ -528,6 +528,8 @@ function doLogout(){
   document.getElementById('lu').value='';document.getElementById('lp').value='';
   document.getElementById('login-error').style.display='none';
   tomadores=[];emprestimos=[];parcelas=[];users=[];
+  // Recarrega credenciais salvas após logout
+  setTimeout(loadSavedCreds,50);
 }
 
 async function loadAll(){
