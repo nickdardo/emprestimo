@@ -1990,22 +1990,8 @@ function exportTomadoresExcel(){
   ws['!cols']=[{wch:4},{wch:32},{wch:18},{wch:20},{wch:14},{wch:18},{wch:18}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,'Tomadores',ws);
-
-  try{
-    const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-    const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download='AGPainel_Tomadores_'+today()+'.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},300);
-    toast('✓ Dados exportados!');
-  }catch(e){
-    console.error(e);
-    toast('⚠ Erro ao exportar: '+e.message,true);
-  }
+  XLSX.writeFile(wb,'AGPainel_Tomadores_'+today()+'.xlsx');
+  toast('✓ Dados exportados!');
 }
 
 function renderTomadores(){
