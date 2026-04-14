@@ -2363,6 +2363,15 @@ function renderTomadores(){
         <button class="btn btn-p btn-sm" onclick="openTomModal(null)">+ Novo Cliente</button>
       </div>
     </div>
+    <!-- FILTRO PERÍODO CLIENTES -->
+    <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem">
+      ${['Mês atual','2 meses','3 meses','6 meses','1 ano','Tudo'].map((l,i)=>{
+        const vals=['1m','2m','3m','6m','12m','all'];
+        const v=vals[i];
+        const sel=window._tomPeriodo||'all';
+        return`<button class="pill ${sel===v?'active':''}" onclick="window._tomPeriodo='${v}';renderTomadores()">${l}</button>`;
+      }).join('')}
+    </div>
     <div style="margin-bottom:1rem"><input type="text" id="tom-s" placeholder="🔍  Buscar cliente..." oninput="filterTom()" style="max-width:360px"/></div>
     <div class="tbl-wrap">
       <table>
@@ -2387,10 +2396,22 @@ function filterTom(){
   const tb=document.getElementById('tom-tbody');if(tb)tb.innerHTML=tomTbodyHTML(sorted);
 }
 
+function _tomDataInicio(p){
+  const d=new Date();
+  if(p==='1m') d.setMonth(d.getMonth()-1);
+  else if(p==='2m') d.setMonth(d.getMonth()-2);
+  else if(p==='3m') d.setMonth(d.getMonth()-3);
+  else if(p==='6m') d.setMonth(d.getMonth()-6);
+  else if(p==='12m') d.setFullYear(d.getFullYear()-1);
+  else return null;
+  d.setHours(0,0,0,0); return d;
+}
+
 function tomTbodyHTML(list){
   if(!list.length)return`<tr><td colspan="8"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum cliente.</div></div></td></tr>`;
+  const _tomDtInicio=_tomDataInicio(window._tomPeriodo||'all');
   return list.map((t,i)=>{
-    const emps=emprestimos.filter(e=>e.tomador_id===t.id);
+    const emps=emprestimos.filter(e=>e.tomador_id===t.id&&(!_tomDtInicio||new Date(e.data_emprestimo+'T12:00:00')>=_tomDtInicio));
     const totalEmprestado=emps.reduce((s,e)=>s+Number(e.valor||0),0);
     return`<tr>
       <td style="color:var(--n4);font-size:12px">${i+1}</td>
@@ -3136,11 +3157,12 @@ function renderRelatorio(){
 
   // ── Período selecionado ──────────────────────────────────
   const periodos=[
-    {label:'Mês atual',   value:'1m'},
-    {label:'3 meses',     value:'3m'},
-    {label:'6 meses',     value:'6m'},
-    {label:'1 ano',       value:'12m'},
-    {label:'Tudo',        value:'all'},
+    {label:'Mês atual', value:'1m'},
+    {label:'2 meses',   value:'2m'},
+    {label:'3 meses',   value:'3m'},
+    {label:'6 meses',   value:'6m'},
+    {label:'1 ano',     value:'12m'},
+    {label:'Tudo',      value:'all'},
   ];
   const periodo=window._relatPeriodo||'6m';
 
@@ -3148,6 +3170,7 @@ function renderRelatorio(){
   function dataInicio(p){
     const d=new Date();
     if(p==='1m') d.setMonth(d.getMonth()-1);
+    else if(p==='2m') d.setMonth(d.getMonth()-2);
     else if(p==='3m') d.setMonth(d.getMonth()-3);
     else if(p==='6m') d.setMonth(d.getMonth()-6);
     else if(p==='12m') d.setFullYear(d.getFullYear()-1);
