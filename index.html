@@ -470,7 +470,6 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
       <button class="wa-nav-btn unset" id="wa-nav-btn" onclick="openWaModal()" title="Configurar WhatsApp para avisos">📱 <span id="wa-nav-label">Seu WhatsApp</span></button>
       <button class="search-nav-btn" onclick="openGlobalSearch()" title="Busca global"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button class="dark-btn" id="dark-toggle" onclick="toggleDarkMode()" title="Alternar tema"></button>
-      <button class="logout-btn" onclick="doLogout()">Sair</button>
     </div>
   </nav>
   <!-- BUSCA GLOBAL -->
@@ -752,11 +751,14 @@ function buildSidebar(){
         ${LUCIDE_ICONS[t.icon]||''}${t.label}
       </button>`
     ).join('')+
-    `<div class="sidebar-footer">AGPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>
-    <button onclick="doLogout()" style="width:100%;margin-top:.5rem;padding:.65rem 1rem;background:transparent;border:1px solid #374151;border-radius:var(--rs);color:#9CA3AF;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.6rem;transition:all .15s" onmouseover="this.style.background='#FEF2F2';this.style.color='#DC2626';this.style.borderColor='#FECACA'" onmouseout="this.style.background='transparent';this.style.color='#9CA3AF';this.style.borderColor='#374151'">
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Sair
-    </button>`
+    `<div style="padding:.5rem .75rem 0">
+      <button onclick="doLogout()" style="width:100%;padding:.65rem 1rem;background:transparent;border:1px solid var(--sid-border, #374151);border-radius:var(--rs);color:#9CA3AF;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.6rem;transition:all .15s" onmouseover="this.style.background='#FEF2F2';this.style.color='#DC2626';this.style.borderColor='#FECACA'" onmouseout="this.style.background='transparent';this.style.color='#9CA3AF';this.style.borderColor='#374151'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>`+
+    `<div style="border-top:1px solid #374151;margin:.75rem .75rem 0"></div>`+
+    `<div class="sidebar-footer">AGPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`
 }
 
 function showPage(p){
