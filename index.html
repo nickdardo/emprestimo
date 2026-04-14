@@ -3278,22 +3278,20 @@ function renderRelatorio(){
   mc.innerHTML=`
     <div class="sec-hdr">
       <span class="sec-title">Relatório</span>
-      <div style="display:flex;align-items:center;gap:.5rem">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <!-- Navegação de ANO -->
-          <div style="display:flex;align-items:center;gap:.3rem">
-            <button onclick="navAno(-1)" style="padding:.2rem .5rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:12px;color:var(--n3)">«</button>
-            <span style="font-size:11px;font-weight:600;color:var(--n3);min-width:40px;text-align:center">${selY}</span>
-            <button onclick="navAno(1)" ${selY>=mesAtualY?'disabled style="opacity:.35;cursor:not-allowed;"':''} style="padding:.2rem .5rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:12px;color:var(--n3)">»</button>
-          </div>
-          <!-- Navegação de MÊS -->
-          <div style="display:flex;align-items:center;gap:.3rem">
-            <button onclick="navMes(-1)" style="padding:.3rem .6rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">‹</button>
-            <span style="font-size:13px;font-weight:700;color:var(--n1);min-width:110px;text-align:center">${new Date(selY,selM,1).toLocaleString('pt-BR',{month:'long'}).replace(/^./,c=>c.toUpperCase())}</span>
-            <button onclick="navMes(1)" ${isMesAtual?'disabled style="opacity:.35;cursor:not-allowed;"':''} style="padding:.3rem .6rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">›</button>
-          </div>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <!-- Seletor compacto: « ‹ Mês·Ano › » -->
+        <div style="display:inline-flex;align-items:center;background:var(--card);border:1px solid #E5E7EB;border-radius:999px;overflow:hidden;box-shadow:var(--sh)">
+          <button onclick="navAno(-1)" title="Ano anterior" style="padding:.45rem .75rem;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:700;color:var(--n3);border-right:1px solid #E5E7EB;line-height:1">«</button>
+          <button onclick="navMes(-1)" title="Mês anterior" style="padding:.45rem .65rem;border:none;background:transparent;cursor:pointer;font-size:15px;color:var(--n2);border-right:1px solid #E5E7EB;line-height:1">‹</button>
+          <span style="padding:.35rem .85rem;font-size:13px;font-weight:700;color:var(--n1);white-space:nowrap;min-width:120px;text-align:center">
+            ${new Date(selY,selM,1).toLocaleString('pt-BR',{month:'short'}).replace('.','').replace(/^./,c=>c.toUpperCase())} ${selY}
+          </span>
+          <button onclick="navMes(1)" title="Próximo mês" ${isMesAtual?'disabled':''}
+            style="padding:.45rem .65rem;border:none;background:transparent;cursor:${isMesAtual?'not-allowed':'pointer'};font-size:15px;color:var(--n2);border-left:1px solid #E5E7EB;opacity:${isMesAtual?'.3':'1'};line-height:1">›</button>
+          <button onclick="navAno(1)" title="Próximo ano" ${selY>=mesAtualY?'disabled':''}
+            style="padding:.45rem .75rem;border:none;background:transparent;cursor:${selY>=mesAtualY?'not-allowed':'pointer'};font-size:13px;font-weight:700;color:var(--n3);border-left:1px solid #E5E7EB;opacity:${selY>=mesAtualY?'.3':'1'};line-height:1">»</button>
         </div>
-        ${!isMesAtual?`<button class="pill active" onclick="window._relatMes=null;renderRelatorio()" style="font-size:11px;margin-left:.25rem">Hoje</button>`:''}
+        ${!isMesAtual?`<button class="pill" onclick="window._relatMes=null;renderRelatorio()" style="font-size:11px;background:#EA580C;color:#fff;border-color:#EA580C">Hoje</button>`:''}
       </div>
     </div>
 
