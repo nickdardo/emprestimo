@@ -2035,9 +2035,15 @@ function confirmarPagamento(id, empId){
     <div style="margin-bottom:.85rem">
       <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">${tipo==='consignado'?'Parcela':'Juros cobrado'} (obrigatório)</div>
       <div style="padding:.7rem 1rem;background:#FFF7ED;border:1px solid #FED7AA;border-radius:var(--rs);text-align:center">
-        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--grn)">${fmtR(jurosParc)}</div>
-        ${mora>0?`<div style="font-size:11px;color:var(--red);margin-top:3px">Inclui mora de ${diasAtrasConf}d: ${fmtR(mora)}</div>`:''}
+        <div style="font-family:var(--FT);font-size:1.3rem;color:var(--grn)" id="jurs-display-${id}">${fmtR(jurosParc)}</div>
+        ${mora>0?`<div style="font-size:11px;color:var(--red);margin-top:3px" id="mora-display-${id}">Inclui mora de ${diasAtrasConf}d: ${fmtR(mora)}</div>`:''}
       </div>
+      ${mora>0?`
+      <label style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;cursor:pointer;user-select:none">
+        <input type="checkbox" id="isentar-mora-${id}" onchange="toggleIsentarMora('${id}',${jurosBase},${mora},${saldo})"
+          style="width:15px;height:15px;cursor:pointer;accent-color:#EA580C"/>
+        <span style="font-size:12px;color:var(--n2)">Isentar juros de mora <span style="color:var(--n4)">(desconto de ${fmtR(mora)})</span></span>
+      </label>`:''}
     </div>
     ${tipo==='consignado'?`<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--rs);padding:.65rem 1rem;margin-bottom:.85rem;font-size:12px;color:#1e40af">📋 Consignado — parcela fixa sem abatimento de capital</div>`:''}
 
@@ -2075,10 +2081,27 @@ function confirmarPagamento(id, empId){
 
     <div style="display:flex;gap:.5rem;justify-content:flex-end">
       <button class="btn btn-g btn-sm" onclick="document.getElementById('confirm-pay-${id}').remove()">Cancelar</button>
-      <button class="btn btn-grn btn-sm" onclick="efetivarPagamento('${id}','${empId}',${jurosParc},${saldo})">Confirmar Pagamento</button>
+      <button class="btn btn-grn btn-sm" onclick="efetivarPagamento('${id}','${empId}',${jurosParc},${saldo},${mora})">Confirmar Pagamento</button>
     </div>
   </div>`;
   document.body.appendChild(div);
+}
+
+function toggleIsentarMora(id, jurosBase, mora, saldo){
+  const isento=document.getElementById('isentar-mora-'+id)?.checked;
+  const novoJuros=isento?jurosBase:jurosBase+mora;
+  const display=document.getElementById('jurs-display-'+id);
+  const moraDisplay=document.getElementById('mora-display-'+id);
+  if(display) display.textContent=fmtR(novoJuros);
+  if(moraDisplay) moraDisplay.style.textDecoration=isento?'line-through':'none';
+  if(moraDisplay) moraDisplay.style.opacity=isento?'.5':'1';
+  // Atualiza o onclick do botão confirmar com o novo valor
+  const btn=document.querySelector(`#confirm-pay-${id} .btn-grn`);
+  if(btn) btn.onclick=()=>efetivarPagamento(id,btn.dataset.empid,novoJuros,saldo,mora,isento);
+  // Guarda empId no dataset do botão
+  if(btn) btn.dataset.empid=btn.onclick.toString().match(/'([^']+)'/)?.[1]||'';
+  // Atualiza o resumo se abatimento já preenchido
+  updatePaySummary(id,novoJuros,saldo);
 }
 
 function updatePaySummary(id, jurosParc, saldo){
@@ -2097,13 +2120,15 @@ function updatePaySummary(id, jurosParc, saldo){
   }
 }
 
-async function efetivarPagamento(id, empId, jurosParc, saldoAtual){
+async function efetivarPagamento(id, empId, jurosParc, saldoAtual, mora=0, moraIsenta=false){
   const datePay=document.getElementById('pay-date-'+id)?.value||today();
   const abat=parseCurrency(document.getElementById('pay-abat-'+id)?.value)||0;
+  // Se checkbox de isenção marcado, recalcula sem mora
+  const isentoChk=document.getElementById('isentar-mora-'+id)?.checked||false;
+  const jurosReal=isentoChk&&mora>0?jurosParc-mora:jurosParc;
   const novoSaldo=Math.max(0,saldoAtual-abat);
-  const totalPago=jurosParc+abat;
+  const totalPago=jurosReal+abat;
 
-  // Update parcela
   const{data,error}=await sb.from('parcelas').update({
     status:'pago', pago_em:datePay,
     valor_pago:totalPago,
@@ -2113,7 +2138,6 @@ async function efetivarPagamento(id, empId, jurosParc, saldoAtual){
   if(error){toast('Erro ao confirmar',true);return;}
   parcelas=parcelas.map(p=>p.id===id?data:p);
 
-  // Update saldo_devedor no empréstimo
   if(abat>0){
     await sb.from('emprestimos').update({saldo_devedor:novoSaldo}).eq('id',empId);
     emprestimos=emprestimos.map(e=>e.id===empId?{...e,saldo_devedor:novoSaldo}:e);
@@ -2121,17 +2145,17 @@ async function efetivarPagamento(id, empId, jurosParc, saldoAtual){
 
   document.getElementById('confirm-pay-'+id)?.remove();
 
-  if(abat>0 && novoSaldo===0){
-    toast(`✓ Pagamento confirmado! Capital totalmente quitado! 🎉`);
+  if(isentoChk&&mora>0){
+    toast(`✓ Pago! Mora de ${fmtR(mora)} isenta.${abat>0?' Abatimento: '+fmtR(abat):''}${novoSaldo===0?' Capital quitado! 🎉':''}`);
+  } else if(abat>0&&novoSaldo===0){
+    toast('✓ Pagamento confirmado! Capital totalmente quitado! 🎉');
   } else if(abat>0){
-    toast(`✓ Pago! Juros: ${fmtR(jurosParc)} + Abatimento: ${fmtR(abat)} → Saldo: ${fmtR(novoSaldo)}`);
+    toast(`✓ Pago! Juros: ${fmtR(jurosReal)} + Abatimento: ${fmtR(abat)} → Saldo: ${fmtR(novoSaldo)}`);
   } else {
     toast('✓ Pagamento de juros confirmado!');
   }
 
-  // Gera próxima parcela automaticamente se não há mais pendentes e saldo > 0
   await autoGerarProximaParcela(empId, novoSaldo);
-
   openParcelas(empId);
   if(curPage==='dashboard')renderDashboard();
   else if(curPage==='emprestimos')renderEmprestimos();
