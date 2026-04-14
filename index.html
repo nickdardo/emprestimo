@@ -1231,14 +1231,13 @@ function renderEmprestimos(){
       </div>
     </div>
     <div class="filter-pills">
-      <button class="pill active" id="pill-todos" onclick="setEmpFilter('todos')">Todos</button>
-      <button class="pill pill-red" id="pill-atrasado" onclick="setEmpFilter('atrasado')">⚠ Em atraso</button>
-      <button class="pill pill-amb" id="pill-hoje" onclick="setEmpFilter('hoje')">🔴 Vence hoje</button>
-      <button class="pill pill-grn" id="pill-quitado" onclick="setEmpFilter('quitado')">✅ Quitados</button>
-      <button class="pill" id="pill-ativo" onclick="setEmpFilter('ativo')">📋 Ativos</button>
-      <button class="pill" id="pill-semparc" onclick="setEmpFilter('semparc')">💳 Sem parcelas</button>
-      <button class="pill pill-juros" id="pill-juros" onclick="setEmpFilter('juros')">💰 Juros</button>
-      <button class="pill pill-consig" id="pill-consig" onclick="setEmpFilter('consig')">📋 Consignado</button>
+      <button class="pill active" id="pill-todos" onclick="setEmpFilter('todos')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Todos</button>
+      <button class="pill pill-red" id="pill-atrasado" onclick="setEmpFilter('atrasado')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Em atraso</button>
+      <button class="pill pill-amb" id="pill-hoje" onclick="setEmpFilter('hoje')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Vence hoje</button>
+      <button class="pill pill-grn" id="pill-quitado" onclick="setEmpFilter('quitado')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Quitados</button>
+      <button class="pill" id="pill-ativo" onclick="setEmpFilter('ativo')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Ativos</button>
+      <button class="pill pill-juros" id="pill-juros" onclick="setEmpFilter('juros')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Juros</button>
+      <button class="pill pill-consig" id="pill-consig" onclick="setEmpFilter('consig')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Consignado</button>
     </div>
     <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
       <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:380px"/>
