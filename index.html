@@ -741,8 +741,8 @@ function buildSidebar(){
     {id:'emprestimos',icon:'emprestimos',label:'Empréstimos'},
     {id:'tomadores',icon:'tomadores',label:'Clientes'},
     {id:'simulador',icon:'simulador',label:'Simulador'},
+    {id:'relatorio',icon:'relatorio',label:'Relatório'},
     {id:'perfil',icon:'perfil',label:'Meu Perfil'},
-    {id:'relatorio',icon:'relatorio',label:'Relatório',admin:true},
     {id:'usuarios',icon:'usuarios',label:'Usuários',admin:true},
   ];
   document.getElementById('sidebarEl').innerHTML=
@@ -752,7 +752,11 @@ function buildSidebar(){
         ${LUCIDE_ICONS[t.icon]||''}${t.label}
       </button>`
     ).join('')+
-    `<div class="sidebar-footer">AGPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`;
+    `<div class="sidebar-footer">AGPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>
+    <button onclick="doLogout()" style="width:100%;margin-top:.5rem;padding:.65rem 1rem;background:transparent;border:1px solid #374151;border-radius:var(--rs);color:#9CA3AF;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.6rem;transition:all .15s" onmouseover="this.style.background='#FEF2F2';this.style.color='#DC2626';this.style.borderColor='#FECACA'" onmouseout="this.style.background='transparent';this.style.color='#9CA3AF';this.style.borderColor='#374151'">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </button>`
 }
 
 function showPage(p){
@@ -3127,48 +3131,266 @@ function enviarAvisosWa(){
 // ══ RELATÓRIO ══
 function renderRelatorio(){
   const mc=document.getElementById('main-content');
-  const ops=users.filter(u=>u.role!=='admin');
-  const allUsers=session.role==='admin'?users:[session];
 
-  const rows=allUsers.map(u=>{
-    const emps=emprestimos.filter(e=>e.owner_id===u.id);
-    const parcsU=parcelas.filter(p=>emps.some(e=>e.id===p.emprestimo_id));
-    const totalEmp=emps.reduce((s,e)=>s+Number(e.valor||0),0);
-    const totalRec=parcsU.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor_pago||p.valor||0),0);
-    const totalPend=parcsU.filter(p=>p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);
-    const atras=parcsU.filter(p=>isAtrasada(p)).length;
-    const av=u.role==='admin'?'background:#FDE68A;color:#78350F':'background:#FFF7ED;color:#EA580C';
-    return`<div style="background:var(--card);border:1px solid #E5E7EB;border-radius:var(--r);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--sh)">
-      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem">
-        <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;${av}">${ini(u.nome)}</div>
-        <div>
-          <div style="font-weight:700;font-size:15px">${u.nome}</div>
-          <div style="font-size:12px;color:var(--n4)">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'3°JOB'}</span></div>
+  // ── Período selecionado ──────────────────────────────────
+  const periodos=[
+    {label:'Mês atual',   value:'1m'},
+    {label:'3 meses',     value:'3m'},
+    {label:'6 meses',     value:'6m'},
+    {label:'1 ano',       value:'12m'},
+    {label:'Tudo',        value:'all'},
+  ];
+  const periodo=window._relatPeriodo||'6m';
+
+  // ── Filtro de data ───────────────────────────────────────
+  function dataInicio(p){
+    const d=new Date();
+    if(p==='1m') d.setMonth(d.getMonth()-1);
+    else if(p==='3m') d.setMonth(d.getMonth()-3);
+    else if(p==='6m') d.setMonth(d.getMonth()-6);
+    else if(p==='12m') d.setFullYear(d.getFullYear()-1);
+    else return null;
+    d.setHours(0,0,0,0); return d;
+  }
+  const dtInicio=dataInicio(periodo);
+
+  // Empréstimos e parcelas do usuário logado
+  const myEmps=session.role==='admin'?emprestimos:emprestimos.filter(e=>e.owner_id===session.id);
+  const empsF=dtInicio?myEmps.filter(e=>new Date(e.data_emprestimo+'T12:00:00')>=dtInicio):myEmps;
+  const empIds=new Set(myEmps.map(e=>e.id));
+  const myParcs=parcelas.filter(p=>empIds.has(p.emprestimo_id));
+
+  // ── Métricas gerais ──────────────────────────────────────
+  const totalEmp=empsF.reduce((s,e)=>s+Number(e.valor||0),0);
+  const parcsPagas=myParcs.filter(p=>p.status==='pago'&&(!dtInicio||new Date((p.pago_em||'')+'T12:00:00')>=dtInicio));
+  const totalRec=parcsPagas.reduce((s,p)=>s+Number(p.valor_pago||p.valor||0),0);
+  const parcsAtras=myParcs.filter(p=>isAtrasada(p));
+  const totalAtras=parcsAtras.reduce((s,p)=>s+Number(p.valor||0),0);
+  const saldoTotal=myEmps.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
+  const pctInad=myParcs.length?Math.round(parcsAtras.length/myParcs.filter(p=>p.status==='pendente').length*100)||0:0;
+
+  // ── Últimos 6 meses para gráfico ─────────────────────────
+  const meses=[];
+  for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);meses.push({label:d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}),m:d.getMonth(),y:d.getFullYear()});}
+  const empMes=meses.map(m=>myEmps.filter(e=>{const d=new Date(e.data_emprestimo+'T12:00:00');return d.getMonth()===m.m&&d.getFullYear()===m.y;}).reduce((s,e)=>s+Number(e.valor||0),0));
+  const recMes=meses.map(m=>myParcs.filter(p=>p.status==='pago'&&p.pago_em).filter(p=>{const d=new Date(p.pago_em+'T12:00:00');return d.getMonth()===m.m&&d.getFullYear()===m.y;}).reduce((s,p)=>s+Number(p.valor_pago||p.valor||0),0));
+
+  // ── Ranking clientes ─────────────────────────────────────
+  const tomRank=tomadores.map(t=>{
+    const te=myEmps.filter(e=>e.tomador_id===t.id);
+    const tp=myParcs.filter(p=>te.some(e=>e.id===p.emprestimo_id));
+    const saldo=te.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
+    const atras=tp.filter(p=>isAtrasada(p)).length;
+    return{...t,saldo,atras,totalEmp:te.reduce((s,e)=>s+Number(e.valor||0),0)};
+  }).filter(t=>t.totalEmp>0).sort((a,b)=>b.saldo-a.saldo).slice(0,8);
+
+  // ── Inadimplência por mês ─────────────────────────────────
+  const inadMes=meses.map(m=>{
+    const vencidas=myParcs.filter(p=>{
+      const v=new Date(p.vencimento+'T12:00:00');
+      return p.status==='pendente'&&v.getMonth()===m.m&&v.getFullYear()===m.y&&v<new Date();
+    });
+    return vencidas.reduce((s,p)=>s+Number(p.valor||0),0);
+  });
+
+  // ── Por tipo ─────────────────────────────────────────────
+  const nJuros=myEmps.filter(e=>(e.tipo||'juros')==='juros').length;
+  const nConsig=myEmps.filter(e=>e.tipo==='consignado').length;
+
+  // ── Projeção próximos 3 meses ─────────────────────────────
+  const proj=[];
+  for(let i=1;i<=3;i++){
+    const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+i);
+    const val=myParcs.filter(p=>{
+      const v=new Date(p.vencimento+'T12:00:00');
+      return p.status==='pendente'&&v.getMonth()===d.getMonth()&&v.getFullYear()===d.getFullYear();
+    }).reduce((s,p)=>s+Number(p.valor||0),0);
+    proj.push({label:d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}),val});
+  }
+
+  mc.innerHTML=`
+    <div class="sec-hdr">
+      <span class="sec-title">Relatório</span>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        ${periodos.map(p=>`<button class="pill ${periodo===p.value?'active':''}" onclick="window._relatPeriodo='${p.value}';renderRelatorio()">${p.label}</button>`).join('')}
+      </div>
+    </div>
+
+    <!-- CARDS RESUMO -->
+    <div class="stats" style="margin-bottom:1.25rem">
+      <div class="stat">
+        <div class="stat-label">Total Emprestado</div>
+        <div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div>
+        <div class="stat-sub">${empsF.length} empréstimos no período</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total Recebido</div>
+        <div class="stat-value" style="color:var(--grn)">${fmtR(totalRec)}</div>
+        <div class="stat-sub">${parcsPagas.length} parcelas pagas</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Saldo Devedor</div>
+        <div class="stat-value" style="color:var(--red)">${fmtR(saldoTotal)}</div>
+        <div class="stat-sub">total em aberto</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Inadimplência</div>
+        <div class="stat-value" style="color:${parcsAtras.length?'var(--red)':'var(--grn)'}">${parcsAtras.length}</div>
+        <div class="stat-sub">${fmtR(totalAtras)} em atraso</div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS LINHA 1 -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem">
+      <!-- Fluxo de Caixa -->
+      <div class="card" style="padding:1.25rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <span style="font-family:var(--FT);font-size:1.05rem">Fluxo de Caixa — Últimos 6 meses</span>
+          <div style="display:flex;gap:1rem;font-size:11px">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#2563EB;border-radius:2px;margin-right:4px"></span>Emprestado</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#16A34A;border-radius:2px;margin-right:4px"></span>Recebido</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#DC2626;border-radius:2px;margin-right:4px"></span>Atraso</span>
+          </div>
+        </div>
+        <canvas id="chart-fluxo" height="160"></canvas>
+      </div>
+      <!-- Donut saúde -->
+      <div class="card" style="padding:1.25rem;display:flex;flex-direction:column">
+        <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem">Saúde da Carteira</span>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center">
+          <canvas id="chart-saude" style="max-height:180px"></canvas>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem">
-        <div style="text-align:center;background:var(--blu0);border-radius:var(--rs);padding:.75rem">
-          <div style="font-size:9px;color:var(--blu);font-weight:700;text-transform:uppercase;margin-bottom:3px">Emprestado</div>
-          <div style="font-family:var(--FT);font-size:1.1rem;color:var(--blu)">${fmtR(totalEmp)}</div>
-          <div style="font-size:10px;color:var(--n4);margin-top:2px">${emps.length} empréstimo${emps.length!==1?'s':''}</div>
-        </div>
-        <div style="text-align:center;background:var(--grn0);border-radius:var(--rs);padding:.75rem">
-          <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:3px">Recebido</div>
-          <div style="font-family:var(--FT);font-size:1.1rem;color:var(--grn)">${fmtR(totalRec)}</div>
-        </div>
-        <div style="text-align:center;background:#F9FAFB;border-radius:var(--rs);padding:.75rem">
-          <div style="font-size:9px;color:var(--n4);font-weight:700;text-transform:uppercase;margin-bottom:3px">Próx. Parcelas</div>
-          <div style="font-family:var(--FT);font-size:1.1rem;color:var(--amb)">${fmtR(totalPend)}</div>
-        </div>
-        <div style="text-align:center;background:${atras?'var(--red0)':'#F9FAFB'};border-radius:var(--rs);padding:.75rem">
-          <div style="font-size:9px;color:${atras?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:3px">Em atraso</div>
-          <div style="font-family:var(--FT);font-size:1.1rem;color:${atras?'var(--red)':'var(--n4)'}">${atras}</div>
+    </div>
+
+    <!-- GRÁFICOS LINHA 2 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+      <!-- Projeção -->
+      <div class="card" style="padding:1.25rem">
+        <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem;display:block">Projeção — Próximos 3 meses</span>
+        <canvas id="chart-proj" height="140"></canvas>
+      </div>
+      <!-- Tipo de empréstimo -->
+      <div class="card" style="padding:1.25rem">
+        <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem;display:block">Por Tipo de Empréstimo</span>
+        <div style="display:flex;align-items:center;gap:1.5rem">
+          <canvas id="chart-tipo" style="max-height:150px;max-width:150px"></canvas>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+              <div style="width:12px;height:12px;background:#EA580C;border-radius:2px"></div>
+              <span style="font-size:13px">💰 Juros Mensal</span>
+              <span style="font-weight:700;margin-left:auto">${nJuros}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <div style="width:12px;height:12px;background:#2563EB;border-radius:2px"></div>
+              <span style="font-size:13px">📋 Consignado</span>
+              <span style="font-weight:700;margin-left:auto">${nConsig}</span>
+            </div>
+            <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid #E5E7EB;font-size:12px;color:var(--n4)">
+              Total: ${nJuros+nConsig} empréstimos
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- RANKING CLIENTES -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-title">Ranking — Maiores Saldos Devedores</div>
+      ${tomRank.map((t,i)=>{
+        const pct=saldoTotal>0?Math.round(t.saldo/saldoTotal*100):0;
+        return`<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid #F3F4F6">
+          <span style="font-size:12px;color:var(--n4);min-width:18px;font-weight:700">${i+1}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;cursor:pointer" onclick="openClientView('${t.id}')">${t.nome} <span style="color:var(--grn);font-size:11px">→</span></div>
+            <div style="background:#E5E7EB;border-radius:999px;height:5px;margin-top:4px;overflow:hidden">
+              <div style="background:${t.atras?'var(--red)':'var(--blu)'};height:100%;border-radius:999px;width:${pct}%"></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:700;color:${t.atras?'var(--red)':'var(--blu)'}">${fmtR(t.saldo)}</div>
+            ${t.atras?`<div style="font-size:10px;color:var(--red)">${t.atras} em atraso</div>`:''}
+          </div>
+        </div>`;
+      }).join('')||'<div class="empty-text">Nenhum dado.</div>'}
+    </div>
+
+    <!-- INADIMPLÊNCIA POR MÊS -->
+    <div class="card">
+      <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem;display:block">Inadimplência por Mês</span>
+      <canvas id="chart-inad" height="120"></canvas>
     </div>`;
-  }).join('');
 
-  mc.innerHTML=`<div class="sec-hdr"><span class="sec-title">Relatório por Operador</span></div>${rows||'<div class="empty"><div class="empty-text">Nenhum dado.</div></div>'}`;
+  // ── Renderiza os gráficos com Chart.js ───────────────────
+  setTimeout(()=>{
+    if(typeof Chart==='undefined'){
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+      s.onload=()=>_desenharGraficos(meses,empMes,recMes,inadMes,proj,myParcs,parcsAtras,nJuros,nConsig);
+      document.head.appendChild(s);
+    } else {
+      _desenharGraficos(meses,empMes,recMes,inadMes,proj,myParcs,parcsAtras,nJuros,nConsig);
+    }
+  },50);
+}
+
+function _desenharGraficos(meses,empMes,recMes,inadMes,proj,myParcs,parcsAtras,nJuros,nConsig){
+  const isDark=document.body.classList.contains('dark');
+  const gridColor=isDark?'rgba(255,255,255,.07)':'rgba(0,0,0,.06)';
+  const textColor=isDark?'#94A3B8':'#6B7280';
+  const labels=meses.map(m=>m.label);
+
+  Chart.defaults.font.family='DM Sans, sans-serif';
+  Chart.defaults.font.size=11;
+
+  // Destroi gráficos anteriores se existirem
+  ['chart-fluxo','chart-saude','chart-proj','chart-tipo','chart-inad'].forEach(id=>{
+    const c=Chart.getChart(id);if(c)c.destroy();
+  });
+
+  // 1. Fluxo de Caixa
+  new Chart(document.getElementById('chart-fluxo'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Emprestado',data:empMes,backgroundColor:'rgba(37,99,235,.7)',borderRadius:4},
+      {label:'Recebido',data:recMes,backgroundColor:'rgba(22,163,74,.7)',borderRadius:4},
+      {label:'Atraso',data:inadMes,backgroundColor:'rgba(220,38,38,.6)',borderRadius:4},
+    ]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$'+v.toLocaleString('pt-BR')}}}}
+  });
+
+  // 2. Donut saúde
+  const pagas=myParcs.filter(p=>p.status==='pago').length;
+  const pend=myParcs.filter(p=>p.status==='pendente'&&!isAtrasada(p)).length;
+  const atrasN=parcsAtras.length;
+  new Chart(document.getElementById('chart-saude'),{
+    type:'doughnut',
+    data:{labels:['Em dia','Em atraso','Pagas'],datasets:[{data:[pend,atrasN,pagas],backgroundColor:['#F59E0B','#DC2626','#16A34A'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:textColor,padding:12,boxWidth:10}}}}
+  });
+
+  // 3. Projeção
+  new Chart(document.getElementById('chart-proj'),{
+    type:'bar',
+    data:{labels:proj.map(p=>p.label),datasets:[{label:'Previsto',data:proj.map(p=>p.val),backgroundColor:'rgba(234,88,12,.7)',borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$'+v.toLocaleString('pt-BR')}}}}
+  });
+
+  // 4. Tipo pizza
+  if(nJuros+nConsig>0){
+    new Chart(document.getElementById('chart-tipo'),{
+      type:'doughnut',
+      data:{labels:['Juros','Consignado'],datasets:[{data:[nJuros,nConsig],backgroundColor:['#EA580C','#2563EB'],borderWidth:0}]},
+      options:{responsive:true,plugins:{legend:{display:false}}}
+    });
+  }
+
+  // 5. Inadimplência linha
+  new Chart(document.getElementById('chart-inad'),{
+    type:'line',
+    data:{labels,datasets:[{label:'Em atraso',data:inadMes,borderColor:'#DC2626',backgroundColor:'rgba(220,38,38,.1)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#DC2626'}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$'+v.toLocaleString('pt-BR')}}}}
+  });
 }
 
 // ══ DARK MODE ══
