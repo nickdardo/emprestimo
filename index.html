@@ -62,6 +62,7 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .nav{background:var(--blk);border-bottom:1px solid var(--blk2);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .nav-brand{font-family:var(--FT);font-size:1.3rem;color:#fff}
 .nav-brand span{color:#F97316}
+.nav-brand .ag{color:#fff}
 .nav-right{display:flex;align-items:center;gap:.75rem}
 .nav-user{font-size:13px;color:#9CA3AF;display:flex;align-items:center;gap:8px}
 .nav-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
@@ -451,7 +452,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   <nav class="nav">
     <div style="display:flex;align-items:center;gap:.75rem">
       <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
-      <span class="nav-brand">AG<span>Painel</span></span>
+      <span class="nav-brand"><span class="ag">AG</span><span>Painel</span></span>
     </div>
     <div class="nav-right">
       <div class="nav-user">
@@ -847,7 +848,13 @@ async function doRegister(){
     const{data:ex}=await sb.from('users').select('id').eq('login',login).maybeSingle();
     if(ex){showRegErr('Login já em uso.');btn.textContent='Criar conta →';btn.disabled=false;return;}
     const trialExp=new Date();trialExp.setDate(trialExp.getDate()+30);
-    const{data,error}=await sb.from('users').insert({nome,login,pass_hash:hp(pass),role:'op',ativo:true,expires_at:trialExp.toISOString().split('T')[0]}).select().single();
+    // Tenta criar com expires_at; se falhar, cria sem (coluna pode não existir ainda)
+    let data,error;
+    const res1=await sb.from('users').insert({nome,login,pass_hash:hp(pass),role:'op',ativo:true,expires_at:trialExp.toISOString().split('T')[0]}).select().single();
+    if(res1.error){
+      const res2=await sb.from('users').insert({nome,login,pass_hash:hp(pass),role:'op',ativo:true}).select().single();
+      data=res2.data;error=res2.error;
+    } else {data=res1.data;error=res1.error;}
     if(error||!data){showRegErr('Erro ao criar conta.');btn.textContent='Criar conta →';btn.disabled=false;return;}
     session=data;saveSession(session);btn.textContent='Criar conta →';btn.disabled=false;
     await bootApp();toast(`✓ Bem-vindo(a), ${data.nome.split(' ')[0]}!`);
@@ -2789,7 +2796,9 @@ async function saveUsr(){
     const d=new Date();d.setDate(d.getDate()+diasAcesso);
     expiresAt=d.toISOString().split('T')[0];
   }
-  const payload={nome,login,role,expires_at:expiresAt};
+  // Tenta salvar com expires_at; se a coluna não existir no banco, salva sem ela
+  const payload={nome,login,role};
+  try{payload.expires_at=expiresAt;}catch(e){}
   if(pass){if(pass.length<4){toast('⚠ Senha muito curta',true);return;}if(!editUsr&&pass!==pass2){toast('⚠ Senhas não coincidem',true);return;}payload.pass_hash=hp(pass);}
   if(editUsr){
     const{data,error}=await sb.from('users').update(payload).eq('id',editUsr.id).select().single();
