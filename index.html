@@ -3377,8 +3377,8 @@ function renderRelatorio(){
     <div class="stats" style="margin-bottom:1.25rem">
       <div class="stat"><div class="stat-label">Total Emprestado</div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${empsF.length} empréstimos no período</div></div>
       <div class="stat"><div class="stat-label">Total Recebido</div><div class="stat-value" style="color:var(--grn)">${fmtR(totalRec)}</div><div class="stat-sub">${parcsPagas.length} parcelas pagas</div></div>
-      <div class="stat"><div class="stat-label">Saldo Devedor</div><div class="stat-value" style="color:var(--red)">${fmtR(saldoTotal)}</div><div class="stat-sub">total em aberto</div></div>
-      <div class="stat"><div class="stat-label">Inadimplência</div><div class="stat-value" style="color:${parcsAtras.length?'var(--red)':'var(--grn)'}">${parcsAtras.length}</div><div class="stat-sub">${fmtR(totalAtras)} em atraso</div></div>
+      <div class="stat"><div class="stat-label">Saldo Devedor</div><div class="stat-value" style="color:var(--red)">${fmtR(saldoTotal)}</div><div class="stat-sub">total geral em aberto</div></div>
+      <div class="stat"><div class="stat-label">Inadimplência</div><div class="stat-value" style="color:${parcsAtras.length?'var(--red)':'var(--grn)'}">${parcsAtras.length}</div><div class="stat-sub">parcelas atrasadas (geral)</div></div>
     </div>
 
     <!-- GRÁFICOS LINHA 1 -->
