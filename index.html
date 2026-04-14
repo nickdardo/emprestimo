@@ -230,7 +230,28 @@ body.dark .sidebar-footer{border-color:#1E293B}
 body.dark .sidebar-item:hover{background:#1E293B}
 body.dark .sidebar-item.active{background:#1E293B}
 body.dark .card,.dark .stat,.dark .modal{background:#1E293B!important;border-color:#334155!important}
-body.dark input,body.dark select,body.dark textarea{background:#1E293B;border-color:#334155;color:var(--n1)}
+body.dark input,body.dark select,body.dark textarea{background:#1E293B;border-color:#334155;color:#F1F5F9}
+body.dark select option{background:#1E293B;color:#F1F5F9}
+body.dark select:focus{border-color:#EA580C}
+body.dark input::placeholder,body.dark textarea::placeholder{color:#475569}
+body.dark .modal{background:#1E293B!important;color:#F1F5F9}
+body.dark .mbody{color:#F1F5F9}
+body.dark .lbl{color:#94A3B8}
+body.dark .msec{color:#F97316}
+body.dark .login-card{background:#1E293B;color:#F1F5F9}
+body.dark .login-field input{background:#0F172A!important;border-color:#334155;color:#F1F5F9!important;-webkit-text-fill-color:#F1F5F9!important}
+body.dark .login-field input:-webkit-autofill,
+body.dark .login-field input:-webkit-autofill:hover,
+body.dark .login-field input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #0F172A inset!important;-webkit-text-fill-color:#F1F5F9!important}
+body.dark .wa-modal-inner{background:#1E293B;color:#F1F5F9}
+body.dark .gsearch-box{background:#1E293B}
+body.dark .gsearch-row{border-color:#334155}
+body.dark .gsearch-row input{color:#F1F5F9;background:transparent}
+body.dark .gsearch-item{border-color:#334155}
+body.dark .gsearch-item:hover{background:#0F172A}
+body.dark .gsearch-empty{color:#64748B}
+body.dark .emp-tipo-desc{background:#0F172A;border-color:#334155}
+body.dark #notif-perm-msg{color:#94A3B8}
 body.dark .tbl-wrap{border-color:#334155}
 body.dark table thead th{background:#1E293B;border-color:#334155}
 body.dark tbody tr{border-color:#1E293B}
@@ -468,7 +489,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 
       <div class="fgrid">
         <div class="fg full">
-          <span class="lbl">Tomador *</span>
+          <span class="lbl">Cliente *</span>
           <div style="display:flex;gap:.5rem">
             <select id="emp-tom" style="flex:1" onchange="updateEmpCalc()"><option value="">Selecione ou crie</option></select>
             <button class="btn btn-g btn-sm" onclick="openTomModal(null)" style="z-index:250;position:relative">+ Novo Cliente</button>
@@ -531,7 +552,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 <!-- MODAL TOMADOR -->
 <div class="mbd" id="tom-modal" style="display:none;z-index:400" onclick="if(event.target===this)closeM('tom-modal')">
   <div class="modal" style="max-width:440px">
-    <div class="mhdr"><span class="mtitle" id="tom-modal-title">Novo Tomador</span><button class="mclose" onclick="closeM('tom-modal')">✕</button></div>
+    <div class="mhdr"><span class="mtitle" id="tom-modal-title">Novo Cliente</span><button class="mclose" onclick="closeM('tom-modal')">✕</button></div>
     <div class="mbody">
       <div class="fgrid">
         <div class="fg full"><span class="lbl">Nome *</span><input id="tom-nome" placeholder="Nome completo"/></div>
@@ -638,7 +659,7 @@ function buildSidebar(){
   const tabs=[
     {id:'dashboard',icon:'dashboard',label:'Dashboard'},
     {id:'emprestimos',icon:'emprestimos',label:'Empréstimos'},
-    {id:'tomadores',icon:'tomadores',label:'Tomadores'},
+    {id:'tomadores',icon:'tomadores',label:'Clientes'},
     {id:'simulador',icon:'simulador',label:'Simulador'},
     {id:'perfil',icon:'perfil',label:'Meu Perfil'},
     {id:'relatorio',icon:'relatorio',label:'Relatório',admin:true},
@@ -1026,7 +1047,7 @@ function showImportPreview(dataRows){
     <div style="padding:1.25rem 1.5rem">
       <div style="padding:.75rem 1rem;background:var(--grn0);border-radius:var(--rs);font-size:13px;color:#065F46;margin-bottom:1rem;border:1px solid var(--grn1)">
         Arquivo reconhecido. <strong>${dataRows.length} empréstimos</strong> serão importados.<br>
-        Os tomadores serão criados automaticamente se ainda não existirem.
+        Os clientes serão criados automaticamente se ainda não existirem.
       </div>
       <div style="font-size:11px;font-weight:700;color:var(--n4);text-transform:uppercase;margin-bottom:.5rem">Prévia (primeiros 5)</div>
       <div style="overflow-x:auto">
@@ -1262,7 +1283,7 @@ function renderEmprestimos(){
         <thead><tr>
           <th id="th-check" style="display:none;width:36px"><input type="checkbox" id="chk-all" onclick="toggleAllChk(this)"/></th>
           <th style="width:36px">Nº</th>
-          <th class="sortable" id="th-sort-nome" onclick="sortEmp('nome')">Tomador<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-nome" onclick="sortEmp('nome')">Cliente<span class="sort-icon"></span></th>
           <th class="hide-mobile sortable" id="th-sort-responsavel" onclick="sortEmp('responsavel')">Responsável<span class="sort-icon"></span></th>
           <th class="hide-mobile">Garantia</th>
           <th class="hide-mobile sortable" id="th-sort-local" onclick="sortEmp('local')">Local<span class="sort-icon"></span></th>
@@ -1480,7 +1501,7 @@ function openEmpModal(id){
   editEmp=id?emprestimos.find(e=>e.id===id):null;
   document.getElementById('emp-modal-title').textContent=editEmp?'Editar Empréstimo':'Novo Empréstimo';
   const sel=document.getElementById('emp-tom');
-  sel.innerHTML='<option value="">Selecione o tomador</option>'+
+  sel.innerHTML='<option value="">Selecione o cliente</option>'+
     tomadores.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('');
   if(editEmp){
     const tipo=editEmp.tipo||'juros';
@@ -1527,7 +1548,7 @@ async function saveEmp(){
   const nparc=parseInt(document.getElementById('emp-nparc').value)||0;
   const tipo=_empTipo||'juros';
 
-  if(!tomId){toast('⚠ Selecione o tomador',true);return;}
+  if(!tomId){toast('⚠ Selecione o cliente',true);return;}
   if(!valor||valor<=0){toast('⚠ Informe o valor',true);return;}
   if(!data){toast('⚠ Informe a data',true);return;}
 
@@ -2173,7 +2194,7 @@ function exportTomadoresExcel(){
 
   const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>AGPainel — Tomadores</title>
+  <title>AGPainel — Clientes</title>
   <style>
     body{font-family:Arial,sans-serif;padding:2rem;color:#111;font-size:13px}
     h1{font-size:1.4rem;margin-bottom:.25rem;color:#111827}
@@ -2186,7 +2207,7 @@ function exportTomadoresExcel(){
     .footer{margin-top:2rem;font-size:11px;color:#9CA3AF;display:flex;justify-content:space-between}
     @media print{button{display:none!important}}
   </style></head><body>
-  <h1>AGPainel — Lista de Tomadores</h1>
+  <h1>AGPainel — Lista de Clientes</h1>
   <div class="sub">Gerado em ${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})} · ${tomadores.length} tomadores</div>
   <table>
     <thead><tr>
@@ -2218,13 +2239,13 @@ function renderTomadores(){
   const mc=document.getElementById('main-content');
   mc.innerHTML=`
     <div class="sec-hdr">
-      <span class="sec-title">Tomadores</span>
+      <span class="sec-title">Clientes</span>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
         <button class="btn btn-g btn-sm" onclick="exportTomadoresExcel()">↓ Exportar PDF</button>
-        <button class="btn btn-p btn-sm" onclick="openTomModal(null)">+ Novo Tomador</button>
+        <button class="btn btn-p btn-sm" onclick="openTomModal(null)">+ Novo Cliente</button>
       </div>
     </div>
-    <div style="margin-bottom:1rem"><input type="text" id="tom-s" placeholder="🔍  Buscar tomador..." oninput="filterTom()" style="max-width:360px"/></div>
+    <div style="margin-bottom:1rem"><input type="text" id="tom-s" placeholder="🔍  Buscar cliente..." oninput="filterTom()" style="max-width:360px"/></div>
     <div class="tbl-wrap">
       <table>
         <thead id="tom-thead"><tr>
@@ -2249,7 +2270,7 @@ function filterTom(){
 }
 
 function tomTbodyHTML(list){
-  if(!list.length)return`<tr><td colspan="8"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum tomador.</div></div></td></tr>`;
+  if(!list.length)return`<tr><td colspan="8"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum cliente.</div></div></td></tr>`;
   return list.map((t,i)=>{
     const emps=emprestimos.filter(e=>e.tomador_id===t.id);
     const totalEmprestado=emps.reduce((s,e)=>s+Number(e.valor||0),0);
@@ -2270,7 +2291,7 @@ function tomTbodyHTML(list){
 
 function openTomModal(id){
   editTom=id?tomadores.find(t=>t.id===id):null;
-  document.getElementById('tom-modal-title').textContent=editTom?'Editar Tomador':'Novo Tomador';
+  document.getElementById('tom-modal-title').textContent=editTom?'Editar Cliente':'Novo Cliente';
   document.getElementById('tom-nome').value=editTom?.nome||'';
   document.getElementById('tom-cont').value=editTom?.contato||'';
   const ocupEl=document.getElementById('tom-ocup');if(ocupEl)ocupEl.value=editTom?.ocupacao||'';
@@ -2313,14 +2334,14 @@ async function saveTom(){
 
   if(editTom){
     tomadores=tomadores.map(t=>t.id===editTom.id?{...data,ocupacao}:t);
-    toast('✓ Tomador atualizado');
+    toast('✓ Cliente atualizado');
   } else {
     const tomComOcup={...data,ocupacao};
     tomadores.push(tomComOcup);
     tomadores.sort((a,b)=>a.nome.localeCompare(b.nome));
     const sel=document.getElementById('emp-tom');
-    if(sel){sel.innerHTML='<option value="">Selecione o tomador</option>'+tomadores.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('');sel.value=data.id;}
-    toast('✓ Tomador cadastrado');
+    if(sel){sel.innerHTML='<option value="">Selecione o cliente</option>'+tomadores.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('');sel.value=data.id;}
+    toast('✓ Cliente cadastrado');
   }
   closeM('tom-modal');
   if(curPage==='tomadores')renderTomadores();
@@ -2330,10 +2351,10 @@ async function deleteTom(id){
   const t=tomadores.find(x=>x.id===id);
   const cnt=emprestimos.filter(e=>e.tomador_id===id).length;
   if(cnt>0&&!confirm(`"${t?.nome}" possui ${cnt} empréstimo${cnt!==1?'s':''}. Remover mesmo assim?`))return;
-  if(cnt===0&&!confirm(`Remover tomador "${t?.nome}"?`))return;
+  if(cnt===0&&!confirm(`Remover cliente "${t?.nome}"?`))return;
   await sb.from('tomadores').delete().eq('id',id);
   tomadores=tomadores.filter(x=>x.id!==id);
-  toast('Tomador removido');renderTomadores();
+  toast('Cliente removido');renderTomadores();
 }
 
 // ══ SIMULADOR ══
@@ -3041,7 +3062,7 @@ function runGlobalSearch(){
     const emps=emprestimos.filter(e=>e.tomador_id===t.id).length;
     items.push(`<div class="gsearch-item" onclick="closeGlobalSearch();setTimeout(()=>openClientView('${t.id}'),100)">
       <div><div style="font-weight:600;font-size:13px">${t.nome}</div><div style="font-size:11px;color:var(--n4)">${t.contato||''} · ${emps} empréstimo${emps!==1?'s':''}</div></div>
-      <span class="gsearch-tag" style="background:#EFF6FF;color:var(--blu)">Tomador</span></div>`);
+      <span class="gsearch-tag" style="background:#EFF6FF;color:var(--blu)">Cliente</span></div>`);
   });
   emprestimos.filter(e=>{const t=tomadores.find(x=>x.id===e.tomador_id);return(t?.nome||'').toLowerCase().includes(q)||(e.responsavel||'').toLowerCase().includes(q)||(e.local||'').toLowerCase().includes(q)||String(e.valor).includes(q);}).forEach(e=>{
     const t=tomadores.find(x=>x.id===e.tomador_id);
