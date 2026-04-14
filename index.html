@@ -3400,7 +3400,7 @@ function avisarPagamento(){
   const plano=window._renovPlanoSel;
   if(!plano)return;
   const msg=`Olá! Acabei de realizar o pagamento via PIX para renovação do AGPainel.%0A%0A👤 Usuário: ${session.nome}%0A📋 Login: @${session.login}%0A📅 Plano: ${plano.label}%0A💰 Valor: R$ ${plano.valor.toFixed(2).replace('.',',')}%0A%0AAguardo a liberação do acesso. Obrigado!`;
-  const tel='55'+_PIX_KEY.replace(/\D/g,'').slice(-11);
+  const tel='5591985919201';
   window.open('https://wa.me/'+tel+'?text='+msg,'_blank');
 }
 
