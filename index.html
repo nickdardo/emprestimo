@@ -3282,87 +3282,64 @@ function navMes(delta){
   window._relatMes={y:d.getFullYear(),m:d.getMonth()};
   renderRelatorio();
 }
-// _relatMes = {y:2026, m:3} (mês 0-indexed), null = mês atual
 function renderRelatorio(){
   const mc=document.getElementById('main-content');
-
-  // ── Mês selecionado (navegável) ──────────────────────────
   const hoje=new Date();
-  if(!window._relatMes) window._relatMes={y:hoje.getFullYear(),m:hoje.getMonth()};
-  const selY=window._relatMes.y, selM=window._relatMes.m;
-  const mesAtualY=hoje.getFullYear(), mesAtualM=hoje.getMonth();
-  const isMesAtual=(selY===mesAtualY&&selM===mesAtualM);
-  const mesLabelRaw=new Date(selY,selM,1).toLocaleString('pt-BR',{month:'long',year:'numeric'});const mesLabel=mesLabelRaw.charAt(0).toUpperCase()+mesLabelRaw.slice(1).toLowerCase().replace(/ de /,' de ');
 
+  if(!window._relat) window._relat={modo:'mes',y:hoje.getFullYear(),m:hoje.getMonth(),d:hoje.getDate()};
+  const R=window._relat;
+  const meses_nomes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
+  // ── Filtro de data ──────────────────────────────────────
+  let dtInicio,dtFim,exibindo;
+  if(R.modo==='dia'){
+    dtInicio=new Date(R.y,R.m,R.d,0,0,0);dtFim=new Date(R.y,R.m,R.d,23,59,59);
+    exibindo=String(R.d).padStart(2,'0')+'/'+String(R.m+1).padStart(2,'0')+'/'+R.y;
+  } else if(R.modo==='mes'){
+    dtInicio=new Date(R.y,R.m,1);dtFim=new Date(R.y,R.m+1,0,23,59,59);
+    exibindo=meses_nomes[R.m]+' '+R.y;
+  } else if(R.modo==='ano'){
+    dtInicio=new Date(R.y,0,1);dtFim=new Date(R.y,11,31,23,59,59);
+    exibindo=''+R.y;
+  } else {
+    dtInicio=null;dtFim=null;exibindo='Todos os períodos';
+  }
+  const selY=R.y,selM=R.m;
+  const mesAtualY=hoje.getFullYear(),mesAtualM=hoje.getMonth();
 
-  // Filtro: início e fim do mês selecionado
-  const dtInicio=new Date(selY,selM,1);
-  const dtFim=new Date(selY,selM+1,0,23,59,59);
+  // ── Dropdowns ───────────────────────────────────────────
+  const diasNoMes=new Date(R.y,R.m+1,0).getDate();
+  const selDia=Array.from({length:diasNoMes},(_,i)=>i+1).map(d=>`<option value="${d}"${d===R.d?' selected':''}>${String(d).padStart(2,'0')}</option>`).join('');
+  const selMesOpts=meses_nomes.map((n,i)=>`<option value="${i}"${i===R.m?' selected':''}>${n}</option>`).join('');
+  const anoAtual=hoje.getFullYear();
+  const selAnoOpts=Array.from({length:6},(_,i)=>anoAtual-i).map(a=>`<option value="${a}"${a===R.y?' selected':''}>${a}</option>`).join('');
+  const selSt='padding:.35rem .65rem;border:1px solid #E5E7EB;border-radius:var(--rs);background:var(--card);color:var(--n1);font-size:13px;font-weight:600;cursor:pointer;';
+  const cal='<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
 
-  // Empréstimos e parcelas do usuário logado
+  // ── Dados ────────────────────────────────────────────────
   const myEmps=session.role==='admin'?emprestimos:emprestimos.filter(e=>e.owner_id===session.id);
   const empsF=dtInicio?myEmps.filter(e=>{const d=new Date(e.data_emprestimo+'T12:00:00');return d>=dtInicio&&d<=dtFim;}):myEmps;
   const empIds=new Set(myEmps.map(e=>e.id));
   const myParcs=parcelas.filter(p=>empIds.has(p.emprestimo_id));
-
-  // ── Métricas gerais ──────────────────────────────────────
   const totalEmp=empsF.reduce((s,e)=>s+Number(e.valor||0),0);
+  const totalLucro=empsF.reduce((s,e)=>s+Number(e.lucro||0),0);
   const parcsPagas=myParcs.filter(p=>p.status==='pago'&&p.pago_em&&(!dtInicio||(new Date(p.pago_em+'T12:00:00')>=dtInicio&&new Date(p.pago_em+'T12:00:00')<=dtFim)));
   const totalRec=parcsPagas.reduce((s,p)=>s+Number(p.valor_pago||p.valor||0),0);
   const parcsAtras=myParcs.filter(p=>isAtrasada(p));
   const totalAtras=parcsAtras.reduce((s,p)=>s+Number(p.valor||0),0);
   const saldoTotal=myEmps.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
-  const pctInad=myParcs.length?Math.round(parcsAtras.length/myParcs.filter(p=>p.status==='pendente').length*100)||0:0;
 
-  // ── Últimos 6 meses para gráfico ─────────────────────────
+  // ── Últimos 6 meses ──────────────────────────────────────
   const meses=[];
   for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);meses.push({label:d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}),m:d.getMonth(),y:d.getFullYear()});}
   const empMes=meses.map(m=>myEmps.filter(e=>{const d=new Date(e.data_emprestimo+'T12:00:00');return d.getMonth()===m.m&&d.getFullYear()===m.y;}).reduce((s,e)=>s+Number(e.valor||0),0));
   const recMes=meses.map(m=>myParcs.filter(p=>p.status==='pago'&&p.pago_em).filter(p=>{const d=new Date(p.pago_em+'T12:00:00');return d.getMonth()===m.m&&d.getFullYear()===m.y;}).reduce((s,p)=>s+Number(p.valor_pago||p.valor||0),0));
-
-  // ── Ranking clientes ─────────────────────────────────────
-  const tomRank=tomadores.map(t=>{
-    const te=myEmps.filter(e=>e.tomador_id===t.id);
-    const tp=myParcs.filter(p=>te.some(e=>e.id===p.emprestimo_id));
-    const saldo=te.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
-    const atras=tp.filter(p=>isAtrasada(p)).length;
-    return{...t,saldo,atras,totalEmp:te.reduce((s,e)=>s+Number(e.valor||0),0)};
-  }).filter(t=>t.totalEmp>0).sort((a,b)=>b.saldo-a.saldo).slice(0,8);
-
-  // ── Inadimplência por mês ─────────────────────────────────
-  const inadMes=meses.map(m=>{
-    const vencidas=myParcs.filter(p=>{
-      const v=new Date(p.vencimento+'T12:00:00');
-      return p.status==='pendente'&&v.getMonth()===m.m&&v.getFullYear()===m.y&&v<new Date();
-    });
-    return vencidas.reduce((s,p)=>s+Number(p.valor||0),0);
-  });
-
-  // ── Por tipo ─────────────────────────────────────────────
+  const inadMes=meses.map(m=>{const v=myParcs.filter(p=>{const vd=new Date(p.vencimento+'T12:00:00');return p.status==='pendente'&&vd.getMonth()===m.m&&vd.getFullYear()===m.y&&vd<new Date();});return v.reduce((s,p)=>s+Number(p.valor||0),0);});
   const nJuros=myEmps.filter(e=>(e.tipo||'juros')==='juros').length;
   const nConsig=myEmps.filter(e=>e.tipo==='consignado').length;
-
-  // ── Projeção próximos 3 meses ─────────────────────────────
   const proj=[];
-  for(let i=1;i<=3;i++){
-    const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+i);
-    const val=myParcs.filter(p=>{
-      const v=new Date(p.vencimento+'T12:00:00');
-      return p.status==='pendente'&&v.getMonth()===d.getMonth()&&v.getFullYear()===d.getFullYear();
-    }).reduce((s,p)=>s+Number(p.valor||0),0);
-    proj.push({label:d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}),val});
-  }
-
-  // ── Seletores de dropdowns ───────────────────────────────
-  const diasNoMes=new Date(R.y,R.m+1,0).getDate();
-  const selDia=Array.from({length:diasNoMes},(_,i)=>i+1).map(d=>`<option value="${d}" ${d===R.d?'selected':''}>${String(d).padStart(2,'0')}</option>`).join('');
-  const selMesOpts=meses_nomes.map((n,i)=>`<option value="${i}" ${i===R.m?'selected':''}>${n}</option>`).join('');
-  const anoAtual=hoje.getFullYear();
-  const selAnoOpts=Array.from({length:6},(_,i)=>anoAtual-i).map(a=>`<option value="${a}" ${a===R.y?'selected':''}>${a}</option>`).join('');
-
-  const selStyle='padding:.35rem .65rem;border:1px solid #E5E7EB;border-radius:var(--rs);background:var(--card);color:var(--n1);font-size:13px;font-weight:600;cursor:pointer;';
-  const calIcon='<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  for(let i=1;i<=3;i++){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+i);const val=myParcs.filter(p=>{const v=new Date(p.vencimento+'T12:00:00');return p.status==='pendente'&&v.getMonth()===d.getMonth()&&v.getFullYear()===d.getFullYear();}).reduce((s,p)=>s+Number(p.valor||0),0);proj.push({label:d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}),val});}
+  const tomRank=tomadores.map(t=>{const te=myEmps.filter(e=>e.tomador_id===t.id);const tp=myParcs.filter(p=>te.some(e=>e.id===p.emprestimo_id));const saldo=te.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);const atras=tp.filter(p=>isAtrasada(p)).length;return{...t,saldo,atras,totalEmp:te.reduce((s,e)=>s+Number(e.valor||0),0)};}).filter(t=>t.totalEmp>0).sort((a,b)=>b.saldo-a.saldo).slice(0,8);
 
   mc.innerHTML=`
     <div class="sec-hdr"><span class="sec-title">Relatório</span></div>
@@ -3370,75 +3347,44 @@ function renderRelatorio(){
     <!-- SELETOR DE PERÍODO -->
     <div style="background:var(--card);border:1px solid #E5E7EB;border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:var(--sh)">
       <div style="font-size:11px;font-weight:700;color:var(--n4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.65rem">Período</div>
-
-      <!-- Tabs -->
       <div style="display:flex;gap:.4rem;margin-bottom:.85rem;flex-wrap:wrap">
-        ${['dia','mes','ano','tudo'].map((m,i)=>{
+        ${['dia','mes','ano','tudo'].map((modo,i)=>{
           const labels=['Diário','Mês','Ano','Tudo'];
-          const active=R.modo===m;
-          return`<button onclick="window._relat.modo='${m}';renderRelatorio()" style="padding:.4rem 1rem;border-radius:var(--rs);border:1px solid ${active?'#16A34A':'#E5E7EB'};background:${active?'#16A34A':'var(--card)'};color:${active?'#fff':'var(--n2)'};font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">${labels[i]}</button>`;
+          const active=R.modo===modo;
+          return`<button onclick="window._relat.modo='${modo}';renderRelatorio()" style="padding:.4rem 1rem;border-radius:var(--rs);border:1px solid ${active?'#16A34A':'#E5E7EB'};background:${active?'#16A34A':'var(--card)'};color:${active?'#fff':'var(--n2)'};font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">${labels[i]}</button>`;
         }).join('')}
       </div>
-
-      <!-- Dropdowns conforme modo -->
       <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">
         ${R.modo==='dia'?`
-          <div style="display:flex;align-items:center;gap:.35rem">${calIcon}<select style="${selStyle}" onchange="window._relat.m=parseInt(this.value);renderRelatorio()">${selMesOpts}</select></div>
-          <div style="display:flex;align-items:center;gap:.35rem">${calIcon}<select style="${selStyle}" onchange="window._relat.d=parseInt(this.value);renderRelatorio()">${selDia}</select></div>
-          <div style="display:flex;align-items:center;gap:.35rem">${calIcon}<select style="${selStyle}" onchange="window._relat.y=parseInt(this.value);renderRelatorio()">${selAnoOpts}</select></div>
+          <div style="display:flex;align-items:center;gap:.35rem">${cal}<select style="${selSt}" onchange="window._relat.m=parseInt(this.value);renderRelatorio()">${selMesOpts}</select></div>
+          <div style="display:flex;align-items:center;gap:.35rem">${cal}<select style="${selSt}" onchange="window._relat.d=parseInt(this.value);renderRelatorio()">${selDia}</select></div>
+          <div style="display:flex;align-items:center;gap:.35rem">${cal}<select style="${selSt}" onchange="window._relat.y=parseInt(this.value);renderRelatorio()">${selAnoOpts}</select></div>
         `:R.modo==='mes'?`
-          <div style="display:flex;align-items:center;gap:.35rem">${calIcon}<select style="${selStyle}" onchange="window._relat.m=parseInt(this.value);renderRelatorio()">${selMesOpts}</select></div>
-          <div style="display:flex;align-items:center;gap:.35rem">${calIcon}<select style="${selStyle}" onchange="window._relat.y=parseInt(this.value);renderRelatorio()">${selAnoOpts}</select></div>
+          <div style="display:flex;align-items:center;gap:.35rem">${cal}<select style="${selSt}" onchange="window._relat.m=parseInt(this.value);renderRelatorio()">${selMesOpts}</select></div>
+          <div style="display:flex;align-items:center;gap:.35rem">${cal}<select style="${selSt}" onchange="window._relat.y=parseInt(this.value);renderRelatorio()">${selAnoOpts}</select></div>
         `:R.modo==='ano'?`
-          <div style="display:flex;align-items:center;gap:.35rem">${calIcon}<select style="${selStyle}" onchange="window._relat.y=parseInt(this.value);renderRelatorio()">${selAnoOpts}</select></div>
+          <div style="display:flex;align-items:center;gap:.35rem">${cal}<select style="${selSt}" onchange="window._relat.y=parseInt(this.value);renderRelatorio()">${selAnoOpts}</select></div>
         `:''}
       </div>
-
-      <!-- Exibindo -->
       <div style="font-size:12px;color:var(--n4);margin-bottom:.85rem;font-style:italic">Exibindo: <strong style="color:var(--n2)">${exibindo}</strong></div>
-
-      <!-- Botões de exportação -->
       <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="exportRelatPDF()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar PDF
-        </button>
-        <button class="btn btn-g btn-sm" onclick="exportRelatCSV()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar Excel (CSV)
-        </button>
+        <button class="btn btn-g btn-sm" onclick="exportRelatPDF()">↓ Exportar PDF</button>
+        <button class="btn btn-g btn-sm" onclick="exportRelatCSV()">↓ Exportar Excel (CSV)</button>
       </div>
     </div>
 
     <!-- CARDS RESUMO -->
     <div class="stats" style="margin-bottom:1.25rem">
-      <div class="stat">
-        <div class="stat-label">Total Emprestado</div>
-        <div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div>
-        <div class="stat-sub">${empsF.length} empréstimos no período</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Total Recebido</div>
-        <div class="stat-value" style="color:var(--grn)">${fmtR(totalRec)}</div>
-        <div class="stat-sub">${parcsPagas.length} parcelas pagas</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Saldo Devedor</div>
-        <div class="stat-value" style="color:var(--red)">${fmtR(saldoTotal)}</div>
-        <div class="stat-sub">total em aberto</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Inadimplência</div>
-        <div class="stat-value" style="color:${parcsAtras.length?'var(--red)':'var(--grn)'}">${parcsAtras.length}</div>
-        <div class="stat-sub">${fmtR(totalAtras)} em atraso</div>
-      </div>
+      <div class="stat"><div class="stat-label">Total Emprestado</div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${empsF.length} empréstimos no período</div></div>
+      <div class="stat"><div class="stat-label">Total Recebido</div><div class="stat-value" style="color:var(--grn)">${fmtR(totalRec)}</div><div class="stat-sub">${parcsPagas.length} parcelas pagas</div></div>
+      <div class="stat"><div class="stat-label">Saldo Devedor</div><div class="stat-value" style="color:var(--red)">${fmtR(saldoTotal)}</div><div class="stat-sub">total em aberto</div></div>
+      <div class="stat"><div class="stat-label">Inadimplência</div><div class="stat-value" style="color:${parcsAtras.length?'var(--red)':'var(--grn)'}">${parcsAtras.length}</div><div class="stat-sub">${fmtR(totalAtras)} em atraso</div></div>
     </div>
 
     <!-- GRÁFICOS LINHA 1 -->
     <div class="relat-grid-a" style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem">
-      <!-- Fluxo de Caixa -->
       <div class="card" style="padding:1.25rem">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
           <span style="font-family:var(--FT);font-size:1.05rem">Fluxo de Caixa — Últimos 6 meses</span>
           <div style="display:flex;gap:1rem;font-size:11px">
             <span><span style="display:inline-block;width:10px;height:10px;background:#2563EB;border-radius:2px;margin-right:4px"></span>Emprestado</span>
@@ -3448,23 +3394,18 @@ function renderRelatorio(){
         </div>
         <canvas id="chart-fluxo" height="160"></canvas>
       </div>
-      <!-- Donut saúde -->
       <div class="card" style="padding:1.25rem;display:flex;flex-direction:column">
         <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem">Saúde da Carteira</span>
-        <div style="flex:1;display:flex;align-items:center;justify-content:center">
-          <canvas id="chart-saude" style="max-height:180px"></canvas>
-        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center"><canvas id="chart-saude" style="max-height:180px"></canvas></div>
       </div>
     </div>
 
     <!-- GRÁFICOS LINHA 2 -->
     <div class="relat-grid-b" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
-      <!-- Projeção -->
       <div class="card" style="padding:1.25rem">
         <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem;display:block">Projeção — Próximos 3 meses</span>
         <canvas id="chart-proj" height="140"></canvas>
       </div>
-      <!-- Tipo de empréstimo -->
       <div class="card" style="padding:1.25rem">
         <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem;display:block">Por Tipo de Empréstimo</span>
         <div style="display:flex;align-items:center;gap:1.5rem">
@@ -3480,9 +3421,7 @@ function renderRelatorio(){
               <span style="font-size:13px">📋 Consignado</span>
               <span style="font-weight:700;margin-left:auto">${nConsig}</span>
             </div>
-            <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid #E5E7EB;font-size:12px;color:var(--n4)">
-              Total: ${nJuros+nConsig} empréstimos
-            </div>
+            <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid #E5E7EB;font-size:12px;color:var(--n4)">Total: ${nJuros+nConsig} empréstimos</div>
           </div>
         </div>
       </div>
@@ -3497,9 +3436,7 @@ function renderRelatorio(){
           <span style="font-size:12px;color:var(--n4);min-width:18px;font-weight:700">${i+1}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;cursor:pointer" onclick="openClientView('${t.id}')">${t.nome} <span style="color:var(--grn);font-size:11px">→</span></div>
-            <div style="background:#E5E7EB;border-radius:999px;height:5px;margin-top:4px;overflow:hidden">
-              <div style="background:${t.atras?'var(--red)':'var(--blu)'};height:100%;border-radius:999px;width:${pct}%"></div>
-            </div>
+            <div style="background:#E5E7EB;border-radius:999px;height:5px;margin-top:4px;overflow:hidden"><div style="background:${t.atras?'var(--red)':'var(--blu)'};height:100%;border-radius:999px;width:${pct}%"></div></div>
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div style="font-size:13px;font-weight:700;color:${t.atras?'var(--red)':'var(--blu)'}">${fmtR(t.saldo)}</div>
@@ -3509,13 +3446,12 @@ function renderRelatorio(){
       }).join('')||'<div class="empty-text">Nenhum dado.</div>'}
     </div>
 
-    <!-- INADIMPLÊNCIA POR MÊS -->
+    <!-- INADIMPLÊNCIA -->
     <div class="card">
       <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem;display:block">Inadimplência por Mês</span>
       <canvas id="chart-inad" height="120"></canvas>
     </div>`;
 
-  // ── Renderiza os gráficos com Chart.js ───────────────────
   setTimeout(()=>{
     if(typeof Chart==='undefined'){
       const s=document.createElement('script');
@@ -3527,7 +3463,6 @@ function renderRelatorio(){
     }
   },50);
 }
-
 function _desenharGraficos(meses,empMes,recMes,inadMes,proj,myParcs,parcsAtras,nJuros,nConsig){
   const isDark=document.body.classList.contains('dark');
   const gridColor=isDark?'rgba(255,255,255,.07)':'rgba(0,0,0,.06)';
