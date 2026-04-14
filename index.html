@@ -268,6 +268,19 @@ body.dark .info-box{background:#1C0E04;border-color:#431407}
 .gsearch-tag{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:700;flex-shrink:0}
 
 
+
+/* ── INPUTS MAIÚSCULOS NOS MODAIS ───────────────────────── */
+.modal input[type="text"],
+.modal input:not([type="password"]):not([type="date"]):not([type="file"]):not([type="checkbox"]),
+.modal textarea,
+.login-field input[type="text"],
+#reg-nome, #reg-login,
+#tom-nome, #tom-cont, #tom-ocup,
+#um-nome, #um-login,
+#emp-resp, #emp-gar, #emp-loc, #emp-obs {
+  text-transform: uppercase;
+}
+
 /* ── WHATSAPP GESTOR ────────────────────────────────────────── */
 .wa-nav-btn{display:flex;align-items:center;gap:6px;padding:.3rem .75rem;border-radius:var(--rs);background:#16A34A;color:#fff;border:none;font-family:var(--FB);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;white-space:nowrap}
 .wa-nav-btn:hover{background:#15803D}
@@ -1531,9 +1544,9 @@ async function saveEmp(){
 
   const payload={
     tomador_id:tomId,
-    responsavel:document.getElementById('emp-resp').value.trim()||null,
-    garantia:document.getElementById('emp-gar').value.trim()||null,
-    local:document.getElementById('emp-loc').value.trim()||null,
+    responsavel:(document.getElementById('emp-resp').value.trim()||'').toUpperCase()||null,
+    garantia:(document.getElementById('emp-gar').value.trim()||'').toUpperCase()||null,
+    local:(document.getElementById('emp-loc').value.trim()||'').toUpperCase()||null,
     valor:parseFloat(valor.toFixed(2)),
     juros:parseFloat(juros.toFixed(4)),
     tipo:tipo,
@@ -2268,10 +2281,10 @@ function openTomModal(id){
 }
 
 async function saveTom(){
-  const nome=document.getElementById('tom-nome').value.trim();
+  const nome=document.getElementById('tom-nome').value.trim().toUpperCase();
   if(!nome){toast('⚠ Informe o nome',true);return;}
   const ocupEl=document.getElementById('tom-ocup');
-  const ocupacao=ocupEl?.value.trim()||null;
+  const ocupacao=ocupEl?.value.trim().toUpperCase()||null;
   const contato=document.getElementById('tom-cont').value.trim()||null;
 
   // Tenta salvar com ocupacao; se falhar (coluna não existe), salva sem ela
@@ -2624,7 +2637,7 @@ function openUsrModal(id){
 }
 
 async function saveUsr(){
-  const nome=document.getElementById('um-nome').value.trim();
+  const nome=document.getElementById('um-nome').value.trim().toUpperCase();
   const login=document.getElementById('um-login').value.trim().toLowerCase();
   const role=document.getElementById('um-role').value;
   const pass=document.getElementById('um-pass').value;
