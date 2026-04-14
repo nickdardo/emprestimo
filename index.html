@@ -2363,15 +2363,6 @@ function renderTomadores(){
         <button class="btn btn-p btn-sm" onclick="openTomModal(null)">+ Novo Cliente</button>
       </div>
     </div>
-    <!-- FILTRO PERÍODO CLIENTES -->
-    <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem">
-      ${['Mês atual','2 meses','3 meses','6 meses','1 ano','Tudo'].map((l,i)=>{
-        const vals=['1m','2m','3m','6m','12m','all'];
-        const v=vals[i];
-        const sel=window._tomPeriodo||'all';
-        return`<button class="pill ${sel===v?'active':''}" onclick="window._tomPeriodo='${v}';renderTomadores()">${l}</button>`;
-      }).join('')}
-    </div>
     <div style="margin-bottom:1rem"><input type="text" id="tom-s" placeholder="🔍  Buscar cliente..." oninput="filterTom()" style="max-width:360px"/></div>
     <div class="tbl-wrap">
       <table>
@@ -2409,9 +2400,8 @@ function _tomDataInicio(p){
 
 function tomTbodyHTML(list){
   if(!list.length)return`<tr><td colspan="8"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum cliente.</div></div></td></tr>`;
-  const _tomDtInicio=_tomDataInicio(window._tomPeriodo||'all');
   return list.map((t,i)=>{
-    const emps=emprestimos.filter(e=>e.tomador_id===t.id&&(!_tomDtInicio||new Date(e.data_emprestimo+'T12:00:00')>=_tomDtInicio));
+    const emps=emprestimos.filter(e=>e.tomador_id===t.id);
     const totalEmprestado=emps.reduce((s,e)=>s+Number(e.valor||0),0);
     return`<tr>
       <td style="color:var(--n4);font-size:12px">${i+1}</td>
