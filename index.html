@@ -252,6 +252,8 @@ body.dark .info-box{background:#1C0E04;border-color:#431407}
 .pill-red.active{background:var(--red);border-color:var(--red);color:#fff}
 .pill-amb.active{background:var(--amb);border-color:var(--amb);color:#fff}
 .pill-grn.active{background:#16A34A;border-color:#16A34A;color:#fff}
+.pill-juros.active{background:#EA580C;border-color:#EA580C;color:#fff}
+.pill-consig.active{background:#2563EB;border-color:#2563EB;color:#fff}
 
 /* ── BUSCA GLOBAL ───────────────────────────────────────────── */
 .gsearch-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:5rem 1rem}
@@ -1235,6 +1237,8 @@ function renderEmprestimos(){
       <button class="pill pill-grn" id="pill-quitado" onclick="setEmpFilter('quitado')">✅ Quitados</button>
       <button class="pill" id="pill-ativo" onclick="setEmpFilter('ativo')">📋 Ativos</button>
       <button class="pill" id="pill-semparc" onclick="setEmpFilter('semparc')">💳 Sem parcelas</button>
+      <button class="pill pill-juros" id="pill-juros" onclick="setEmpFilter('juros')">💰 Juros</button>
+      <button class="pill pill-consig" id="pill-consig" onclick="setEmpFilter('consig')">📋 Consignado</button>
     </div>
     <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
       <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:380px"/>
@@ -1342,6 +1346,8 @@ function filterEmp(){
   else if(_empFilter==='quitado'){f=f.filter(e=>{const ep=parcelas.filter(p=>p.emprestimo_id===e.id);return ep.length>0&&ep.every(p=>p.status==='pago');});}
   else if(_empFilter==='ativo'){f=f.filter(e=>{const ep=parcelas.filter(p=>p.emprestimo_id===e.id);return ep.length===0||ep.some(p=>p.status==='pendente');});}
   else if(_empFilter==='semparc'){f=f.filter(e=>parcelas.filter(p=>p.emprestimo_id===e.id).length===0);}
+  else if(_empFilter==='juros'){f=f.filter(e=>(e.tipo||'juros')==='juros');}
+  else if(_empFilter==='consig'){f=f.filter(e=>e.tipo==='consignado');}
   const sorted=applySortEmp(f);
   const tb=document.getElementById('emp-tbody');if(tb)tb.innerHTML=empTbodyHTML(sorted);
 }
@@ -1386,7 +1392,7 @@ function empTbodyHTML(list){
       </td>
       <td>
         <div style="display:flex;gap:.3rem">
-          <button class="btn btn-xs btn-g" onclick="openEmpModal('${e.id}')">✏</button>
+          <button class="btn btn-xs btn-g" onclick="openEmpModal('${e.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           ${session.role==='admin'?`<button class="btn btn-xs btn-d" onclick="deleteEmp('${e.id}')">✕</button>`:''}
         </div>
       </td>
@@ -2243,7 +2249,7 @@ function tomTbodyHTML(list){
       <td style="font-weight:600;color:var(--blu)">${emps.length}</td>
       <td style="font-weight:700;color:${totalEmprestado>0?'var(--blu)':'var(--n4)'}">${fmtR(totalEmprestado)}</td>
       <td><div style="display:flex;gap:.3rem">
-        <button class="btn btn-xs btn-g" onclick="openTomModal('${t.id}')">✏</button>
+        <button class="btn btn-xs btn-g" onclick="openTomModal('${t.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="btn btn-xs btn-d" onclick="deleteTom('${t.id}')">✕</button>
       </div></td>
     </tr>`;
@@ -2599,7 +2605,7 @@ function usrListHTML(){
         <div style="font-size:12px;color:var(--n4);margin-top:2px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'3°JOB'}</span></div>
       </div>
       <div style="display:flex;gap:.4rem">
-        <button class="btn btn-g btn-sm" onclick="openUsrModal('${u.id}')">✏ Editar</button>
+        <button class="btn btn-g btn-sm" onclick="openUsrModal('${u.id}')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar</button>
         ${!isSelf?`<button class="btn btn-d btn-sm" onclick="deleteUsr('${u.id}')">✕</button>`:''}
       </div>
     </div>`;
