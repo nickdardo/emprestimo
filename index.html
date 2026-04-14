@@ -540,6 +540,38 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   </div>
 </div>
 
+
+<!-- MODAL RENOVAÇÃO DE ACESSO -->
+<div class="mbd" id="renov-modal" style="display:none" onclick="if(event.target===this)closeM('renov-modal')">
+  <div class="modal" style="max-width:460px">
+    <div class="mhdr"><span class="mtitle">Renovar Acesso</span><button class="mclose" onclick="closeM('renov-modal')">✕</button></div>
+    <div class="mbody">
+      <!-- Planos -->
+      <div id="renov-planos">
+        <div style="font-size:13px;color:var(--n3);margin-bottom:1rem">Escolha o plano desejado e pague via PIX:</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem" id="renov-grid"></div>
+      </div>
+      <!-- QR Code -->
+      <div id="renov-qr" style="display:none;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:var(--n1);margin-bottom:.75rem" id="renov-qr-titulo"></div>
+        <div id="renov-qr-canvas" style="display:inline-block;padding:12px;background:#fff;border-radius:var(--rs);border:2px solid #E5E7EB;margin-bottom:.75rem"></div>
+        <div style="font-size:11px;color:var(--n4);margin-bottom:.5rem">Ou copie o código PIX:</div>
+        <div style="display:flex;gap:.4rem;margin-bottom:1rem">
+          <input id="renov-pix-code" readonly style="flex:1;font-size:10px;font-family:monospace;background:#F9FAFB" onclick="this.select()"/>
+          <button class="btn btn-g btn-sm" onclick="copiarPix()">Copiar</button>
+        </div>
+        <div style="background:#F0FDF4;border:1px solid #D1FAE5;border-radius:var(--rs);padding:.75rem;font-size:12px;color:#166534;margin-bottom:.75rem">
+          ✓ Após o pagamento, envie o comprovante para o administrador. Seu acesso será liberado em instantes.
+        </div>
+        <button class="btn btn-sm" style="background:#16A34A;color:#fff;width:100%" onclick="avisarPagamento()">
+          💬 Já paguei — Avisar administrador
+        </button>
+        <button class="btn btn-g btn-sm" style="width:100%;margin-top:.4rem" onclick="document.getElementById('renov-qr').style.display='none';document.getElementById('renov-planos').style.display=''">← Voltar aos planos</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EMPRÉSTIMO -->
 <div class="mbd" id="emp-modal" style="display:none" onclick="if(event.target===this)closeM('emp-modal')">
   <div class="modal" style="max-width:540px">
@@ -900,12 +932,15 @@ async function bootApp(){
       navBadge.className='nav-badge badge-admin';
     } else if(session.expires_at){
       const diasNav=Math.ceil((new Date(session.expires_at)-new Date())/(1000*60*60*24));
+      navBadge.style.cursor='pointer';
+      navBadge.title='Clique para renovar acesso';
+      navBadge.onclick=()=>abrirRenovacao();
       if(diasNav<0){
-        navBadge.textContent='Expirado';navBadge.className='nav-badge badge-expired';
+        navBadge.textContent='⛔ Expirado — Renovar';navBadge.className='nav-badge badge-expired';
       } else if(diasNav<=7){
-        navBadge.textContent=`⚠ ${diasNav}d restantes`;navBadge.className='nav-badge badge-warn';
+        navBadge.textContent=`⚠ ${diasNav}d — Renovar`;navBadge.className='nav-badge badge-warn';
       } else if(diasNav<=30){
-        navBadge.textContent=`Free · ${diasNav}d restantes`;navBadge.className='nav-badge badge-free';
+        navBadge.textContent=`Free · ${diasNav}d`;navBadge.className='nav-badge badge-free';
       } else {
         navBadge.textContent=`Ativo · ${diasNav}d`;navBadge.className='nav-badge badge-ativo';
       }
@@ -3260,6 +3295,115 @@ function exportRelatCSV(){
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},300);
   toast('✓ CSV exportado!');
 }
+
+
+// ══ PIX / RENOVAÇÃO ══
+const _PIX_KEY='01058147250';
+const _PIX_NAME='Eduardo Ribeiro Oliveira';
+const _PIX_CITY='Belem';
+const _PIX_PLANOS=[
+  {label:'30 dias',  dias:30,  valor:2.99, desc:'Renovação trial'},
+  {label:'60 dias',  dias:60,  valor:5.00, desc:'Plano básico'},
+  {label:'90 dias',  dias:90,  valor:8.00, desc:'Plano trimestral'},
+  {label:'6 meses',  dias:180, valor:15.00,desc:'Plano semestral'},
+  {label:'1 ano',    dias:365, valor:25.00,desc:'Plano anual'},
+];
+
+function _crc16pix(str){
+  let crc=0xFFFF;
+  for(let i=0;i<str.length;i++){
+    crc^=str.charCodeAt(i)<<8;
+    for(let j=0;j<8;j++) crc=(crc&0x8000)?((crc<<1)^0x1021):(crc<<1);
+  }
+  return(crc&0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+}
+
+function _pixField(id,value){
+  const l=String(value.length).padStart(2,'0');
+  return id+l+value;
+}
+
+function gerarPixEMV(chave,nome,cidade,valor,txid){
+  txid=(txid||'AGPainel').replace(/[^A-Za-z0-9]/g,'').substring(0,25).padEnd(1,'A');
+  const gui=_pixField('00','BR.GOV.BCB.PIX')+_pixField('01',chave);
+  const mai=_pixField('26',gui);
+  const addi=_pixField('62',_pixField('05',txid));
+  const nomeAsc=nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').substring(0,25);
+  const cidAsc=cidade.normalize('NFD').replace(/[\u0300-\u036f]/g,'').substring(0,15);
+  const payload=
+    _pixField('00','01')+
+    _pixField('01','12')+
+    mai+
+    _pixField('52','0000')+
+    _pixField('53','986')+
+    _pixField('54',valor.toFixed(2))+
+    _pixField('58','BR')+
+    _pixField('59',nomeAsc)+
+    _pixField('60',cidAsc)+
+    addi+
+    '6304';
+  return payload+_crc16pix(payload);
+}
+
+function abrirRenovacao(){
+  if(session.role==='admin'){toast('Admin não precisa renovar!');return;}
+  const grid=document.getElementById('renov-grid');
+  if(!grid)return;
+  grid.innerHTML=_PIX_PLANOS.map((p,i)=>`
+    <div onclick="selecionarPlano(${i})" style="border:2px solid #E5E7EB;border-radius:var(--r);padding:.85rem;cursor:pointer;text-align:center;transition:all .15s;background:var(--card)"
+      onmouseover="this.style.borderColor='#EA580C';this.style.background='#FFF7ED'"
+      onmouseout="this.style.borderColor='#E5E7EB';this.style.background='var(--card)'">
+      <div style="font-size:1.1rem;font-weight:700;color:var(--n1)">${p.label}</div>
+      <div style="font-size:1.3rem;font-weight:800;color:#EA580C;margin:.25rem 0">R$ ${p.valor.toFixed(2).replace('.',',')}</div>
+      <div style="font-size:11px;color:var(--n4)">${p.desc}</div>
+    </div>`).join('');
+  document.getElementById('renov-planos').style.display='';
+  document.getElementById('renov-qr').style.display='none';
+  openM('renov-modal');
+}
+
+function selecionarPlano(idx){
+  const plano=_PIX_PLANOS[idx];
+  const txid='AGP'+session.id.substring(0,8).toUpperCase();
+  const emv=gerarPixEMV(_PIX_KEY,_PIX_NAME,_PIX_CITY,plano.valor,txid);
+
+  document.getElementById('renov-qr-titulo').textContent=`PIX — ${plano.label} · R$ ${plano.valor.toFixed(2).replace('.',',')}`;
+  document.getElementById('renov-pix-code').value=emv;
+  document.getElementById('renov-planos').style.display='none';
+  document.getElementById('renov-qr').style.display='';
+
+  // Gera QR Code
+  const qrDiv=document.getElementById('renov-qr-canvas');
+  qrDiv.innerHTML='';
+  if(typeof QRCode==='undefined'){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload=()=>new QRCode(qrDiv,{text:emv,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
+    document.head.appendChild(s);
+  } else {
+    new QRCode(qrDiv,{text:emv,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
+  }
+
+  // Guarda plano selecionado para aviso
+  window._renovPlanoSel=plano;
+}
+
+function copiarPix(){
+  const code=document.getElementById('renov-pix-code')?.value;
+  if(!code)return;
+  navigator.clipboard.writeText(code).then(()=>toast('✓ Código PIX copiado!')).catch(()=>{
+    document.getElementById('renov-pix-code').select();document.execCommand('copy');toast('✓ Copiado!');
+  });
+}
+
+function avisarPagamento(){
+  const plano=window._renovPlanoSel;
+  if(!plano)return;
+  const msg=`Olá! Acabei de realizar o pagamento via PIX para renovação do AGPainel.%0A%0A👤 Usuário: ${session.nome}%0A📋 Login: @${session.login}%0A📅 Plano: ${plano.label}%0A💰 Valor: R$ ${plano.valor.toFixed(2).replace('.',',')}%0A%0AAguardo a liberação do acesso. Obrigado!`;
+  const tel='55'+_PIX_KEY.replace(/\D/g,'').slice(-11);
+  window.open('https://wa.me/'+tel+'?text='+msg,'_blank');
+}
+
 
 // ══ RELATÓRIO ══
 function navAno(delta){
