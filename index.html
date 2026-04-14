@@ -3183,6 +3183,26 @@ function enviarAvisosWa(){
 }
 
 // ══ RELATÓRIO ══
+function navAno(delta){
+  if(!window._relatMes){const n=new Date();window._relatMes={y:n.getFullYear(),m:n.getMonth()};}
+  const novoAno=window._relatMes.y+delta;
+  const hoje=new Date();
+  // Não avança além do ano atual
+  if(novoAno>hoje.getFullYear()) return;
+  window._relatMes={y:novoAno,m:window._relatMes.m};
+  // Se o novo ano é o atual e o mês ultrapassou o atual, ajusta para o mês atual
+  if(novoAno===hoje.getFullYear()&&window._relatMes.m>hoje.getMonth()){
+    window._relatMes.m=hoje.getMonth();
+  }
+  renderRelatorio();
+}
+
+function navMes(delta){
+  if(!window._relatMes){const n=new Date();window._relatMes={y:n.getFullYear(),m:n.getMonth()};}
+  const d=new Date(window._relatMes.y,window._relatMes.m+delta,1);
+  window._relatMes={y:d.getFullYear(),m:d.getMonth()};
+  renderRelatorio();
+}
 // _relatMes = {y:2026, m:3} (mês 0-indexed), null = mês atual
 function renderRelatorio(){
   const mc=document.getElementById('main-content');
@@ -3193,13 +3213,9 @@ function renderRelatorio(){
   const selY=window._relatMes.y, selM=window._relatMes.m;
   const mesAtualY=hoje.getFullYear(), mesAtualM=hoje.getMonth();
   const isMesAtual=(selY===mesAtualY&&selM===mesAtualM);
-  const mesLabel=new Date(selY,selM,1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
+  const mesLabelRaw=new Date(selY,selM,1).toLocaleString('pt-BR',{month:'long',year:'numeric'});const mesLabel=mesLabelRaw.charAt(0).toUpperCase()+mesLabelRaw.slice(1).toLowerCase().replace(/ de /,' de ');
 
-  function navMes(delta){
-    const d=new Date(selY,selM+delta,1);
-    window._relatMes={y:d.getFullYear(),m:d.getMonth()};
-    renderRelatorio();
-  }
+
 
   // Filtro: início e fim do mês selecionado
   const dtInicio=new Date(selY,selM,1);
@@ -3263,10 +3279,21 @@ function renderRelatorio(){
     <div class="sec-hdr">
       <span class="sec-title">Relatório</span>
       <div style="display:flex;align-items:center;gap:.5rem">
-        <button onclick="navMes(-1)" style="padding:.35rem .65rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">‹</button>
-        <span style="font-size:13px;font-weight:600;color:var(--n1);min-width:140px;text-align:center;text-transform:capitalize">${mesLabel}</span>
-        <button onclick="navMes(1)" ${isMesAtual?'disabled style="opacity:.35;cursor:not-allowed;"':''} style="padding:.35rem .65rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">›</button>
-        ${!isMesAtual?`<button class="pill active" onclick="window._relatMes=null;renderRelatorio()" style="font-size:11px">Hoje</button>`:''}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <!-- Navegação de ANO -->
+          <div style="display:flex;align-items:center;gap:.3rem">
+            <button onclick="navAno(-1)" style="padding:.2rem .5rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:12px;color:var(--n3)">«</button>
+            <span style="font-size:11px;font-weight:600;color:var(--n3);min-width:40px;text-align:center">${selY}</span>
+            <button onclick="navAno(1)" ${selY>=mesAtualY?'disabled style="opacity:.35;cursor:not-allowed;"':''} style="padding:.2rem .5rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:12px;color:var(--n3)">»</button>
+          </div>
+          <!-- Navegação de MÊS -->
+          <div style="display:flex;align-items:center;gap:.3rem">
+            <button onclick="navMes(-1)" style="padding:.3rem .6rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">‹</button>
+            <span style="font-size:13px;font-weight:700;color:var(--n1);min-width:110px;text-align:center">${new Date(selY,selM,1).toLocaleString('pt-BR',{month:'long'}).replace(/^./,c=>c.toUpperCase())}</span>
+            <button onclick="navMes(1)" ${isMesAtual?'disabled style="opacity:.35;cursor:not-allowed;"':''} style="padding:.3rem .6rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">›</button>
+          </div>
+        </div>
+        ${!isMesAtual?`<button class="pill active" onclick="window._relatMes=null;renderRelatorio()" style="font-size:11px;margin-left:.25rem">Hoje</button>`:''}
       </div>
     </div>
 
