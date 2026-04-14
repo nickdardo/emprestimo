@@ -380,6 +380,14 @@ body.dark #parc-modal .mbody div[style*="background:#FEF2F2"]{
 /* ── PRINT ──────────────────────────────────────────────────── */
 
 
+
+@media(max-width:640px){
+  .relat-grid-a,.relat-grid-b{grid-template-columns:1fr!important}
+  #chart-fluxo,#chart-proj,#chart-inad{max-height:180px}
+  #chart-saude{max-height:140px}
+  #chart-tipo{max-height:110px!important;max-width:110px!important}
+}
+
 /* ── MOBILE TABLE COLUMNS ───────────────────────────────────── */
 @media(max-width:640px){
   .hide-mobile{display:none!important}
@@ -2398,24 +2406,57 @@ function _tomDataInicio(p){
   d.setHours(0,0,0,0); return d;
 }
 
+function _tomRow(t,i){
+  const emps=emprestimos.filter(e=>e.tomador_id===t.id);
+  const totalEmprestado=emps.reduce((s,e)=>s+Number(e.valor||0),0);
+  return`<tr>
+    <td style="color:var(--n4);font-size:12px">${i+1}</td>
+    <td style="font-weight:600">${t.nome}</td>
+    <td style="color:var(--n3)">${t.contato?`<a href="https://wa.me/55${t.contato.replace(/\D/g,'')}" target="_blank" style="color:var(--grn);text-decoration:none">${t.contato}</a>`:'—'}</td>
+    <td class="hide-mobile" style="color:var(--n3)">${t.ocupacao||'—'}</td>
+    <td style="font-weight:600;color:var(--blu)">${emps.length}</td>
+    <td style="font-weight:700;color:${totalEmprestado>0?'var(--blu)':'var(--n4)'}">${fmtR(totalEmprestado)}</td>
+    <td><div style="display:flex;gap:.3rem">
+      <button class="btn btn-xs btn-g" onclick="openTomModal('${t.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="btn btn-xs btn-d" onclick="deleteTom('${t.id}')">✕</button>
+    </div></td>
+  </tr>`;
+}
+
+function _isClienteQuitado(t){
+  const emps=emprestimos.filter(e=>e.tomador_id===t.id);
+  if(!emps.length) return false;
+  return emps.every(e=>{
+    const ep=parcelas.filter(p=>p.emprestimo_id===e.id);
+    return ep.length>0&&ep.every(p=>p.status==='pago');
+  });
+}
+
 function tomTbodyHTML(list){
   if(!list.length)return`<tr><td colspan="8"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum cliente.</div></div></td></tr>`;
-  return list.map((t,i)=>{
-    const emps=emprestimos.filter(e=>e.tomador_id===t.id);
-    const totalEmprestado=emps.reduce((s,e)=>s+Number(e.valor||0),0);
-    return`<tr>
-      <td style="color:var(--n4);font-size:12px">${i+1}</td>
-      <td style="font-weight:600">${t.nome}</td>
-      <td style="color:var(--n3)">${t.contato?`<a href="https://wa.me/55${t.contato.replace(/\D/g,'')}" target="_blank" style="color:var(--grn);text-decoration:none">${t.contato}</a>`:'—'}</td>
-      <td class="hide-mobile" style="color:var(--n3)">${t.ocupacao||'—'}</td>
-      <td style="font-weight:600;color:var(--blu)">${emps.length}</td>
-      <td style="font-weight:700;color:${totalEmprestado>0?'var(--blu)':'var(--n4)'}">${fmtR(totalEmprestado)}</td>
-      <td><div style="display:flex;gap:.3rem">
-        <button class="btn btn-xs btn-g" onclick="openTomModal('${t.id}')" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="btn btn-xs btn-d" onclick="deleteTom('${t.id}')">✕</button>
-      </div></td>
-    </tr>`;
-  }).join('');
+  
+  const ativos=list.filter(t=>!_isClienteQuitado(t));
+  const quitados=list.filter(t=>_isClienteQuitado(t));
+  
+  let html='';
+  // Ativos
+  if(ativos.length){
+    html+=ativos.map((t,i)=>_tomRow(t,i+1)).join('');
+  }
+  // Separador + Quitados
+  if(quitados.length){
+    html+=`<tr><td colspan="7" style="padding:.75rem 1rem;background:#F0FDF4;border-top:2px solid #D1FAE5;border-bottom:1px solid #D1FAE5">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span style="font-size:12px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.05em">Quitados (${quitados.length})</span>
+      </div>
+    </td></tr>`;
+    html+=quitados.map((t,i)=>{
+      const row=_tomRow(t,ativos.length+i+1);
+      return row.replace('<tr>',`<tr style="opacity:.7">`);
+    }).join('');
+  }
+  return html;
 }
 
 function openTomModal(id){
@@ -3142,42 +3183,37 @@ function enviarAvisosWa(){
 }
 
 // ══ RELATÓRIO ══
+// _relatMes = {y:2026, m:3} (mês 0-indexed), null = mês atual
 function renderRelatorio(){
   const mc=document.getElementById('main-content');
 
-  // ── Período selecionado ──────────────────────────────────
-  const periodos=[
-    {label:'Mês atual', value:'1m'},
-    {label:'2 meses',   value:'2m'},
-    {label:'3 meses',   value:'3m'},
-    {label:'6 meses',   value:'6m'},
-    {label:'1 ano',     value:'12m'},
-    {label:'Tudo',      value:'all'},
-  ];
-  const periodo=window._relatPeriodo||'6m';
+  // ── Mês selecionado (navegável) ──────────────────────────
+  const hoje=new Date();
+  if(!window._relatMes) window._relatMes={y:hoje.getFullYear(),m:hoje.getMonth()};
+  const selY=window._relatMes.y, selM=window._relatMes.m;
+  const mesAtualY=hoje.getFullYear(), mesAtualM=hoje.getMonth();
+  const isMesAtual=(selY===mesAtualY&&selM===mesAtualM);
+  const mesLabel=new Date(selY,selM,1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
 
-  // ── Filtro de data ───────────────────────────────────────
-  function dataInicio(p){
-    const d=new Date();
-    if(p==='1m') d.setMonth(d.getMonth()-1);
-    else if(p==='2m') d.setMonth(d.getMonth()-2);
-    else if(p==='3m') d.setMonth(d.getMonth()-3);
-    else if(p==='6m') d.setMonth(d.getMonth()-6);
-    else if(p==='12m') d.setFullYear(d.getFullYear()-1);
-    else return null;
-    d.setHours(0,0,0,0); return d;
+  function navMes(delta){
+    const d=new Date(selY,selM+delta,1);
+    window._relatMes={y:d.getFullYear(),m:d.getMonth()};
+    renderRelatorio();
   }
-  const dtInicio=dataInicio(periodo);
+
+  // Filtro: início e fim do mês selecionado
+  const dtInicio=new Date(selY,selM,1);
+  const dtFim=new Date(selY,selM+1,0,23,59,59);
 
   // Empréstimos e parcelas do usuário logado
   const myEmps=session.role==='admin'?emprestimos:emprestimos.filter(e=>e.owner_id===session.id);
-  const empsF=dtInicio?myEmps.filter(e=>new Date(e.data_emprestimo+'T12:00:00')>=dtInicio):myEmps;
+  const empsF=myEmps.filter(e=>{const d=new Date(e.data_emprestimo+'T12:00:00');return d>=dtInicio&&d<=dtFim;});
   const empIds=new Set(myEmps.map(e=>e.id));
   const myParcs=parcelas.filter(p=>empIds.has(p.emprestimo_id));
 
   // ── Métricas gerais ──────────────────────────────────────
   const totalEmp=empsF.reduce((s,e)=>s+Number(e.valor||0),0);
-  const parcsPagas=myParcs.filter(p=>p.status==='pago'&&(!dtInicio||new Date((p.pago_em||'')+'T12:00:00')>=dtInicio));
+  const parcsPagas=myParcs.filter(p=>p.status==='pago'&&p.pago_em&&new Date(p.pago_em+'T12:00:00')>=dtInicio&&new Date(p.pago_em+'T12:00:00')<=dtFim);
   const totalRec=parcsPagas.reduce((s,p)=>s+Number(p.valor_pago||p.valor||0),0);
   const parcsAtras=myParcs.filter(p=>isAtrasada(p));
   const totalAtras=parcsAtras.reduce((s,p)=>s+Number(p.valor||0),0);
@@ -3226,8 +3262,11 @@ function renderRelatorio(){
   mc.innerHTML=`
     <div class="sec-hdr">
       <span class="sec-title">Relatório</span>
-      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
-        ${periodos.map(p=>`<button class="pill ${periodo===p.value?'active':''}" onclick="window._relatPeriodo='${p.value}';renderRelatorio()">${p.label}</button>`).join('')}
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <button onclick="navMes(-1)" style="padding:.35rem .65rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">‹</button>
+        <span style="font-size:13px;font-weight:600;color:var(--n1);min-width:140px;text-align:center;text-transform:capitalize">${mesLabel}</span>
+        <button onclick="navMes(1)" ${isMesAtual?'disabled style="opacity:.35;cursor:not-allowed;"':''} style="padding:.35rem .65rem;border-radius:var(--rs);border:1px solid #E5E7EB;background:var(--card);cursor:pointer;font-size:14px;color:var(--n2)">›</button>
+        ${!isMesAtual?`<button class="pill active" onclick="window._relatMes=null;renderRelatorio()" style="font-size:11px">Hoje</button>`:''}
       </div>
     </div>
 
@@ -3256,7 +3295,7 @@ function renderRelatorio(){
     </div>
 
     <!-- GRÁFICOS LINHA 1 -->
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="relat-grid-a" style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem">
       <!-- Fluxo de Caixa -->
       <div class="card" style="padding:1.25rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
@@ -3279,7 +3318,7 @@ function renderRelatorio(){
     </div>
 
     <!-- GRÁFICOS LINHA 2 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+    <div class="relat-grid-b" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
       <!-- Projeção -->
       <div class="card" style="padding:1.25rem">
         <span style="font-family:var(--FT);font-size:1.05rem;margin-bottom:1rem;display:block">Projeção — Próximos 3 meses</span>
@@ -3486,6 +3525,14 @@ function printFicha(tomId){
   const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ficha — ${tom.nome}</title>
   <style>body{font-family:Arial,sans-serif;padding:2rem;color:#111;max-width:800px;margin:0 auto}h1{font-size:1.5rem;margin-bottom:.25rem}h2{font-size:1rem;color:#666;font-weight:400;margin:0 0 1.5rem}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;padding:6px 8px;text-align:left;border-bottom:2px solid #ddd}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.stat{border:1px solid #ddd;border-radius:8px;padding:.75rem;text-align:center}.stat-label{font-size:10px;text-transform:uppercase;color:#666;margin-bottom:4px}.stat-val{font-size:1.2rem;font-weight:700}.footer{margin-top:2rem;font-size:11px;color:#999;text-align:right}
+
+
+@media(max-width:640px){
+  .relat-grid-a,.relat-grid-b{grid-template-columns:1fr!important}
+  #chart-fluxo,#chart-proj,#chart-inad{max-height:180px}
+  #chart-saude{max-height:140px}
+  #chart-tipo{max-height:110px!important;max-width:110px!important}
+}
 
 /* ── MOBILE TABLE COLUMNS ───────────────────────────────────── */
 @media(max-width:640px){
