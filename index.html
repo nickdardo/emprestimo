@@ -3967,7 +3967,18 @@ function renderRelatorio(){
   const nConsig=myEmps.filter(e=>e.tipo==='consignado').length;
   const proj=[];
   for(let i=1;i<=3;i++){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+i);const val=myParcs.filter(p=>{const v=new Date(p.vencimento+'T12:00:00');return p.status==='pendente'&&v.getMonth()===d.getMonth()&&v.getFullYear()===d.getFullYear();}).reduce((s,p)=>s+Number(p.valor||0),0);proj.push({label:d.toLocaleString('pt-BR',{month:'short',year:'2-digit'}),val});}
-  const tomRank=tomadores.map(t=>{const te=myEmps.filter(e=>e.tomador_id===t.id);const tp=myParcs.filter(p=>te.some(e=>e.id===p.emprestimo_id));const saldo=te.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);const atras=tp.filter(p=>isAtrasada(p)).length;return{...t,saldo,atras,totalEmp:te.reduce((s,e)=>s+Number(e.valor||0),0)};}).filter(t=>t.totalEmp>0).sort((a,b)=>b.saldo-a.saldo).slice(0,8);
+  // Ranking e lista filtrados pelo período selecionado (usa empsF)
+  const tomRank=tomadores.map(t=>{
+    const te=empsF.filter(e=>e.tomador_id===t.id);
+    if(!te.length)return null;
+    const tp=myParcs.filter(p=>te.some(e=>e.id===p.emprestimo_id));
+    const saldo=te.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
+    const atras=tp.filter(p=>isAtrasada(p)).length;
+    const totalEmp=te.reduce((s,e)=>s+Number(e.valor||0),0);
+    return{...t,saldo,atras,totalEmp};
+  }).filter(Boolean).filter(t=>t.totalEmp>0).sort((a,b)=>b.saldo-a.saldo).slice(0,10);
+  const saldoTotalPeriodo=tomRank.reduce((s,t)=>s+t.saldo,0);
+  const empsPeriodo=empsF.slice(0,10);
 
   mc.innerHTML=`
     <div class="sec-hdr"><span class="sec-title">Relatório</span></div>
@@ -4054,6 +4065,18 @@ function renderRelatorio(){
         </div>
       </div>
     </div>
+
+    <!-- EMPRÉSTIMOS DO PERÍODO -->
+    ${(()=>{
+      if(!empsPeriodo.length||R.modo==='tudo')return'';
+      const rows=empsPeriodo.map(e=>{
+        const tom=tomadores.find(t=>t.id===e.tomador_id);
+        const parcsE=myParcs.filter(p=>p.emprestimo_id===e.id);
+        const pgE=parcsE.filter(p=>p.status==='pago').length;
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600;cursor:pointer;color:var(--n1)" onclick="openClientView(\''+tom?.id+'\')">'+( tom?.nome||'—')+' <span style="color:var(--grn);font-size:11px">→</span></div><div style="font-size:11px;color:var(--n4)">'+fmtDate(e.data_emprestimo)+' · '+(e.juros*100).toFixed(0)+'%</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--blu)">'+fmtR(e.valor)+'</div><div style="font-size:11px;color:var(--n4)">'+pgE+'/'+parcsE.length+' pagas</div></div></div>';
+      }).join('');
+      return '<div class="card" style="margin-bottom:1rem"><div style="font-size:14px;font-weight:700;color:var(--n1);margin-bottom:.85rem">📋 Empréstimos — '+exibindo+'</div>'+rows+'</div>';
+    })()}
 
     <!-- RANKING CLIENTES -->
     <div class="card" style="margin-bottom:1rem">
@@ -4157,6 +4180,14 @@ function toggleDarkMode(){
   const next=curr==='dark'?'light':'dark';
   root.setAttribute('data-theme',next);
   document.body.classList.toggle('dark', next==='dark');
+  // Forçar cores do body explicitamente
+  if(next==='light'){
+    document.body.style.background='#F0FDF4';
+    document.body.style.color='#111827';
+  } else {
+    document.body.style.background='#0D0B1E';
+    document.body.style.color='#F0EFFF';
+  }
   try{localStorage.setItem('ep_dark',next);}catch(e){}
   updateDarkBtn();
 }
@@ -4172,8 +4203,16 @@ function updateDarkBtn(){
 function loadDarkMode(){
   try{
     const saved=localStorage.getItem('ep_dark')||'dark';
-    document.documentElement.setAttribute('data-theme', saved==='light'?'light':'dark');
-    document.body.classList.toggle('dark', saved!=='light');
+    const isLight=saved==='light';
+    document.documentElement.setAttribute('data-theme', isLight?'light':'dark');
+    document.body.classList.toggle('dark', !isLight);
+    if(isLight){
+      document.body.style.background='#F0FDF4';
+      document.body.style.color='#111827';
+    } else {
+      document.body.style.background='#0D0B1E';
+      document.body.style.color='#F0EFFF';
+    }
   }catch(e){}
   updateDarkBtn();
 }
