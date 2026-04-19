@@ -26,36 +26,55 @@
 body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh;font-size:15px}
 
 /* LOGIN */
-.login-bg{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 70% 90%,#2E006B 0%,#100220 45%,#0A0118 100%);padding:1rem}
-.login-card{background:radial-gradient(ellipse at 70% 90%,#2E006B 0%,#100220 45%,#0A0118 100%);border:1px solid rgba(120,60,200,.2);border-radius:20px;padding:0;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.6);overflow:hidden}
-.login-card-body{padding:1.75rem 2.5rem 2.5rem}
+.login-bg{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:#07020F;padding:1rem;position:relative;overflow:hidden;
+}
+#stars-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.login-bg-glow{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:
+    radial-gradient(ellipse 65% 55% at 50% 65%,rgba(110,30,200,.55) 0%,rgba(70,0,140,.28) 45%,transparent 75%),
+    radial-gradient(ellipse 40% 30% at 80% 20%,rgba(160,60,240,.18) 0%,transparent 60%),
+    radial-gradient(ellipse 30% 25% at 15% 80%,rgba(80,20,180,.15) 0%,transparent 55%);
+}
+.login-card-wrap{position:relative;z-index:2;width:100%;max-width:420px;padding:2px;border-radius:22px;
+  background:linear-gradient(135deg,#22D3EE 0%,#818CF8 50%,#C084FC 100%);
+  box-shadow:0 0 40px rgba(100,40,220,.55),0 0 80px rgba(180,80,255,.2),0 8px 40px rgba(0,0,0,.7);
+}
+.login-card{
+  background:radial-gradient(ellipse at 40% 0%,#1A0940 0%,#0D0520 55%,#07020F 100%);
+  border-radius:20px;padding:0;width:100%;overflow:hidden;
+}
+.login-card-body{padding:1.75rem 2.25rem 2.25rem}
 .login-logo{font-family:var(--FT);font-size:2.2rem;color:#F0EFFF;margin-bottom:.2rem;line-height:1}
 .login-logo span{color:#00C896}
 .login-sub{font-size:13px;color:var(--n3);margin-bottom:2rem}
 .login-field{margin-bottom:1rem}
-.login-field label{display:block;font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.login-field label{display:block;font-size:11px;font-weight:700;color:rgba(200,190,255,.7);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
 .login-field input{
   width:100%;padding:.75rem 1rem;
-  border:1.5px solid #2D2650;border-radius:var(--rs);
+  border:1.5px solid rgba(130,100,220,.35);border-radius:var(--rs);
   font-family:var(--FB);font-size:16px;
-  color:#F0EFFF !important;background:#231E3D !important;
-  outline:none;transition:border-color .15s;
+  color:#F0EFFF !important;background:rgba(20,10,50,.8) !important;
+  outline:none;transition:border-color .15s,box-shadow .15s;
   -webkit-text-fill-color:#F0EFFF !important;
-  caret-color:#00C896;
+  caret-color:#818CF8;
 }
-.login-field input:focus{border-color:#00C896 !important;box-shadow:0 0 0 3px rgba(0,200,150,.15) !important}
+.login-field input:focus{border-color:#818CF8 !important;box-shadow:0 0 0 3px rgba(129,140,248,.2) !important}
 /* Fix Android autofill dark background */
 .login-field input:-webkit-autofill,
 .login-field input:-webkit-autofill:hover,
 .login-field input:-webkit-autofill:focus{
-  -webkit-box-shadow:0 0 0 1000px #231E3D inset !important;
+  -webkit-box-shadow:0 0 0 1000px #140A32 inset !important;
   -webkit-text-fill-color:#F0EFFF !important;
-  border-color:#2D2650;
+  border-color:rgba(130,100,220,.35);
   transition:background-color 9999s ease-in-out 0s;
 }
 .login-error{background:rgba(255,77,106,.1);color:#FF4D6A;font-size:13px;padding:.65rem .85rem;border-radius:var(--rs);margin-bottom:1rem;display:none;border-left:3px solid #DC2626;font-weight:500}
-.login-hint{font-size:11px;color:var(--n4);text-align:center;margin-top:1rem}
+.login-hint{font-size:11px;color:rgba(180,170,220,.45);text-align:center;margin-top:1.25rem}
 @media(max-width:480px){
+  .login-card-wrap{border-radius:18px}
   .login-card{border-radius:16px}
   .login-card-body{padding:1.5rem 1.25rem 2rem}
   .login-logo{font-size:2rem}
@@ -547,6 +566,9 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 <!-- LOGIN -->
 <div id="login-page">
   <div class="login-bg">
+    <canvas id="stars-canvas"></canvas>
+    <div class="login-bg-glow"></div>
+    <div class="login-card-wrap">
     <div class="login-card">
       
       <div style="padding:2.75rem 1.5rem 1.5rem;text-align:center">
@@ -562,17 +584,13 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
             <div id="remember-toggle" onclick="toggleRemember()" style="width:40px;height:22px;border-radius:999px;background:#D1D5DB;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">
               <div id="remember-knob" style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
             </div>
-            <span style="font-size:14px;color:#374151;font-weight:500">Lembrar acesso</span>
+            <span style="font-size:14px;color:#C4C0E8;font-weight:500">Lembrar acesso</span>
           </label>
           <span id="remember-status" style="font-size:11px;color:var(--n4)"></span>
         </div>
-        <button onclick="doLogin()" id="login-btn" class="btn btn-grn btn-full" style="background:#EA580C">Entrar →</button>
-        <div style="display:flex;align-items:center;gap:.75rem;margin-top:1.25rem">
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-          <span style="font-size:12px;color:var(--n4)">ou</span>
-          <div style="flex:1;height:1px;background:#E5E7EB"></div>
-        </div>
-        <button onclick="showRegister()" class="btn btn-g btn-full" style="margin-top:.75rem">Criar minha conta →</button>
+        <button onclick="doLogin()" id="login-btn" class="btn btn-grn btn-full" style="background:#EA580C;font-size:16px;font-weight:600;letter-spacing:.02em;padding:1rem">Entrar →</button>
+        <p style="text-align:center;margin-top:.85rem;font-size:13px"><a href="#" onclick="return false" style="color:rgba(180,170,220,.65);text-decoration:none">Esqueceu a senha?</a></p>
+        <button onclick="showRegister()" class="btn btn-full" style="margin-top:.6rem;background:transparent;border:1.5px solid rgba(180,160,255,.35);color:#C4C0E8;font-size:15px;font-weight:600;padding:.9rem;border-radius:var(--rs)">Criar minha conta</button>
         <p class="login-hint">Desenvolvido por Eduardo Ribeiro</p>
       </div></div>
       <div id="register-panel" style="display:none">
@@ -585,9 +603,10 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
         <div class="login-field"><label>Confirmar senha *</label><input type="password" id="reg-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field" style="margin-bottom:.5rem"><label>Código de indicação (opcional)</label><input type="text" id="reg-indicacao" placeholder="Ex: GEA1B2C3" style="text-transform:uppercase"/></div>
         <button onclick="doRegister()" id="register-btn" class="btn btn-grn btn-full" style="background:#00C896;color:#0D0B1E">Criar conta →</button>
-        <button onclick="showLogin()" style="margin-top:.75rem;width:100%;padding:.6rem;background:transparent;color:var(--n4);border:none;font-family:var(--FB);font-size:13px;cursor:pointer">← Voltar para o login</button>
+        <button onclick="showLogin()" style="margin-top:.75rem;width:100%;padding:.6rem;background:transparent;color:rgba(180,170,220,.6);border:none;font-family:var(--FB);font-size:13px;cursor:pointer">← Voltar para o login</button>
       </div></div>
     </div>
+    </div><!-- /login-card-wrap -->
   </div>
 </div>
 
@@ -4502,6 +4521,33 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 }
 
 // ══ INIT ══
+// STAR CANVAS ANIMATION
+(function initStars(){
+  var canvas=document.getElementById('stars-canvas');
+  if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  var stars=[];
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+  resize();
+  window.addEventListener('resize',resize);
+  for(var i=0;i<220;i++){
+    stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.3+.2,a:Math.random(),da:(Math.random()*.004+.001)*(Math.random()>.5?1:-1)});
+  }
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    stars.forEach(function(s){
+      s.a+=s.da;
+      if(s.a<0||s.a>1)s.da=-s.da;
+      ctx.beginPath();
+      ctx.arc(s.x*canvas.width,s.y*canvas.height,s.r,0,2*Math.PI);
+      ctx.fillStyle='rgba(255,255,255,'+s.a.toFixed(2)+')';
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
 window.addEventListener('DOMContentLoaded',async()=>{
   loadDarkMode();
   loadSavedCreds();
