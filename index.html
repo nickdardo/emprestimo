@@ -1557,9 +1557,9 @@ function renderDashboard(){
               if(!porTomador[emp.tomador_id]){
                 porTomador[emp.tomador_id]={
                   tomador:tomadores.find(t=>t.id===emp.tomador_id),
-                  emprestimos:[],
-                  totalRecebido:0,
-                  temPendente:false
+                  emprestimosQuitados:[],
+                  totalEmprestimos:0,
+                  totalRecebido:0
                 };
               }
               const parcsEmp=parcelas.filter(p=>p.emprestimo_id===emp.id);
@@ -1569,15 +1569,17 @@ function renderDashboard(){
               const todasPagas=parcsEmp.length>0&&parcsEmp.every(p=>p.status==='pago');
               const estaQuitado=tipo==='consignado'?todasPagas:(saldo===0&&todasPagas);
               
-              porTomador[emp.tomador_id].emprestimos.push({...emp,recebido,estaQuitado});
+              porTomador[emp.tomador_id].totalEmprestimos++;
               porTomador[emp.tomador_id].totalRecebido+=recebido;
-              if(!estaQuitado)porTomador[emp.tomador_id].temPendente=true;
+              if(estaQuitado){
+                porTomador[emp.tomador_id].emprestimosQuitados.push({...emp,recebido});
+              }
             });
             
-            // Separa quitados vs em débito
+            // Filtra clientes que têm pelo menos 1 empréstimo quitado
             const quitados=[];
             Object.values(porTomador).forEach(item=>{
-              if(!item.temPendente){
+              if(item.emprestimosQuitados.length>0){
                 quitados.push(item);
               }
             });
@@ -1590,10 +1592,10 @@ function renderDashboard(){
             }
             
             return quitados.map(item=>`
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .85rem;margin-bottom:.5rem;border-radius:var(--rs);border:1px solid var(--grn1);background:var(--grn0);cursor:pointer;transition:all .15s" onclick="openClientView('${item.tomador.id}')" onmouseenter="this.style.background='#DCFCE7'" onmouseleave="this.style.background='var(--grn0)'">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .85rem;margin-bottom:.5rem;border-radius:var(--rs);border:2px solid var(--grn1);background:var(--grn0);cursor:pointer;transition:all .2s;box-shadow:0 2px 4px rgba(0,0,0,.1)" onclick="openClientView('${item.tomador.id}')" onmouseenter="this.style.background='#DCFCE7';this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 8px rgba(0,0,0,.15)'" onmouseleave="this.style.background='var(--grn0)';this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,.1)'">
                 <div>
                   <div style="font-size:13px;font-weight:700;color:var(--n1);margin-bottom:2px">${item.tomador?.nome||'—'}</div>
-                  <div style="font-size:11px;color:var(--n3)">${item.emprestimos.length} empréstimo${item.emprestimos.length!==1?'s':''} · Tudo quitado!</div>
+                  <div style="font-size:11px;color:var(--n3)">${item.emprestimosQuitados.length} de ${item.totalEmprestimos} empréstimo${item.totalEmprestimos!==1?'s':''} quitado${item.emprestimosQuitados.length!==1?'s':''}</div>
                 </div>
                 <div style="text-align:right">
                   <div style="font-weight:700;color:var(--grn);font-size:1rem">${fmtR(item.totalRecebido)}</div>
