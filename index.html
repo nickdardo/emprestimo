@@ -589,7 +589,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
           <span id="remember-status" style="font-size:11px;color:var(--n4)"></span>
         </div>
         <button onclick="doLogin()" id="login-btn" class="btn btn-grn btn-full" style="background:#EA580C;font-size:16px;font-weight:600;letter-spacing:.02em;padding:1rem">Entrar →</button>
-        <p style="text-align:center;margin-top:.85rem;font-size:13px"><a href="#" onclick="return false" style="color:rgba(180,170,220,.65);text-decoration:none">Esqueceu a senha?</a></p>
+        <p style="text-align:center;margin-top:.85rem;font-size:13px"><a href="#" onclick="openEsqueciSenha();return false" style="color:rgba(180,170,220,.65);text-decoration:none;cursor:pointer">Esqueceu a senha?</a></p>
         <button onclick="showRegister()" class="btn btn-full" style="margin-top:.6rem;background:transparent;border:1.5px solid rgba(180,160,255,.35);color:#C4C0E8;font-size:15px;font-weight:600;padding:.9rem;border-radius:var(--rs)">Criar minha conta</button>
         <p class="login-hint">Desenvolvido por Eduardo Ribeiro</p>
       </div></div>
@@ -599,6 +599,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
         <div class="login-error" id="reg-error"></div>
         <div class="login-field"><label>Nome completo *</label><input type="text" id="reg-nome" placeholder="Seu nome completo" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field"><label>Usuário *</label><input type="text" id="reg-login" placeholder="Ex: joao.silva" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+        <div class="login-field"><label>E-mail *</label><input type="email" id="reg-email" placeholder="seu.email@exemplo.com" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field"><label>Senha *</label><input type="password" id="reg-pass" placeholder="Mínimo 4 caracteres" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field"><label>Confirmar senha *</label><input type="password" id="reg-pass2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')doRegister()"/></div>
         <div class="login-field" style="margin-bottom:.5rem"><label>Código de indicação (opcional)</label><input type="text" id="reg-indicacao" placeholder="Ex: GEA1B2C3" style="text-transform:uppercase"/></div>
@@ -889,6 +890,22 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   </div>
 </div>
 
+<!-- MODAL ESQUECI SENHA -->
+<div class="mbd" id="esqueci-senha-modal" style="display:none" onclick="if(event.target===this)closeEsqueciSenha()">
+  <div class="modal" style="max-width:420px">
+    <div class="mhdr"><span class="mtitle">Recuperar Senha</span><button class="mclose" onclick="closeEsqueciSenha()">✕</button></div>
+    <div class="mbody">
+      <div style="font-size:13px;color:var(--n3);margin-bottom:1.25rem">Informe seu login ou e-mail. Enviaremos uma senha temporária por e-mail.</div>
+      <div class="login-error" id="esqueci-error" style="display:none"></div>
+      <div class="fg full"><span class="lbl">Login ou E-mail *</span><input id="esqueci-input" placeholder="Ex: joao.silva ou joao@email.com"/></div>
+    </div>
+    <div class="mfooter" style="display:flex;gap:.5rem">
+      <button class="btn btn-g btn-sm" onclick="closeEsqueciSenha()">Cancelar</button>
+      <button class="btn btn-grn btn-sm" onclick="enviarRecuperacaoSenha()" id="esqueci-btn">Enviar →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══ SUPABASE ══
 const SUPA_URL='https://abmwlhxdvfgnptmvtkla.supabase.co';
@@ -1052,15 +1069,134 @@ function copiarCodigoIndicacao(){const cod=gerarCodigoIndicacao(session.id);navi
 function compartilharIndicacao(){const cod=gerarCodigoIndicacao(session.id);const url='https://gepainel.vercel.app';const msg=`Olá! Estou usando o *GEPainel* para gerenciar empréstimos! 🚀%0A%0ACadastre-se com meu código e ganhe 30 dias grátis:%0A*Código:* ${cod}%0A*Link:* ${url}`;window.open('https://wa.me/?text='+msg,'_blank');}
 async function verificarCodigoIndicacao(cod){
   if(!cod||cod.length<8)return;
-  const{data:allUsers}=await sb.from('users').select('id,nome').limit(200);
+  const{data:allUsers}=await sb.from('users').select('id,nome,expires_at').limit(200);
   if(!allUsers)return;
   const indicador=allUsers.find(u=>gerarCodigoIndicacao(u.id)===cod&&u.id!==session.id);
   if(!indicador)return;
   const jaUsou=localStorage.getItem('ep_bonus_dado_'+indicador.id);if(jaUsou)return;
-  const base=new Date();base.setDate(base.getDate()+30);
+  
+  // Acumula 30 dias: se já tem tempo futuro, soma a partir dessa data; senão, soma a partir de hoje
+  const base=indicador.expires_at&&new Date(indicador.expires_at)>new Date()?new Date(indicador.expires_at):new Date();
+  base.setDate(base.getDate()+30);
+  
   await sb.from('users').update({expires_at:base.toISOString().split('T')[0]}).eq('id',indicador.id);
   localStorage.setItem('ep_bonus_dado_'+indicador.id,'1');
   toast('🎁 Código válido! Seu amigo ganhou 30 dias extras!');
+}
+
+// ══ ESQUECI MINHA SENHA ══
+function openEsqueciSenha(){
+  document.getElementById('esqueci-senha-modal').style.display='flex';
+  document.getElementById('esqueci-input').value='';
+  document.getElementById('esqueci-error').style.display='none';
+  setTimeout(()=>document.getElementById('esqueci-input').focus(),100);
+}
+
+function closeEsqueciSenha(){
+  document.getElementById('esqueci-senha-modal').style.display='none';
+}
+
+function showEsqueciErr(msg){
+  const el=document.getElementById('esqueci-error');
+  el.textContent=msg;
+  el.style.display='block';
+}
+
+async function enviarRecuperacaoSenha(){
+  const input=document.getElementById('esqueci-input').value.trim().toLowerCase();
+  document.getElementById('esqueci-error').style.display='none';
+  
+  if(!input){showEsqueciErr('Informe seu login ou e-mail.');return;}
+  
+  const btn=document.getElementById('esqueci-btn');
+  btn.textContent='Enviando...';
+  btn.disabled=true;
+  
+  try{
+    // Busca usuário por login ou email
+    let user;
+    const{data:byLogin}=await sb.from('users').select('id,nome,login,email').eq('login',input).maybeSingle();
+    if(byLogin){
+      user=byLogin;
+    } else {
+      const{data:byEmail}=await sb.from('users').select('id,nome,login,email').eq('email',input).maybeSingle();
+      if(byEmail)user=byEmail;
+    }
+    
+    if(!user){
+      showEsqueciErr('Usuário não encontrado.');
+      btn.textContent='Enviar →';
+      btn.disabled=false;
+      return;
+    }
+    
+    if(!user.email){
+      showEsqueciErr('Este usuário não possui e-mail cadastrado.');
+      btn.textContent='Enviar →';
+      btn.disabled=false;
+      return;
+    }
+    
+    // Gera senha temporária (6 caracteres aleatórios)
+    const senhaTemp=Math.random().toString(36).slice(2,8).toUpperCase();
+    
+    // Atualiza senha no banco
+    await sb.from('users').update({pass_hash:hp(senhaTemp)}).eq('id',user.id);
+    
+    // ENVIA E-MAIL VIA RESEND API
+    // IMPORTANTE: Você precisa configurar sua API KEY do Resend
+    const RESEND_API_KEY='re_9cS321VF_9xxu2mLBC8vw8wYLeqCYTgLs'; // ⚠️ SUBSTITUA PELA SUA API KEY DO RESEND
+    
+    const emailData={
+      from: 'GEPainel <onboarding@resend.dev>', // ⚠️ Configure seu domínio no Resend
+      to: [user.email],
+      subject: 'Recuperação de Senha - GEPainel',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h2 style="color:#EA580C">Recuperação de Senha</h2>
+          <p>Olá, <strong>${user.nome}</strong>!</p>
+          <p>Você solicitou a recuperação de senha para sua conta no GEPainel.</p>
+          <div style="background:#F3F4F6;padding:15px;border-radius:8px;margin:20px 0">
+            <p style="margin:0;font-size:14px;color:#666">Sua senha temporária é:</p>
+            <p style="margin:10px 0 0;font-size:24px;font-weight:bold;color:#EA580C;letter-spacing:2px">${senhaTemp}</p>
+          </div>
+          <p><strong>Login:</strong> ${user.login}</p>
+          <p style="color:#666;font-size:14px">Por segurança, recomendamos que você altere esta senha após fazer login.</p>
+          <hr style="border:none;border-top:1px solid #E5E7EB;margin:30px 0"/>
+          <p style="color:#999;font-size:12px">Se você não solicitou esta recuperação, ignore este e-mail.</p>
+        </div>
+      `
+    };
+    
+    const response=await fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+RESEND_API_KEY,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(emailData)
+    });
+    
+    if(!response.ok){
+      const errData=await response.json();
+      console.error('Erro Resend:',errData);
+      showEsqueciErr('Erro ao enviar e-mail. Verifique a configuração do Resend.');
+      btn.textContent='Enviar →';
+      btn.disabled=false;
+      return;
+    }
+    
+    toast('✓ Senha enviada para '+user.email+'!');
+    closeEsqueciSenha();
+    btn.textContent='Enviar →';
+    btn.disabled=false;
+    
+  }catch(e){
+    console.error('Erro:',e);
+    showEsqueciErr('Erro ao processar solicitação.');
+    btn.textContent='Enviar →';
+    btn.disabled=false;
+  }
 }
 
 // ══ SIDEBAR ══
@@ -1241,24 +1377,28 @@ async function doLogin(){
 async function doRegister(){
   const nome=document.getElementById('reg-nome').value.trim();
   const login=document.getElementById('reg-login').value.trim().toLowerCase();
+  const email=document.getElementById('reg-email').value.trim().toLowerCase();
   const pass=document.getElementById('reg-pass').value;
   const pass2=document.getElementById('reg-pass2').value;
   document.getElementById('reg-error').style.display='none';
   if(!nome){showRegErr('Informe seu nome.');return;}
   if(!login||login.length<3){showRegErr('Login deve ter ao menos 3 caracteres.');return;}
   if(!/^[a-z0-9._]+$/.test(login)){showRegErr('Login inválido. Use letras, números, ponto.');return;}
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showRegErr('E-mail inválido.');return;}
   if(pass.length<4){showRegErr('Senha deve ter ao menos 4 caracteres.');return;}
   if(pass!==pass2){showRegErr('As senhas não coincidem.');return;}
   const btn=document.getElementById('register-btn');btn.textContent='Criando...';btn.disabled=true;
   try{
     const{data:ex}=await sb.from('users').select('id').eq('login',login).maybeSingle();
     if(ex){showRegErr('Login já em uso.');btn.textContent='Criar conta →';btn.disabled=false;return;}
+    const{data:exEmail}=await sb.from('users').select('id').eq('email',email).maybeSingle();
+    if(exEmail){showRegErr('E-mail já cadastrado.');btn.textContent='Criar conta →';btn.disabled=false;return;}
     const trialExp=new Date();trialExp.setDate(trialExp.getDate()+30);
-    // Tenta criar com expires_at; se falhar, cria sem (coluna pode não existir ainda)
+    // Tenta criar com expires_at e email; se falhar, cria sem (coluna pode não existir ainda)
     let data,error;
-    const res1=await sb.from('users').insert({nome,login,pass_hash:hp(pass),role:'op',ativo:true,expires_at:trialExp.toISOString().split('T')[0]}).select().single();
+    const res1=await sb.from('users').insert({nome,login,email,pass_hash:hp(pass),role:'op',ativo:true,expires_at:trialExp.toISOString().split('T')[0]}).select().single();
     if(res1.error){
-      const res2=await sb.from('users').insert({nome,login,pass_hash:hp(pass),role:'op',ativo:true}).select().single();
+      const res2=await sb.from('users').insert({nome,login,email,pass_hash:hp(pass),role:'op',ativo:true}).select().single();
       data=res2.data;error=res2.error;
     } else {data=res1.data;error=res1.error;}
     if(error||!data){showRegErr('Erro ao criar conta.');btn.textContent='Criar conta →';btn.disabled=false;return;}
@@ -2073,6 +2213,13 @@ function openEmpModal(id){
   openM('emp-modal');
 }
 
+// Função auxiliar para adicionar meses mantendo o dia do mês
+function addMonths(dateStr, months){
+  const d=new Date(dateStr+'T12:00:00');
+  d.setMonth(d.getMonth()+months);
+  return d.toISOString().split('T')[0];
+}
+
 async function saveEmp(){
   const tomId=document.getElementById('emp-tom').value;
   const valor=parseCurrency(document.getElementById('emp-valor').value);
@@ -2125,30 +2272,26 @@ async function saveEmp(){
       if(tipo==='consignado'){
         // Parcelas fixas: valorTotal / nparc
         const valorParc=parseFloat((valorTotalConsig/nparc).toFixed(2));
-        const dataBase=new Date(data+'T12:00:00');
         const parcsPayload=Array.from({length:nparc},(_,i)=>{
-          const venc=new Date(dataBase.getTime()+(i+1)*30*24*60*60*1000);
-          return{emprestimo_id:d.id,numero:i+1,vencimento:venc.toISOString().split('T')[0],valor:valorParc,status:'pendente'};
+          const venc=addMonths(data,i+1);
+          return{emprestimo_id:d.id,numero:i+1,vencimento:venc,valor:valorParc,status:'pendente'};
         });
         const{data:ps,error:pe}=await sb.from('parcelas').insert(parcsPayload).select();
         if(!pe&&ps)parcelas.push(...ps);
         toast('✓ Consignado registrado! '+nparc+'× '+fmtR(valorParc));
       } else if(nparc>0){
         const valorParc=parseFloat((valor*juros).toFixed(2));
-        const dataBase=new Date(data+'T12:00:00');
         const parcsPayload=Array.from({length:nparc},(_,i)=>{
-          const venc=new Date(dataBase.getTime()+(i+1)*30*24*60*60*1000);
-          return{emprestimo_id:d.id,numero:i+1,vencimento:venc.toISOString().split('T')[0],valor:valorParc,status:'pendente'};
+          const venc=addMonths(data,i+1);
+          return{emprestimo_id:d.id,numero:i+1,vencimento:venc,valor:valorParc,status:'pendente'};
         });
         const{data:ps,error:pe}=await sb.from('parcelas').insert(parcsPayload).select();
         if(!pe&&ps)parcelas.push(...ps);
         toast('✓ Empréstimo registrado! '+nparc+' parcela'+(nparc!==1?'s':'')+' gerada'+(nparc!==1?'s':'')+'.');
       } else {
-        // Juros ilimitado: gera automaticamente a primeira parcela (vence em 30 dias)
+        // Juros ilimitado: gera automaticamente a primeira parcela (vence em 1 mês no mesmo dia)
         const valorParcAuto=parseFloat((valor*juros).toFixed(2));
-        const dataBaseAuto=new Date(data+'T12:00:00');
-        const vencAuto=new Date(dataBaseAuto.getTime()+30*24*60*60*1000);
-        const vencStrAuto=vencAuto.toISOString().split('T')[0];
+        const vencStrAuto=addMonths(data,1);
         const{data:pa,error:pe}=await sb.from('parcelas').insert({
           emprestimo_id:d.id,numero:1,
           vencimento:vencStrAuto,
@@ -2275,13 +2418,12 @@ async function addParcela(empId){
   const emp=emprestimos.find(e=>e.id===empId);
   if(!emp)return;
   const valorJuros=parseFloat((emp.valor*emp.juros).toFixed(2)); // apenas juros mensal
-  const dataBase=new Date(emp.data_emprestimo+'T12:00:00');
   const parcsExist=parcelas.filter(p=>p.emprestimo_id===empId);
   const nextNum=parcsExist.length+1;
-  const venc=new Date(dataBase.getTime()+nextNum*31*24*60*60*1000);
+  const venc=addMonths(emp.data_emprestimo,nextNum);
   const{data,error}=await sb.from('parcelas').insert({
     emprestimo_id:empId,numero:nextNum,
-    vencimento:venc.toISOString().split('T')[0],
+    vencimento:venc,
     valor:valorJuros,status:'pendente'
   }).select().single();
   if(error){toast('Erro ao adicionar parcela',true);return;}
