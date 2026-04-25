@@ -2476,6 +2476,12 @@ function openParcelas(empId){
   const progPct=parcsEmp.length?Math.round(parcsEmp.filter(p=>p.status==='pago').length/parcsEmp.length*100):0;
   // Saldo devedor = valor original - abatimentos realizados
   const saldo=parseFloat((emp?.saldo_devedor!=null?emp.saldo_devedor:emp?.valor||0).toFixed(2));
+  
+  // Para empréstimos de JUROS: só considera quitado se saldo=0 E todas parcelas pagas
+  // Para CONSIGNADO: quitado quando todas parcelas pagas
+  const tipo=emp?.tipo||'juros';
+  const todasPagas=parcsEmp.length>0&&parcsEmp.every(p=>p.status==='pago');
+  const estaQuitado=tipo==='consignado'?todasPagas:(saldo===0&&todasPagas);
 
   document.getElementById('parc-modal-body').innerHTML=`
     <!-- INFO EMPRÉSTIMO -->
@@ -2483,7 +2489,7 @@ function openParcelas(empId){
       <span><strong>${fmtR(emp?.valor)}</strong> emprestado</span>
       <span><strong>${((emp?.juros||0)*100)%1===0?((emp?.juros||0)*100).toFixed(0):((emp?.juros||0)*100).toFixed(1)}%</strong> juros</span>
       <span>💵 <strong style="color:var(--grn)">${fmtR(emp?.valor*(emp?.juros||0))}</strong>/mês</span>
-      ${emp?.saldo_devedor!=null?`<span>Saldo: <strong style="color:${emp.saldo_devedor===0?'var(--grn)':'var(--red)'}">${fmtR(emp.saldo_devedor)}${emp.saldo_devedor===0?' Quitado!':''}</strong></span>`:`<span>Saldo: <strong style="color:var(--red)">${fmtR(emp?.valor)}</strong></span>`}
+      ${emp?.saldo_devedor!=null?`<span>Saldo: <strong style="color:${estaQuitado?'var(--grn)':'var(--red)'}">${fmtR(emp.saldo_devedor)}${estaQuitado?' Quitado!':''}</strong></span>`:`<span>Saldo: <strong style="color:var(--red)">${fmtR(emp?.valor)}</strong></span>`}
       <span><strong>${fmtDate(emp?.data_emprestimo)}</strong></span>
       ${emp?.garantia?`<span><strong>${emp.garantia}</strong></span>`:''}
     </div>
@@ -2494,9 +2500,9 @@ function openParcelas(empId){
         <div style="font-size:9px;color:var(--grn);font-weight:700;text-transform:uppercase;margin-bottom:2px">Recebido</div>
         <div style="font-family:var(--FT);font-size:1.2rem;color:var(--grn)">${fmtR(pago)}</div>
       </div>
-      <div style="background:${saldo===0?'var(--grn0)':'var(--red0)'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${saldo===0?'var(--grn1)':'var(--red1)'}">
-        <div style="font-size:9px;color:${saldo===0?'var(--grn)':'var(--red)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">Saldo Devedor</div>
-        <div style="font-family:var(--FT);font-size:1.2rem;color:${saldo===0?'var(--grn)':'var(--red)'}">${saldo===0?'Quitado!':fmtR(saldo)}</div>
+      <div style="background:${estaQuitado?'var(--grn0)':'var(--red0)'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${estaQuitado?'var(--grn1)':'var(--red1)'}">
+        <div style="font-size:9px;color:${estaQuitado?'var(--grn)':'var(--red)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">Saldo Devedor</div>
+        <div style="font-family:var(--FT);font-size:1.2rem;color:${estaQuitado?'var(--grn)':'var(--red)'}">${estaQuitado?'Quitado!':fmtR(saldo)}</div>
       </div>
       <div style="background:${atrasadasCnt?'var(--red0)':'#F9FAFB'};border-radius:var(--rs);padding:.7rem;text-align:center;border:1px solid ${atrasadasCnt?'var(--red1)':'#E5E7EB'}">
         <div style="font-size:9px;color:${atrasadasCnt?'var(--red)':'var(--n4)'};font-weight:700;text-transform:uppercase;margin-bottom:2px">Atraso</div>
@@ -2533,9 +2539,10 @@ function openParcelas(empId){
       const atras=isAtrasada(p);
       const diasAtras=atras?Math.floor((new Date()-new Date(p.vencimento+'T12:00:00'))/(1000*60*60*24)):0;
       const vencHoje=p.status==='pendente'&&p.vencimento===today();
-      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .85rem;margin-bottom:.4rem;border-radius:var(--rs);border:1px solid ${p.status==='pago'?'#D1FAE5':atras?'#FECACA':vencHoje?'#FDE68A':'#E5E7EB'};background:${p.status==='pago'?'#F0FDF4':atras?'#FEF2F2':vencHoje?'#FFFBEB':'#FAFAFA'}">
-        ${p.status==='pendente'?`<input type="checkbox" class="chk-parc" data-id="${p.id}" onchange="onChkParcChange('${empId}')" style="width:15px;height:15px;cursor:pointer;margin-right:.5rem;flex-shrink:0;display:none"/>`:'<div style="width:21px;flex-shrink:0"></div>'}
-        <div style="flex:1;min-width:0">
+      const isPendente=p.status==='pendente';
+      return`<div ${isPendente?`onclick="confirmarPagamento('${p.id}','${empId}')" style="cursor:pointer;"`:'style="'}display:flex;align-items:center;justify-content:space-between;padding:.7rem .85rem;margin-bottom:.4rem;border-radius:var(--rs);border:1px solid ${p.status==='pago'?'#D1FAE5':atras?'#FECACA':vencHoje?'#FDE68A':'#E5E7EB'};background:${p.status==='pago'?'#F0FDF4':atras?'#FEF2F2':vencHoje?'#FFFBEB':'#FAFAFA'}${isPendente?';transition:all .15s':''}"${isPendente?' onmouseenter="this.style.transform=\'scale(1.01)\'" onmouseleave="this.style.transform=\'scale(1)\'"':''}>
+        ${p.status==='pendente'?`<input type="checkbox" class="chk-parc" data-id="${p.id}" onchange="onChkParcChange('${empId}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;margin-right:.5rem;flex-shrink:0;display:none"/>`:'<div style="width:21px;flex-shrink:0"></div>'}
+        <div style="flex:1;min-width:0;pointer-events:none">
           <div style="font-size:13px;font-weight:700;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':vencHoje?'var(--amb)':'var(--n1)'}">
             ${p.numero}º ${lblParcela(emp)}
             ${atras?`<span style="font-size:10px;font-weight:400;background:var(--red);color:#fff;padding:1px 6px;border-radius:999px;margin-left:4px">${diasAtras}d atraso</span>`:''}
@@ -2547,11 +2554,11 @@ function openParcelas(empId){
             ${p.pago_em?` · Pago em: <strong style="color:var(--grn)">${fmtDate(p.pago_em)}</strong>`:''}
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
-          <span style="font-weight:700;font-size:14px;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':'var(--n1)'}">${fmtR(p.valor)}</span>
+        <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;pointer-events:auto">
+          <span style="font-weight:700;font-size:14px;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':'var(--n1)'}${isPendente?';pointer-events:none':''}">${fmtR(p.valor)}</span>
           ${p.status==='pendente'?`
-            <button class="btn btn-xs btn-grn btn-confirmar-parc" data-pid="${p.id}" onclick="confirmarPagamento('${p.id}','${empId}')" style="font-weight:700">Confirmar</button>
-            <button class="btn btn-xs btn-d" onclick="deleteParcela('${p.id}','${empId}')" title="Remover parcela">✕</button>
+            <button class="btn btn-xs btn-grn btn-confirmar-parc" data-pid="${p.id}" onclick="event.stopPropagation();confirmarPagamento('${p.id}','${empId}')" style="font-weight:700">Confirmar</button>
+            <button class="btn btn-xs btn-d" onclick="event.stopPropagation();deleteParcela('${p.id}','${empId}')" title="Remover parcela">✕</button>
           `:`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}','${empId}')" title="Reverter para pendente" style="font-size:11px">Reverter</button>`}
         </div>
       </div>`;
