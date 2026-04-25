@@ -2540,7 +2540,7 @@ function openParcelas(empId){
       const diasAtras=atras?Math.floor((new Date()-new Date(p.vencimento+'T12:00:00'))/(1000*60*60*24)):0;
       const vencHoje=p.status==='pendente'&&p.vencimento===today();
       const isPendente=p.status==='pendente';
-      return`<div ${isPendente?`onclick="confirmarPagamento('${p.id}','${empId}')"`:''} style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .85rem;margin-bottom:.4rem;border-radius:var(--rs);border:1px solid ${p.status==='pago'?'#D1FAE5':atras?'#FECACA':vencHoje?'#FDE68A':'#E5E7EB'};background:${p.status==='pago'?'#F0FDF4':atras?'#FEF2F2':vencHoje?'#FFFBEB':'#FAFAFA'};${isPendente?'cursor:pointer;transition:all .15s':''}">
+      return`<div ${isPendente?`onclick="confirmarPagamento('${p.id}','${empId}')"`:''} style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:.7rem .85rem;margin-bottom:.4rem;border-radius:var(--rs);border:1px solid ${p.status==='pago'?'#D1FAE5':atras?'#FECACA':vencHoje?'#FDE68A':'#E5E7EB'};background:${p.status==='pago'?'#F0FDF4':atras?'#FEF2F2':vencHoje?'#FFFBEB':'#FAFAFA'};transition:all .15s" onmouseenter="this.style.transform='scale(1.01)'" onmouseleave="this.style.transform='scale(1)'">
         ${p.status==='pendente'?`<input type="checkbox" class="chk-parc" data-id="${p.id}" onchange="onChkParcChange('${empId}')" onclick="event.stopPropagation()" style="width:15px;height:15px;cursor:pointer;margin-right:.5rem;flex-shrink:0;display:none"/>`:'<div style="width:21px;flex-shrink:0"></div>'}
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:${p.status==='pago'?'var(--grn)':atras?'var(--red)':vencHoje?'var(--amb)':'var(--n1)'}">
@@ -2559,7 +2559,7 @@ function openParcelas(empId){
           ${p.status==='pendente'?`
             <button class="btn btn-xs btn-grn btn-confirmar-parc" data-pid="${p.id}" onclick="event.stopPropagation();confirmarPagamento('${p.id}','${empId}')" style="font-weight:700">Confirmar</button>
             <button class="btn btn-xs btn-d" onclick="event.stopPropagation();deleteParcela('${p.id}','${empId}')" title="Remover parcela">✕</button>
-          `:`<button class="btn btn-xs btn-g" onclick="marcarPendente('${p.id}','${empId}')" title="Reverter para pendente" style="font-size:11px">Reverter</button>`}
+          `:`<button class="btn btn-xs btn-g" onclick="event.stopPropagation();marcarPendente('${p.id}','${empId}')" title="Reverter para pendente" style="font-size:11px">Reverter</button>`}
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -2627,7 +2627,7 @@ function confirmarPagamento(id, empId){
       </div>
       ${mora>0?`
       <label style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem;cursor:pointer;user-select:none">
-        <input type="checkbox" id="isentar-mora-${id}" onchange="toggleIsentarMora('${id}',${jurosBase},${mora},${saldo})"
+        <input type="checkbox" id="isentar-mora-${id}" onchange="toggleIsentarMora('${id}','${empId}',${jurosBase},${mora},${saldo})"
           style="width:15px;height:15px;cursor:pointer;accent-color:#EA580C"/>
         <span style="font-size:12px;color:var(--n2)">Isentar juros de mora <span style="color:var(--n4)">(desconto de ${fmtR(mora)})</span></span>
       </label>`:''}
@@ -2674,7 +2674,7 @@ function confirmarPagamento(id, empId){
   document.body.appendChild(div);
 }
 
-function toggleIsentarMora(id, jurosBase, mora, saldo){
+function toggleIsentarMora(id, empId, jurosBase, mora, saldo){
   const isento=document.getElementById('isentar-mora-'+id)?.checked;
   const novoJuros=isento?jurosBase:jurosBase+mora;
   const display=document.getElementById('jurs-display-'+id);
@@ -2684,9 +2684,7 @@ function toggleIsentarMora(id, jurosBase, mora, saldo){
   if(moraDisplay) moraDisplay.style.opacity=isento?'.5':'1';
   // Atualiza o onclick do botão confirmar com o novo valor
   const btn=document.querySelector(`#confirm-pay-${id} .btn-grn`);
-  if(btn) btn.onclick=()=>efetivarPagamento(id,btn.dataset.empid,novoJuros,saldo,mora,isento);
-  // Guarda empId no dataset do botão
-  if(btn) btn.dataset.empid=btn.onclick.toString().match(/'([^']+)'/)?.[1]||'';
+  if(btn) btn.onclick=()=>efetivarPagamento(id,empId,novoJuros,saldo,mora,isento);
   // Atualiza o resumo se abatimento já preenchido
   updatePaySummary(id,novoJuros,saldo);
 }
