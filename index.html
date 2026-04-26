@@ -1652,7 +1652,8 @@ function renderDashboard(){
             }else if(filtroAtivo==='3dias'){
               parcelasF=parcelas.filter(p=>p.status==='pendente'&&new Date(p.vencimento+'T12:00:00')>new Date()&&new Date(p.vencimento+'T12:00:00')<=em3);
             }else if(filtroAtivo==='7dias'){
-              parcelasF=parcelas.filter(p=>p.status==='pendente'&&new Date(p.vencimento+'T12:00:00')>em3&&new Date(p.vencimento+'T12:00:00')<=em7);
+              // Mostra TODAS as parcelas até 7 dias (incluindo hoje e próximos 3)
+              parcelasF=parcelas.filter(p=>p.status==='pendente'&&new Date(p.vencimento+'T12:00:00')<=em7);
             }
             
             if(parcelasF.length===0){
@@ -1672,11 +1673,11 @@ function renderDashboard(){
             });
             
             return Object.values(porCliente).map(item=>`
-              <div style="margin-bottom:.75rem;border:2px solid ${filtroAtivo==='hoje'?'#FECACA':filtroAtivo==='3dias'?'#FDE68A':'#CBD5E1'};border-radius:var(--rs);overflow:hidden;background:${filtroAtivo==='hoje'?'#FEF2F2':filtroAtivo==='3dias'?'#FFFBEB':'#F8FAFC'};cursor:pointer;transition:all .2s;box-shadow:0 2px 4px rgba(0,0,0,.1)" onclick="openClientView('${item.tomador.id}')" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 8px rgba(0,0,0,.15)'" onmouseleave="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,.1)'">
+              <div style="margin-bottom:.75rem;border:2px solid ${filtroAtivo==='hoje'?'#991B1B':filtroAtivo==='3dias'?'#EA580C':'#B45309'};border-radius:var(--rs);overflow:hidden;background:${filtroAtivo==='hoje'?'#7F1D1D':filtroAtivo==='3dias'?'#C2410C':'#92400E'};cursor:pointer;transition:all .2s;box-shadow:0 2px 4px rgba(0,0,0,.1)" onclick="openClientView('${item.tomador.id}')" onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 8px rgba(0,0,0,.15)'" onmouseleave="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 4px rgba(0,0,0,.1)'">
                 <div style="padding:.75rem 1rem">
-                  <div style="font-weight:700;color:#1E293B;margin-bottom:4px;font-size:14px">${item.tomador.nome}</div>
+                  <div style="font-weight:700;color:#FFFFFF;margin-bottom:4px;font-size:14px">${item.tomador.nome}</div>
                   ${item.parcelas.map(p=>`
-                    <div style="font-size:11px;color:#64748B;margin-top:2px">
+                    <div style="font-size:11px;color:#FEF3C7;margin-top:2px">
                       • ${fmtR(p.valor)} · Venc: ${fmtDate(p.vencimento)} · ${p.numero}º ${p.emp?.tipo==='consignado'?'Parcela':'Juros'}
                     </div>
                   `).join('')}
