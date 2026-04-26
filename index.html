@@ -4417,16 +4417,27 @@ async function selecionarPlano(idx){
   document.getElementById('renov-qr').style.display='';
   
   try{
+    // Pega token de autenticação
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session)throw new Error('Não autenticado');
+    
     // Chama Edge Function para criar pagamento no Mercado Pago
-    const {data,error}=await supabase.functions.invoke('create-pix-payment',{
-      body:{
+    const response=await fetch('https://abmwlhxdvfgnptmvtkla.supabase.co/functions/v1/create-pix-payment',{
+      method:'POST',
+      headers:{
+        'Authorization':`Bearer ${session.access_token}`,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
         dias:plano.dias,
         valor:plano.valor,
         autoRenewal:autoRenewal
-      }
+      })
     });
     
-    if(error)throw error;
+    if(!response.ok)throw new Error('Erro na requisição');
+    
+    const data=await response.json();
     if(!data.success)throw new Error(data.error||'Erro ao gerar PIX');
     
     // Atualiza interface com QR Code do Mercado Pago
