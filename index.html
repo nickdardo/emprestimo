@@ -1635,10 +1635,21 @@ function renderDashboard(){
       <div class="stat"><div class="stat-label">Próximas Parcelas</div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${parcs.filter(p=>p.status==='pendente').length} parcelas</div></div>
     </div>
     ${(()=>{
-      const em3=new Date();em3.setDate(em3.getDate()+3);
-      const em7=new Date();em7.setDate(em7.getDate()+7);
-      const venc3=parcelas.filter(p=>p.status==='pendente'&&new Date(p.vencimento+'T12:00:00')>new Date()&&new Date(p.vencimento+'T12:00:00')<=em3);
-      const venc7=parcelas.filter(p=>p.status==='pendente'&&new Date(p.vencimento+'T12:00:00')>em3&&new Date(p.vencimento+'T12:00:00')<=em7);
+      const hoje=new Date();hoje.setHours(0,0,0,0);
+      const em3=new Date();em3.setDate(em3.getDate()+3);em3.setHours(23,59,59,999);
+      const em7=new Date();em7.setDate(em7.getDate()+7);em7.setHours(23,59,59,999);
+      // venc3: amanhã até dia 3
+      const venc3=parcelas.filter(p=>{
+        if(p.status!=='pendente')return false;
+        const v=new Date(p.vencimento+'T00:00:00');
+        return v>hoje&&v<=em3;
+      });
+      // venc7: TODAS até dia 7 (incluindo hoje e próximos 3 dias)
+      const venc7=parcelas.filter(p=>{
+        if(p.status!=='pendente')return false;
+        const v=new Date(p.vencimento+'T00:00:00');
+        return v>=hoje&&v<=em7;
+      });
       let out='';
       if(atrasadas.length)out+=`<div class="warn-box">⚠ <strong>${atrasadas.length} parcela${atrasadas.length!==1?'s':''} em atraso!</strong> Verifique os empréstimos pendentes.</div>`;
       if(vencHoje.length)out+=`<div id="alerta-hoje" class="warn-box" onclick="mostrarVencimento('hoje')" style="background:#FEF2F2;border-color:#FECACA;color:#991B1B;cursor:pointer;transition:all .2s;font-weight:600" onmouseenter="this.style.boxShadow='0 4px 8px rgba(153,27,27,.2)'" onmouseleave="this.style.boxShadow=''"><span style="font-size:1.2rem;margin-right:6px">●</span><strong>${vencHoje.length} parcela${vencHoje.length!==1?'s':''} vence${vencHoje.length===1?'':'m'} hoje.</strong></div>`;
@@ -1655,20 +1666,25 @@ function renderDashboard(){
           </div>
           ${(()=>{
             const hoje=new Date();hoje.setHours(0,0,0,0);
-            const em3=new Date(hoje);em3.setDate(em3.getDate()+3);
-            const em7=new Date(hoje);em7.setDate(em7.getDate()+7);
+            const em3=new Date(hoje);em3.setDate(em3.getDate()+3);em3.setHours(23,59,59,999);
+            const em7=new Date(hoje);em7.setDate(em7.getDate()+7);em7.setHours(23,59,59,999);
             
             let parcelasF=[];
             if(filtroAtivo==='hoje'){
               parcelasF=parcelas.filter(p=>p.status==='pendente'&&p.vencimento===today());
             }else if(filtroAtivo==='3dias'){
-              parcelasF=parcelas.filter(p=>p.status==='pendente'&&new Date(p.vencimento+'T12:00:00')>new Date()&&new Date(p.vencimento+'T12:00:00')<=em3);
-            }else if(filtroAtivo==='7dias'){
-              // Mostra parcelas FUTURAS até 7 dias (não inclui atrasadas)
-              const agora=new Date();agora.setHours(0,0,0,0);
+              // Amanhã até dia 3
               parcelasF=parcelas.filter(p=>{
-                const venc=new Date(p.vencimento+'T12:00:00');
-                return p.status==='pendente'&&venc>=agora&&venc<=em7;
+                if(p.status!=='pendente')return false;
+                const v=new Date(p.vencimento+'T00:00:00');
+                return v>hoje&&v<=em3;
+              });
+            }else if(filtroAtivo==='7dias'){
+              // TODAS até dia 7 (incluindo hoje)
+              parcelasF=parcelas.filter(p=>{
+                if(p.status!=='pendente')return false;
+                const v=new Date(p.vencimento+'T00:00:00');
+                return v>=hoje&&v<=em7;
               });
             }
             
