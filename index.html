@@ -1390,6 +1390,96 @@ async function bootApp(){
   buildSidebar();loadBottomNavPref();showPage('dashboard');
   if(_notifAtivo())iniciarVerificacaoAutomatica();
   if(session.role==='admin')verificarRenovacoesPendentes();
+  
+  // Aviso de boas-vindas (primeiro acesso)
+  mostrarBoasVindas();
+  
+  // Aviso para adicionar e-mail (se não tiver)
+  mostrarAvisoEmail();
+}
+
+// ══ AVISOS INICIAIS ══
+function mostrarBoasVindas(){
+  // Verifica se já mostrou boas-vindas antes
+  const jaViu=localStorage.getItem('gepainel_boas_vindas');
+  if(jaViu)return;
+  
+  // Marca como visto
+  localStorage.setItem('gepainel_boas_vindas','1');
+  
+  // Aguarda 800ms para o app carregar
+  setTimeout(()=>{
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .3s';
+    modal.innerHTML=`
+      <div style="background:var(--card);border-radius:var(--r);max-width:480px;width:100%;box-shadow:var(--shm);overflow:hidden">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#EA580C 0%,#DC2626 100%);padding:1.75rem 1.5rem;text-align:center">
+          <div style="font-size:3rem;margin-bottom:.5rem">👋</div>
+          <div style="font-family:var(--FT);font-size:1.5rem;color:#fff;font-weight:700;margin-bottom:.25rem">Bem-vindo ao GEPainel!</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.9)">Sistema de gestão de empréstimos</div>
+        </div>
+        
+        <!-- Conteúdo -->
+        <div style="padding:1.75rem 1.5rem">
+          <div style="font-size:14px;color:var(--n2);line-height:1.6;margin-bottom:1.25rem">
+            <p style="margin:0 0 .75rem">Olá, <strong>${session.nome.split(' ')[0]}</strong>! 👋</p>
+            <p style="margin:0 0 .75rem">Estamos felizes em ter você aqui. O GEPainel foi desenvolvido para facilitar a gestão dos seus empréstimos e clientes.</p>
+            <p style="margin:0">Caso precise de ajuda ou tenha alguma dúvida, entre em contato:</p>
+          </div>
+          
+          <!-- Contato de suporte -->
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:var(--rs);padding:1rem;margin-bottom:1.25rem">
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <div style="width:40px;height:40px;background:#16A34A;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div style="flex:1">
+                <div style="font-size:11px;color:#166534;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px">Suporte técnico</div>
+                <a href="https://wa.me/5591985919201" target="_blank" style="font-size:16px;font-weight:700;color:#16A34A;text-decoration:none;font-family:var(--FM)">(91) 98591-9201</a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Botão fechar -->
+          <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-grn btn-full" style="padding:.85rem;font-weight:600;font-size:15px">
+            Entendi, vamos começar! →
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  },800);
+}
+
+function mostrarAvisoEmail(){
+  // Só mostra se não tiver e-mail
+  if(session.email)return;
+  
+  // Aguarda 2s (após boas-vindas)
+  setTimeout(()=>{
+    const banner=document.createElement('div');
+    banner.id='aviso-email-banner';
+    banner.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);max-width:600px;width:calc(100% - 2rem);z-index:100;animation:slideDown .3s';
+    banner.innerHTML=`
+      <div style="background:#FEF3C7;border:2px solid #FDE68A;border-radius:var(--r);padding:1rem 1.25rem;box-shadow:0 4px 12px rgba(0,0,0,.15);display:flex;align-items:start;gap:1rem">
+        <div style="width:36px;height:36px;background:#F59E0B;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:14px;color:#92400E;margin-bottom:4px">📧 Adicione seu e-mail</div>
+          <div style="font-size:13px;color:#78350F;line-height:1.5;margin-bottom:.75rem">
+            Para recuperar sua senha em caso de esquecimento, adicione seu e-mail no perfil.
+          </div>
+          <button onclick="showPage('perfil');document.getElementById('aviso-email-banner').remove()" class="btn btn-sm" style="background:#F59E0B;color:#fff;font-weight:600;padding:.4rem .85rem;font-size:12px">
+            Adicionar agora →
+          </button>
+        </div>
+        <button onclick="this.closest('#aviso-email-banner').remove()" style="background:none;border:none;color:#92400E;cursor:pointer;font-size:1.2rem;padding:0;line-height:1;flex-shrink:0">✕</button>
+      </div>
+    `;
+    document.body.appendChild(banner);
+  },2000);
 }
 
 function doLogout(){
@@ -3633,11 +3723,11 @@ function usrListHTML(){
     return`<div style="background:#fff;border:1px solid #E5E7EB;border-radius:var(--r);padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;margin-bottom:.65rem;box-shadow:var(--sh)">
       <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;${av}">${ini(u.nome)}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:17px;color:var(--n1);margin-bottom:3px">
-          ${u.nome}${isSelf?' <span style="font-size:11px;color:var(--n4);font-weight:400">(você)</span>':''}
-          ${u.email?`<span style="font-size:13px;color:var(--n3);font-weight:400;margin-left:8px">· ${u.email}</span>`:''}
+        <div style="font-weight:700;font-size:17px;color:#1E293B;margin-bottom:3px">
+          ${u.nome}${isSelf?' <span style="font-size:11px;color:#64748B;font-weight:400">(você)</span>':''}
+          ${u.email?`<span style="font-size:13px;color:#64748B;font-weight:400;margin-left:8px">· ${u.email}</span>`:''}
         </div>
-        <div style="font-size:12px;color:var(--n4);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+        <div style="font-size:12px;color:#64748B;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
           @${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'3°JOB'}</span>
           ${(()=>{
             if(u.role==='admin')return'';
