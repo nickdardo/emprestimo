@@ -4417,16 +4417,24 @@ async function selecionarPlano(idx){
   document.getElementById('renov-qr').style.display='';
   
   try{
-    // Pega token de autenticação
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session)throw new Error('Não autenticado');
+    // Verifica autenticação
+    if(!session||!session.id){
+      throw new Error('Você precisa estar logado');
+    }
+    
+    // Pega token atual
+    const {data:{session:authSession}}=await sb.auth.getSession();
+    if(!authSession){
+      throw new Error('Sessão expirada. Faça login novamente');
+    }
     
     // Chama Edge Function para criar pagamento no Mercado Pago
     const response=await fetch('https://abmwlhxdvfgnptmvtkla.supabase.co/functions/v1/create-pix-payment',{
       method:'POST',
       headers:{
-        'Authorization':`Bearer ${session.access_token}`,
-        'Content-Type':'application/json'
+        'Authorization':`Bearer ${authSession.access_token}`,
+        'Content-Type':'application/json',
+        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFibXdsaHhkdmZnbnB0bXZ0a2xhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY0NjczMjQsImV4cCI6MjA1MjA0MzMyNH0.kdCte6wubAs7sEEDPSutT1lFAQxNRUQsB-YW_LMWK88'
       },
       body:JSON.stringify({
         dias:plano.dias,
@@ -4435,7 +4443,10 @@ async function selecionarPlano(idx){
       })
     });
     
-    if(!response.ok)throw new Error('Erro na requisição');
+    if(!response.ok){
+      const error=await response.json();
+      throw new Error(error.error||'Erro na requisição');
+    }
     
     const data=await response.json();
     if(!data.success)throw new Error(data.error||'Erro ao gerar PIX');
@@ -4466,8 +4477,8 @@ async function selecionarPlano(idx){
     
   }catch(err){
     console.error('Erro ao criar PIX:',err);
-    toast('❌ Erro ao gerar PIX: '+err.message);
-    qrDiv.innerHTML='<div style="padding:2rem;text-align:center;color:var(--red)"><div style="font-size:2rem;margin-bottom:.5rem">❌</div>Erro ao gerar PIX</div>';
+    toast('❌ '+err.message);
+    qrDiv.innerHTML='<div style="padding:2rem;text-align:center;color:var(--red)"><div style="font-size:2rem;margin-bottom:.5rem">❌</div>'+err.message+'</div>';
   }
 }
 
