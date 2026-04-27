@@ -2095,7 +2095,7 @@ function renderEmprestimos(){
     <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
         <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:280px"/>
-        <input type="date" id="emp-date-filter" onchange="filterEmp()" style="padding:.5rem .75rem;border:1px solid var(--border);border-radius:var(--rs);background:var(--card);color:var(--n2);font-size:13px;font-family:var(--FB);cursor:pointer" title="Filtrar por data de empréstimo"/>
+        <input type="text" id="emp-date-filter" placeholder="📅  dd/mm/aaaa" oninput="filterEmp()" style="padding:.5rem .75rem;border:1px solid var(--border);border-radius:var(--rs);background:var(--card);color:var(--n2);font-size:13px;font-family:var(--FB);max-width:150px" title="Filtrar por data de empréstimo"/>
         <button class="btn btn-g btn-sm" onclick="clearDateFilter()" id="btn-clear-date" style="display:none" title="Limpar filtro de data">✕ Data</button>
       </div>
       <button class="btn btn-d btn-sm" onclick="deleteSelectedEmps()" id="btn-del-all" style="display:none">Excluir selecionados</button>
@@ -2212,7 +2212,21 @@ function filterEmp(){
   let f=emprestimos.filter(e=>{
     const tom=tomadores.find(t=>t.id===e.tomador_id);
     const matchText=(tom?.nome||'').toLowerCase().includes(q)||(e.responsavel||'').toLowerCase().includes(q)||(e.local||'').toLowerCase().includes(q);
-    const matchDate=!dateFilter||e.data_emprestimo===dateFilter;
+    
+    // Filtro de data parcial - aceita digitação progressiva
+    let matchDate=true;
+    if(dateFilter){
+      // Converter data do empréstimo de YYYY-MM-DD para DD/MM/YYYY
+      const empDate=e.data_emprestimo||'';
+      if(empDate){
+        const[y,m,d]=empDate.split('-');
+        const formattedDate=`${d}/${m}/${y}`;
+        matchDate=formattedDate.includes(dateFilter);
+      }else{
+        matchDate=false;
+      }
+    }
+    
     return matchText&&matchDate;
   });
   if(_empFilter==='atrasado'){f=f.filter(e=>parcelas.some(p=>p.emprestimo_id===e.id&&isAtrasada(p)));}
