@@ -2093,7 +2093,11 @@ function renderEmprestimos(){
       <button class="pill pill-consig" id="pill-consig" onclick="setEmpFilter('consig')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Consignado</button>
     </div>
     <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
-      <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:380px"/>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:280px"/>
+        <input type="date" id="emp-date-filter" onchange="filterEmp()" style="padding:.5rem .75rem;border:1px solid var(--border);border-radius:var(--rs);background:var(--card);color:var(--n2);font-size:13px;font-family:var(--FB);cursor:pointer" title="Filtrar por data de empréstimo"/>
+        <button class="btn btn-g btn-sm" onclick="clearDateFilter()" id="btn-clear-date" style="display:none" title="Limpar filtro de data">✕ Data</button>
+      </div>
       <button class="btn btn-d btn-sm" onclick="deleteSelectedEmps()" id="btn-del-all" style="display:none">Excluir selecionados</button>
       <button class="btn btn-g btn-sm" onclick="toggleSelectMode()" id="btn-select-mode">Selecionar</button>
     </div>
@@ -2181,6 +2185,14 @@ function applySortTom(list){
 }
 
 let _empFilter='todos';
+function clearDateFilter(){
+  const dateInput=document.getElementById('emp-date-filter');
+  if(dateInput){
+    dateInput.value='';
+    filterEmp();
+  }
+}
+
 function setEmpFilter(f){
   _empFilter=f;
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
@@ -2189,9 +2201,19 @@ function setEmpFilter(f){
 }
 function filterEmp(){
   const q=(document.getElementById('emp-s')?.value||'').toLowerCase();
+  const dateFilter=document.getElementById('emp-date-filter')?.value||'';
+  
+  // Mostrar/ocultar botão de limpar filtro de data
+  const btnClearDate=document.getElementById('btn-clear-date');
+  if(btnClearDate){
+    btnClearDate.style.display=dateFilter?'inline-block':'none';
+  }
+  
   let f=emprestimos.filter(e=>{
     const tom=tomadores.find(t=>t.id===e.tomador_id);
-    return(tom?.nome||'').toLowerCase().includes(q)||(e.responsavel||'').toLowerCase().includes(q)||(e.local||'').toLowerCase().includes(q);
+    const matchText=(tom?.nome||'').toLowerCase().includes(q)||(e.responsavel||'').toLowerCase().includes(q)||(e.local||'').toLowerCase().includes(q);
+    const matchDate=!dateFilter||e.data_emprestimo===dateFilter;
+    return matchText&&matchDate;
   });
   if(_empFilter==='atrasado'){f=f.filter(e=>parcelas.some(p=>p.emprestimo_id===e.id&&isAtrasada(p)));}
   else if(_empFilter==='hoje'){f=f.filter(e=>parcelas.some(p=>p.emprestimo_id===e.id&&p.status==='pendente'&&p.vencimento===today()));}
