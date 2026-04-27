@@ -590,6 +590,218 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   .stat,.card{box-shadow:none!important;border:1px solid #ddd!important}
 }
 
+
+/* ══════════════════════════════════════════════════════════════════ */
+/* MODAL PIX - RENOVAÇÃO AUTOMÁTICA */
+/* ══════════════════════════════════════════════════════════════════ */
+
+/* Modal PIX */
+.modal-pix {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s;
+}
+
+.modal-pix-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+}
+
+.modal-pix-content {
+    position: relative;
+    background: var(--card);
+    border-radius: var(--r);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shm);
+    z-index: 1;
+}
+
+.modal-pix-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--card2);
+    color: var(--n2);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 2;
+}
+
+.modal-pix-close:hover {
+    background: var(--border);
+    color: var(--n1);
+    transform: rotate(90deg);
+}
+
+/* Grid de Planos */
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Card de Plano */
+.plan-card {
+    background: var(--card2);
+    border: 2px solid var(--border);
+    border-radius: var(--r);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--sh);
+}
+
+.plan-card:active {
+    transform: translateY(0);
+}
+
+.plan-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--n2);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.plan-price {
+    font-family: var(--FT);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+}
+
+.plan-detail {
+    font-size: 12px;
+    color: var(--n3);
+}
+
+.plan-badge {
+    position: absolute;
+    top: 8px;
+    right: -30px;
+    background: var(--grn);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 35px;
+    transform: rotate(45deg);
+    letter-spacing: 0.05em;
+}
+
+/* Loading Dots */
+.loading-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Botão Renovar na Navbar */
+.btn-renovar {
+    background: linear-gradient(135deg, #00C896 0%, #00A37A 100%);
+    color: white;
+    border: none;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--rs);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 200, 150, 0.2);
+}
+
+.btn-renovar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 200, 150, 0.3);
+}
+
+.btn-renovar:active {
+    transform: translateY(0);
+}
+
+/* Responsivo */
+@media (max-width: 640px) {
+    .plans-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .modal-pix-content {
+        margin: 0;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .btn-renovar {
+        font-size: 11px;
+        padding: 0.35rem 0.7rem;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -656,6 +868,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
         <span id="nav-name"></span>
         <span class="nav-badge" id="nav-role"></span>
       </div>
+      <button class="btn-renovar" onclick="abrirRenovacao()" title="Renovar acesso via PIX">💳 Renovar</button>
       <button class="wa-nav-btn unset" id="wa-nav-btn" onclick="openWaModal()" title="Configurar WhatsApp para avisos">📱 <span id="wa-nav-label">Seu WhatsApp</span></button>
       <button class="search-nav-btn" onclick="openGlobalSearch()" title="Busca global"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button class="dark-btn" id="dark-toggle" onclick="toggleDarkMode()" title="Alternar tema"></button>
@@ -922,7 +1135,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
       <div class="fgrid">
         <div class="fg full"><span class="lbl">Nome *</span><input id="um-nome" placeholder="Nome do usuário"/></div>
         <div class="fg"><span class="lbl">Login *</span><input id="um-login" placeholder="Ex: joao.silva"/></div>
-        <div class="fg"><span class="lbl">Perfil</span><select id="um-role"><option value="admin">Admin</option><option value="op">VIP</option></select></div>
+        <div class="fg"><span class="lbl">Perfil</span><select id="um-role"><option value="admin">Admin</option><option value="op">3°JOB</option></select></div>
         <div class="fg full"><span class="lbl">Senha *</span><input type="password" id="um-pass" placeholder="Mínimo 4 caracteres"/></div>
         <div class="fg full" id="um-p2w"><span class="lbl">Confirmar senha *</span><input type="password" id="um-pass2" placeholder="Repita a senha"/></div>
         <div class="fg full">
@@ -1436,7 +1649,7 @@ async function bootApp(){
         navBadge.textContent=`Ativo · ${diasNav}d`;navBadge.className='nav-badge badge-ativo';
       }
     } else {
-      navBadge.textContent='VIP';navBadge.className='nav-badge';
+      navBadge.textContent='3°JOB';navBadge.className='nav-badge';
     }
   }catch(e){}
   try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
@@ -1591,7 +1804,7 @@ function renderDashboardSelector(){
         <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;${av}">${ini(u.nome)}</div>
         <div>
           <div style="font-weight:700;font-size:15px;color:var(--n1)">${u.nome}</div>
-          <div style="font-size:12px;color:var(--n4);margin-top:1px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'VIP'}</span></div>
+          <div style="font-size:12px;color:var(--n4);margin-top:1px">@${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'3°JOB'}</span></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;text-align:center">
@@ -1662,7 +1875,7 @@ function renderDashboard(){
       <div style="display:flex;align-items:center;gap:.75rem">
         ${voltarBtn}
         <span class="sec-title">${userAtivo ? userAtivo.nome.split(' ')[0] : 'Dashboard'}</span>
-        ${userAtivo ? `<span class="bdg ${userAtivo.role==='admin'?'bdg-admin':'bdg-op'}">${userAtivo.role==='admin'?'Admin':'VIP'}</span>` : ''}
+        ${userAtivo ? `<span class="bdg ${userAtivo.role==='admin'?'bdg-admin':'bdg-op'}">${userAtivo.role==='admin'?'Admin':'3°JOB'}</span>` : ''}
       </div>
       <div style="display:flex;gap:.5rem">
         <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
@@ -3218,7 +3431,31 @@ function exportTomadoresExcel(){
   </div>
   <br>
   <button onclick="window.print()" style="padding:.5rem 1.5rem;background:#111827;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">🖨 Salvar como PDF</button>
-  </body></html>`);
+  
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DE RENOVAÇÃO PIX -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="modal-renovacao" class="modal-pix" style="display:none">
+    <div class="modal-pix-overlay" onclick="fecharRenovacao()"></div>
+    <div class="modal-pix-content">
+        <button class="modal-pix-close" onclick="fecharRenovacao()">×</button>
+        <div id="modal-renovacao-content">
+            <div style="text-align:center;padding:2rem">
+                <div style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;color:var(--n1)">
+                    Renovar Acesso
+                </div>
+                <div style="font-size:13px;color:var(--n3);margin-bottom:2rem">
+                    Escolha um plano e pague com PIX
+                </div>
+                <div id="plans-container" class="plans-grid">
+                    <!-- Planos serão renderizados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body></html>`);
   win.document.close();
   toast('✓ Relatório aberto — clique em "Salvar como PDF"');
 }
@@ -3601,7 +3838,7 @@ function renderPerfil(){
           </div>
           <div style="text-align:center">
             <div style="font-weight:600;font-size:16px">${session.nome}</div>
-            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'Admin':'VIP'}</div>
+            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'Admin':'3°JOB'}</div>
           </div>
           <div style="width:100%">
             <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Selecionar foto</div>
@@ -3860,7 +4097,7 @@ function usrListHTML(){
           ${u.email?`<span style="font-size:13px;color:#64748B;font-weight:400;margin-left:8px">· ${u.email}</span>`:''}
         </div>
         <div style="font-size:12px;color:#64748B;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
-          @${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'VIP'}</span>
+          @${u.login} · <span class="bdg ${u.role==='admin'?'bdg-admin':'bdg-op'}">${u.role==='admin'?'Admin':'3°JOB'}</span>
           ${(()=>{
             if(u.role==='admin')return'';
             if(!u.expires_at)return'<span class="bdg" style="background:#DCFCE7;color:#166534">✓ Vitalício</span>';
@@ -4282,7 +4519,31 @@ function exportRelatPDF(){
   <body><h1>GEPainel — Relatório</h1>
   ${mc.innerHTML.replace(/<script[\s\S]*?<\/script>/gi,'')}
   <br><button onclick="window.print()" style="padding:.5rem 1.5rem;background:#111827;color:#fff;border:none;border-radius:6px;cursor:pointer">🖨 Salvar como PDF</button>
-  </body></html>`);
+  
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DE RENOVAÇÃO PIX -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="modal-renovacao" class="modal-pix" style="display:none">
+    <div class="modal-pix-overlay" onclick="fecharRenovacao()"></div>
+    <div class="modal-pix-content">
+        <button class="modal-pix-close" onclick="fecharRenovacao()">×</button>
+        <div id="modal-renovacao-content">
+            <div style="text-align:center;padding:2rem">
+                <div style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;color:var(--n1)">
+                    Renovar Acesso
+                </div>
+                <div style="font-size:13px;color:var(--n3);margin-bottom:2rem">
+                    Escolha um plano e pague com PIX
+                </div>
+                <div id="plans-container" class="plans-grid">
+                    <!-- Planos serão renderizados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body></html>`);
   win.document.close();
 }
 
@@ -5031,7 +5292,31 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   <tbody>${empRows}</tbody></table>
   <div class="footer">GEPainel · ${session?.nome||''}</div>
   <br><button onclick="window.print()" style="padding:.5rem 1.5rem;background:#EA580C;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px">🖨 Imprimir</button>
-  </body></html>`);
+  
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DE RENOVAÇÃO PIX -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="modal-renovacao" class="modal-pix" style="display:none">
+    <div class="modal-pix-overlay" onclick="fecharRenovacao()"></div>
+    <div class="modal-pix-content">
+        <button class="modal-pix-close" onclick="fecharRenovacao()">×</button>
+        <div id="modal-renovacao-content">
+            <div style="text-align:center;padding:2rem">
+                <div style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;color:var(--n1)">
+                    Renovar Acesso
+                </div>
+                <div style="font-size:13px;color:var(--n3);margin-bottom:2rem">
+                    Escolha um plano e pague com PIX
+                </div>
+                <div id="plans-container" class="plans-grid">
+                    <!-- Planos serão renderizados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body></html>`);
   win.document.close();
 }
 
@@ -5083,5 +5368,29 @@ window.addEventListener('DOMContentLoaded',async()=>{
   },30000);
 });
 </script>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DE RENOVAÇÃO PIX -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="modal-renovacao" class="modal-pix" style="display:none">
+    <div class="modal-pix-overlay" onclick="fecharRenovacao()"></div>
+    <div class="modal-pix-content">
+        <button class="modal-pix-close" onclick="fecharRenovacao()">×</button>
+        <div id="modal-renovacao-content">
+            <div style="text-align:center;padding:2rem">
+                <div style="font-size:1.5rem;font-weight:700;margin-bottom:1rem;color:var(--n1)">
+                    Renovar Acesso
+                </div>
+                <div style="font-size:13px;color:var(--n3);margin-bottom:2rem">
+                    Escolha um plano e pague com PIX
+                </div>
+                <div id="plans-container" class="plans-grid">
+                    <!-- Planos serão renderizados aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
