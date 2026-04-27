@@ -2095,7 +2095,7 @@ function renderEmprestimos(){
     <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
         <input type="text" id="emp-s" placeholder="🔍  Buscar por nome, local ou responsável..." oninput="filterEmp()" style="max-width:280px"/>
-        <input type="text" id="emp-date-filter" placeholder="📅  dd/mm/aaaa" oninput="filterEmp()" style="padding:.5rem .75rem;border:1px solid var(--border);border-radius:var(--rs);background:var(--card);color:var(--n2);font-size:13px;font-family:var(--FB);max-width:150px" title="Filtrar por data de empréstimo"/>
+        <input type="text" id="emp-date-filter" placeholder="📅  Buscar por data" oninput="filterEmp()" style="padding:.5rem .75rem;border:1px solid var(--border);border-radius:var(--rs);background:var(--card);color:var(--n2);font-size:13px;font-family:var(--FB);max-width:150px" title="Filtrar por data de empréstimo"/>
         <button class="btn btn-g btn-sm" onclick="clearDateFilter()" id="btn-clear-date" style="display:none" title="Limpar filtro de data">✕ Data</button>
       </div>
       <button class="btn btn-d btn-sm" onclick="deleteSelectedEmps()" id="btn-del-all" style="display:none">Excluir selecionados</button>
