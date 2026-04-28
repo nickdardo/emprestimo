@@ -1480,14 +1480,13 @@ async function bootApp(){
         navBadge.textContent='⛔ Expirado — Renovar';navBadge.className='nav-badge badge-expired';
       } else if(diasNav<=7){
         navBadge.textContent=`⚠ ${diasNav}d — Renovar`;navBadge.className='nav-badge badge-warn';
+      } else if(diasNav<=30){
+        navBadge.textContent=`Free · ${diasNav}d`;navBadge.className='nav-badge badge-free';
       } else {
-        const plan=getUserPlan(session.expires_at);
-        navBadge.textContent=`${plan.name} · ${diasNav}d`;
-        navBadge.className=`nav-badge ${plan.badge}`;
+        navBadge.textContent=`Ativo · ${diasNav}d`;navBadge.className='nav-badge badge-ativo';
       }
     } else {
-      // Sem data de expiração = acesso vitalício
-      navBadge.textContent='Vitalício';navBadge.className='nav-badge badge-ativo';
+      navBadge.textContent='3°JOB';navBadge.className='nav-badge';
     }
   }catch(e){}
   try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
@@ -3803,20 +3802,32 @@ async function confirmarRenovacao(renovId,userId,dias){
   if(!confirm('Confirmar este pagamento?'))return;
   
   try{
-    // Calcular nova data de expiração com base em expires_at
-    const u=users.find(x=>x.id===userId);
-    const base=u?.expires_at&&new Date(u.expires_at)>new Date()?new Date(u.expires_at):new Date();
-    base.setDate(base.getDate()+dias);
-    const novaData=base.toISOString().split('T')[0];
+    // Calcular nova data de expiração
+    const{data:user}=await sb.from('users').select('expiry_date').eq('id',userId).single();
+    
+    let newExpiry;
+    if(user?.expiry_date){
+      const current=new Date(user.expiry_date);
+      if(current>new Date()){
+        // Se ainda não expirou, adiciona os dias
+        newExpiry=new Date(current.getTime()+dias*24*60*60*1000);
+      }else{
+        // Se já expirou, conta a partir de hoje
+        newExpiry=new Date(Date.now()+dias*24*60*60*1000);
+      }
+    }else{
+      // Primeira renovação
+      newExpiry=new Date(Date.now()+dias*24*60*60*1000);
+    }
     
     // Atualizar usuário
     const{error:userError}=await sb.from('users')
-      .update({expires_at:novaData})
+      .update({expiry_date:newExpiry.toISOString()})
       .eq('id',userId);
     
     if(userError)throw userError;
     
-    // Marcar renovação como confirmada na tabela renewals
+    // Marcar renovação como confirmada
     const{error:renovError}=await sb.from('renewals')
       .update({
         status:'confirmed',
@@ -3826,10 +3837,7 @@ async function confirmarRenovacao(renovId,userId,dias){
     
     if(renovError)throw renovError;
     
-    // Atualiza local
-    users=users.map(u=>u.id===userId?{...u,expires_at:novaData}:u);
-    
-    toast('✅ Renovação confirmada até '+new Date(novaData).toLocaleDateString('pt-BR')+'!');
+    toast('✅ Renovação confirmada!');
     renderRenovacoes();
     
   }catch(err){
@@ -3855,15 +3863,7 @@ function renderPerfil(){
           </div>
           <div style="text-align:center">
             <div style="font-weight:600;font-size:16px">${session.nome}</div>
-            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${(()=>{
-            if(session.role==='admin')return'<span class="nav-badge badge-admin">Admin</span>';
-            if(!session.expires_at)return'<span class="nav-badge badge-ativo">Vitalício</span>';
-            const plan=getUserPlan(session.expires_at);
-            const dias=Math.ceil((new Date(session.expires_at)-new Date())/(1000*60*60*24));
-            if(dias<0)return'<span class="nav-badge badge-expired">⛔ Expirado</span>';
-            if(dias<=7)return`<span class="nav-badge badge-warn">⚠ ${dias}d</span>`;
-            return`<span class="nav-badge ${plan.badge}">${plan.name}</span>`;
-          })()}</div>
+            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'Admin':'3°JOB'}</div>
           </div>
           <div style="width:100%">
             <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Selecionar foto</div>
@@ -4056,7 +4056,7 @@ async function carregarRenovacoesPendentes(){
   const sec=document.getElementById('renov-pendentes-section');
   if(!sec)return;
   try{
-    const{data,error}=await sb.from('renewals').select('*,users(nome,login)').eq('status','pending').order('created_at',{ascending:false});
+    const{data,error}=await sb.from('renovacoes').select('*').eq('status','pendente').order('created_at',{ascending:false});
     if(error||!data||!data.length){sec.innerHTML='';return;}
 
     sec.innerHTML=`
@@ -4064,17 +4064,16 @@ async function carregarRenovacoesPendentes(){
         <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span style="font-weight:700;color:#92400E;font-size:14px">Renovações Pendentes (${data.length})</span>
-          <button class="btn btn-g btn-xs" onclick="showPage('renovacoes')" style="margin-left:auto">Ver todas →</button>
         </div>
         ${data.map(r=>`
           <div style="background:#fff;border:1px solid #FDE68A;border-radius:var(--rs);padding:.85rem 1rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;gap:.75rem;flex-wrap:wrap">
             <div>
-              <div style="font-weight:700;font-size:14px">${r.users?.nome||r.users?.login||'—'}</div>
-              <div style="font-size:12px;color:var(--n4)">@${r.users?.login||'—'} · ${r.plan_type} · <strong style="color:#EA580C">R$ ${Number(r.amount).toFixed(2).replace('.',',')}</strong></div>
+              <div style="font-weight:700;font-size:14px">${r.user_nome}</div>
+              <div style="font-size:12px;color:var(--n4)">@${r.user_login} · ${r.plano} · <strong style="color:#EA580C">R$ ${Number(r.valor).toFixed(2).replace('.',',')}</strong></div>
               <div style="font-size:11px;color:var(--n4);margin-top:2px">${new Date(r.created_at).toLocaleString('pt-BR')}</div>
             </div>
             <div style="display:flex;gap:.4rem">
-              <button class="btn btn-sm" style="background:#16A34A;color:#fff" onclick="confirmarRenovacao('${r.id}','${r.user_id}',${r.dias})">✓ Confirmar ${r.plan_type}</button>
+              <button class="btn btn-sm" style="background:#16A34A;color:#fff" onclick="confirmarRenovacao('${r.id}','${r.user_id}',${r.dias})">✓ Confirmar</button>
               <button class="btn btn-d btn-sm" onclick="rejeitarRenovacao('${r.id}')">✕ Rejeitar</button>
             </div>
           </div>`).join('')}
@@ -4082,11 +4081,33 @@ async function carregarRenovacoesPendentes(){
   }catch(e){console.warn('Erro ao carregar renovacoes',e);}
 }
 
+async function confirmarRenovacao(renovId, userId, dias){
+  if(!confirm('Confirmar pagamento e renovar acesso por '+dias+' dias?'))return;
+  // Calcula nova data de expiração
+  const u=users.find(x=>x.id===userId);
+  const base=u?.expires_at&&new Date(u.expires_at)>new Date()?new Date(u.expires_at):new Date();
+  base.setDate(base.getDate()+dias);
+  const novaData=base.toISOString().split('T')[0];
+
+  // Atualiza user
+  const{error:ue}=await sb.from('users').update({expires_at:novaData}).eq('id',userId);
+  if(ue){toast('Erro ao atualizar acesso',true);return;}
+
+  // Marca renovação como confirmada
+  await sb.from('renovacoes').update({status:'confirmado'}).eq('id',renovId);
+
+  // Atualiza local
+  users=users.map(u=>u.id===userId?{...u,expires_at:novaData}:u);
+
+  toast('✓ Acesso renovado até '+new Date(novaData).toLocaleDateString('pt-BR')+'!');
+  renderUsuarios();
+}
+
 async function rejeitarRenovacao(renovId){
   if(!confirm('Rejeitar esta solicitação?'))return;
-  await sb.from('renewals').update({status:'rejected',confirmed_at:new Date().toISOString()}).eq('id',renovId);
+  await sb.from('renovacoes').update({status:'rejeitado'}).eq('id',renovId);
   toast('Solicitação rejeitada.');
-  renderRenovacoes();
+  renderUsuarios();
 }
 
 function usrListHTML(){
@@ -4108,8 +4129,8 @@ function usrListHTML(){
             const dias=Math.ceil((new Date(u.expires_at)-new Date())/(1000*60*60*24));
             if(dias<0)return'<span class="bdg" style="background:#FEE2E2;color:#991B1B">⛔ Expirado</span>';
             if(dias<=7)return`<span class="bdg" style="background:#FEF3C7;color:#92400E">⚠ ${dias}d restantes</span>`;
-            const plan=getUserPlan(u.expires_at);
-            return`<span class="nav-badge ${plan.badge}" style="font-size:11px">${plan.name} · ${dias}d</span>`;
+            if(dias<=30)return`<span class="bdg" style="background:#FFF7ED;color:#EA580C">Free · ${dias}d restantes</span>`;
+            return`<span class="bdg" style="background:#EFF6FF;color:#1d4ed8">Ativo · ${dias}d</span>`;
           })()}
         </div>
       </div>
@@ -4704,61 +4725,64 @@ function mostrarAvisoRenovacao(){
 async function selecionarPlano(idx){
   const plano=_PIX_PLANOS[idx];
   
-  // Salvar renovação pendente no banco
-  try{
-    const{error}=await sb.from('renewals').insert([{
-      user_id:session.id,
-      plan_type:plano.label,
-      amount:plano.valor,
-      dias:plano.dias,
-      status:'pending',
-      created_at:new Date().toISOString()
-    }]);
-    
-    if(error)throw error;
-  }catch(err){
-    console.error('Erro ao salvar renovação:',err);
-    toast('⚠️ Erro ao criar solicitação',true);
-    return;
-  }
-  
-  // Mostra QR Code PIX
+  // ── Guarda plano selecionado imediatamente ─────────────
+  window._renovPlanoSel=plano;
+
+  // ── Mostra QR Code PRIMEIRO (não bloqueia no DB) ───────
   const qrDiv=document.getElementById('renov-qr-canvas');
   qrDiv.innerHTML='<div style="padding:2rem;text-align:center;color:var(--n3)"><div style="font-size:2rem;margin-bottom:.5rem">⏳</div>Gerando PIX...</div>';
   document.getElementById('renov-planos').style.display='none';
   document.getElementById('renov-qr').style.display='';
-  
-  try{
-    // Verifica se está logado
-    if(!session||!session.id){
-      throw new Error('Você precisa estar logado');
+
+  // Gerar código PIX estático
+  const pixCode=gerarPixEMV(_PIX_KEY,_PIX_NAME,_PIX_CITY,plano.valor,'GEPainel');
+  document.getElementById('renov-qr-titulo').textContent=`PIX — ${plano.label} · R$ ${plano.valor.toFixed(2).replace('.',',')}`;
+  document.getElementById('renov-pix-code').value=pixCode;
+
+  // Gerar QR Code visual
+  qrDiv.innerHTML='';
+  const renderQR=()=>new QRCode(qrDiv,{text:pixCode,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
+  if(typeof QRCode==='undefined'){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload=renderQR;
+    s.onerror=()=>{qrDiv.innerHTML='<div style="font-size:12px;word-break:break-all;padding:.5rem;color:var(--n3)">'+pixCode+'</div>';};
+    document.head.appendChild(s);
+  }else{
+    renderQR();
+  }
+
+  // ── Salva no banco em background (não bloqueia UI) ─────
+  // Tenta com coluna 'dias'; se falhar, tenta sem ela
+  _salvarRenovacaoBackground(plano);
+}
+
+async function _salvarRenovacaoBackground(plano){
+  const payload={
+    user_id:session.id,
+    plan_type:plano.label,
+    amount:plano.valor,
+    dias:plano.dias,
+    status:'pending'
+  };
+  let res=await sb.from('renewals').insert([payload]);
+  if(res.error){
+    // Tenta sem coluna 'dias' (coluna pode não existir)
+    const{dias:_,...payload2}=payload;
+    res=await sb.from('renewals').insert([payload2]);
+    if(res.error){
+      console.warn('renewals insert falhou:',res.error.message);
+      // Fallback: salva na tabela renovacoes legada
+      await sb.from('renovacoes').insert([{
+        user_id:session.id,
+        user_nome:session.nome,
+        user_login:session.login,
+        plano:plano.label,
+        dias:plano.dias,
+        valor:plano.valor,
+        status:'pendente'
+      }]).catch(e=>console.warn('renovacoes fallback falhou:',e));
     }
-    
-    // Gerar código PIX estático
-    const pixCode=gerarPixCode(plano.valor);
-    
-    // Atualizar interface
-    document.getElementById('renov-qr-titulo').textContent=`PIX — ${plano.label} · R$ ${plano.valor.toFixed(2).replace('.',',')}`;
-    document.getElementById('renov-pix-code').value=pixCode;
-    
-    // Gerar QR Code visual
-    qrDiv.innerHTML='';
-    if(typeof QRCode==='undefined'){
-      const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-      s.onload=()=>new QRCode(qrDiv,{text:pixCode,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
-      document.head.appendChild(s);
-    }else{
-      new QRCode(qrDiv,{text:pixCode,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
-    }
-    
-    // Guarda plano selecionado
-    window._renovPlanoSel=plano;
-    
-  }catch(err){
-    console.error('Erro ao criar PIX:',err);
-    toast('❌ '+err.message);
-    qrDiv.innerHTML='<div style="padding:2rem;text-align:center;color:var(--red)"><div style="font-size:2rem;margin-bottom:.5rem">❌</div>'+err.message+'</div>';
   }
 }
 
@@ -4845,12 +4869,25 @@ async function avisarPagamento(){
   const btn=document.querySelector('#renov-modal .btn-grn');
   if(btn){btn.textContent='Registrando...';btn.disabled=true;}
 
-  // Envia WhatsApp para o admin
+  // Registra solicitação no Supabase
+  try{
+    await sb.from('renovacoes').insert({
+      user_id:session.id,
+      user_nome:session.nome,
+      user_login:session.login,
+      plano:plano.label,
+      dias:plano.dias,
+      valor:plano.valor,
+      status:'pendente'
+    });
+  }catch(e){console.warn('Erro ao registrar renovacao',e);}
+
+  // Envia WhatsApp
   const msg=`Olá! Acabei de realizar o pagamento via PIX para renovação do GEPainel.%0A%0A👤 Usuário: ${session.nome}%0A📋 Login: @${session.login}%0A📅 Plano: ${plano.label}%0A💰 Valor: R$ ${plano.valor.toFixed(2).replace('.',',')}%0A%0AAguardo a liberação do acesso. Obrigado!`;
   const tel='5591985919201';
   window.open('https://wa.me/'+tel+'?text='+msg,'_blank');
 
-  if(btn){btn.textContent='✓ Comprovante enviado!';btn.style.background='#166534';}
+  if(btn){btn.textContent='✓ Solicitação enviada!';btn.style.background='#166534';}
   toast('✓ Solicitação registrada! Aguarde a confirmação do admin.');
   setTimeout(()=>closeM('renov-modal'),2500);
 }
@@ -4859,7 +4896,7 @@ async function avisarPagamento(){
 
 async function verificarRenovacoesPendentes(){
   try{
-    const{data}=await sb.from('renewals').select('id').eq('status','pending');
+    const{data}=await sb.from('renovacoes').select('id').eq('status','pendente');
     if(data&&data.length>0){
       const siUsr=document.getElementById('si-usuarios');
       if(siUsr&&!siUsr.querySelector('.renov-badge')){
