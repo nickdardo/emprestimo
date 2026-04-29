@@ -15,9 +15,23 @@ const ASAAS_HEADERS = {
   'access_token': process.env.ASAAS_API_KEY,
 };
 
+// ── Helpers ────────────────────────────────────────────────────────────────
+function limparDocumento(doc) {
+  return (doc || '').replace(/\D/g, '');
+}
+
+function documentoValido(doc) {
+  // Aceita CPF (11 dígitos) ou CNPJ (14 dígitos)
+  return doc.length === 11 || doc.length === 14;
+}
+
 // ── Busca ou cria cliente no Asaas pelo CPF/email ──────────────────────────
 async function upsertCustomer({ nome, email, cpf }) {
-  const searchParam = cpf ? `cpfCnpj=${cpf.replace(/\D/g,'')}` : `email=${encodeURIComponent(email)}`;
+  // Prioriza busca por CPF/CNPJ (mais confiável que email)
+  const searchParam = cpf
+    ? `cpfCnpj=${cpf}`
+    : `email=${encodeURIComponent(email)}`;
+
   const search = await fetch(`${ASAAS_BASE}/customers?${searchParam}&limit=1`, {
     headers: ASAAS_HEADERS,
   });
@@ -26,13 +40,17 @@ async function upsertCustomer({ nome, email, cpf }) {
   if (searchData?.data?.length > 0) {
     const existing = searchData.data[0];
 
-    // ✅ NOVO: atualiza o cliente se ainda não tem CPF
+    // Se o cliente existe mas está sem CPF/CNPJ, atualiza
     if (cpf && !existing.cpfCnpj) {
-      await fetch(`${ASAAS_BASE}/customers/${existing.id}`, {
+      const updateRes = await fetch(`${ASAAS_BASE}/customers/${existing.id}`, {
         method: 'PUT',
         headers: ASAAS_HEADERS,
-        body: JSON.stringify({ cpfCnpj: cpf.replace(/\D/g,'') }),
+        body: JSON.stringify({ cpfCnpj: cpf }),
       });
+      const updated = await updateRes.json();
+      if (!updated.id) {
+        throw new Error('Erro ao atualizar CPF do cliente: ' + JSON.stringify(updated));
+      }
     }
 
     return existing.id;
@@ -41,16 +59,20 @@ async function upsertCustomer({ nome, email, cpf }) {
   // Cria novo cliente
   const body = {
     name: nome,
+    cpfCnpj: cpf, // sempre enviado, já validado antes
     ...(email ? { email } : {}),
-    ...(cpf   ? { cpfCnpj: cpf.replace(/\D/g,'') } : {}),
   };
+
   const create = await fetch(`${ASAAS_BASE}/customers`, {
     method: 'POST',
     headers: ASAAS_HEADERS,
     body: JSON.stringify(body),
   });
   const customer = await create.json();
-  if (!customer.id) throw new Error('Erro ao criar cliente: ' + JSON.stringify(customer));
+
+  if (!customer.id) {
+    throw new Error('Erro ao criar cliente: ' + JSON.stringify(customer));
+  }
   return customer.id;
 }
 
@@ -62,31 +84,49 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId, userName, userEmail, userCpf, planoLabel, planoValor, planoDias } = req.body;
+    const {
+      userId,
+      userName,
+      userEmail,
+      userCpf,
+      planoLabel,
+      planoValor,
+      planoDias,
+    } = req.body;
 
+    // 1. Validações de entrada
     if (!userId || !planoValor || !planoDias) {
-      return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' });
+      return res.status(400).json({
+        error: 'Parâmetros obrigatórios ausentes (userId, planoValor, planoDias)',
+      });
     }
 
-    // ✅ Passe o CPF aqui
-const customerId = await upsertCustomer({
-  nome:  userName  || 'Usuário GEPainel',
-  email: userEmail || null,
-  cpf:   userCpf   || null,
-});
+    const cpfLimpo = limparDocumento(userCpf);
+    if (!documentoValido(cpfLimpo)) {
+      return res.status(400).json({
+        error: 'CPF ou CNPJ inválido — é obrigatório para gerar cobrança PIX',
+      });
+    }
 
-    // 2. Data de vencimento = hoje + 1 dia (PIX expira em 24h)
+    // 2. Cria/recupera cliente no Asaas (com CPF garantido)
+    const customerId = await upsertCustomer({
+      nome:  userName  || 'Usuário GEPainel',
+      email: userEmail || null,
+      cpf:   cpfLimpo,
+    });
+
+    // 3. Data de vencimento = hoje + 1 dia (PIX expira em 24h)
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 1);
     const dueDateStr = dueDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
-    // 3. Cria cobrança PIX
+    // 4. Cria cobrança PIX
     const paymentBody = {
-      customer:    customerId,
-      billingType: 'PIX',
-      value:       planoValor,
-      dueDate:     dueDateStr,
-      description: `GEPainel — ${planoLabel}`,
+      customer:          customerId,
+      billingType:       'PIX',
+      value:             planoValor,
+      dueDate:           dueDateStr,
+      description:       `GEPainel — ${planoLabel}`,
       externalReference: userId, // vincula ao userId do Supabase
     };
 
@@ -101,13 +141,17 @@ const customerId = await upsertCustomer({
       throw new Error('Erro ao criar cobrança: ' + JSON.stringify(payment));
     }
 
-    // 4. Busca QR Code PIX da cobrança
+    // 5. Busca QR Code PIX da cobrança
     const qrRes  = await fetch(`${ASAAS_BASE}/payments/${payment.id}/pixQrCode`, {
       headers: ASAAS_HEADERS,
     });
     const qrData = await qrRes.json();
 
-    // 5. Retorna dados para o frontend
+    if (!qrData.payload) {
+      throw new Error('Erro ao gerar QR Code: ' + JSON.stringify(qrData));
+    }
+
+    // 6. Retorna dados para o frontend
     return res.status(200).json({
       paymentId:   payment.id,
       pixCode:     qrData.payload,        // código copia-e-cola
