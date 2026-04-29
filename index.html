@@ -602,6 +602,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 /* ── RENEWAL PLAN GRID ── */
 .renov-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem}
 @media(max-width:400px){.renov-plan-grid{grid-template-columns:1fr}}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
 
 /* ── NAV MOBILE OVERFLOW FIX ── */
 @media(max-width:480px){
@@ -753,7 +754,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 <!-- MODAL RENOVAÇÃO DE ACESSO -->
 <div class="mbd" id="renov-modal" style="display:none" onclick="if(event.target===this)closeM('renov-modal')">
   <div class="modal" style="max-width:460px">
-    <div class="mhdr"><span class="mtitle">Renovar Acesso</span><button class="mclose" onclick="closeM('renov-modal')">✕</button></div>
+    <div class="mhdr"><span class="mtitle">Renovar Acesso</span><button class="mclose" onclick="if(window._renovPollingId)clearInterval(window._renovPollingId);closeM('renov-modal')">✕</button></div>
     <div class="mbody">
       <!-- Planos -->
       <div id="renov-planos">
@@ -794,7 +795,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
         <div style="background:#F0FDF4;border:1px solid #D1FAE5;border-radius:var(--rs);padding:.75rem;font-size:12px;color:#166534;margin-bottom:.75rem">
           ✓ Após o pagamento, envie o comprovante via WhatsApp para o administrador confirmar.
         </div>
-        <button class="btn btn-sm" style="background:#16A34A;color:#fff;width:100%" onclick="avisarPagamento()">
+        <button id="renov-avisar-btn" class="btn btn-sm" style="background:#16A34A;color:#fff;width:100%" onclick="avisarPagamento()">
           💬 Já paguei — Avisar administrador
         </button>
         <button class="btn btn-g btn-sm" style="width:100%;margin-top:.4rem" onclick="document.getElementById('renov-qr').style.display='none';document.getElementById('renov-planos').style.display=''">← Voltar aos planos</button>
@@ -4717,37 +4718,122 @@ function mostrarAvisoRenovacao(){
 
 async function selecionarPlano(idx){
   const plano=_PIX_PLANOS[idx];
-  
-  // ── Guarda plano selecionado imediatamente ─────────────
   window._renovPlanoSel=plano;
+  window._renovPollingId=null;
 
-  // ── Mostra QR Code PRIMEIRO (não bloqueia no DB) ───────
+  // ── Mostra tela de carregamento ────────────────────────
   const qrDiv=document.getElementById('renov-qr-canvas');
-  qrDiv.innerHTML='<div style="padding:2rem;text-align:center;color:var(--n3)"><div style="font-size:2rem;margin-bottom:.5rem">⏳</div>Gerando PIX...</div>';
+  qrDiv.innerHTML='<div style="padding:2rem;text-align:center;color:var(--n3)"><div style="font-size:2.5rem;margin-bottom:.75rem">⏳</div><div style="font-weight:600">Gerando cobrança PIX...</div><div style="font-size:12px;margin-top:.35rem">Aguarde um instante</div></div>';
   document.getElementById('renov-planos').style.display='none';
   document.getElementById('renov-qr').style.display='';
-
-  // Gerar código PIX estático
-  const pixCode=gerarPixEMV(_PIX_KEY,_PIX_NAME,_PIX_CITY,plano.valor,'GEPainel');
   document.getElementById('renov-qr-titulo').textContent=`PIX — ${plano.label} · R$ ${plano.valor.toFixed(2).replace('.',',')}`;
-  document.getElementById('renov-pix-code').value=pixCode;
 
-  // Gerar QR Code visual
-  qrDiv.innerHTML='';
-  const renderQR=()=>new QRCode(qrDiv,{text:pixCode,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
-  if(typeof QRCode==='undefined'){
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    s.onload=renderQR;
-    s.onerror=()=>{qrDiv.innerHTML='<div style="font-size:12px;word-break:break-all;padding:.5rem;color:var(--n3)">'+pixCode+'</div>';};
-    document.head.appendChild(s);
-  }else{
-    renderQR();
+  // Esconde botão "Avisar pagamento" (não é mais necessário com Asaas)
+  const avisarBtn=document.getElementById('renov-avisar-btn');
+  if(avisarBtn)avisarBtn.style.display='none';
+
+  try{
+    // ── Chama API Vercel para criar cobrança no Asaas ──
+    const resp=await fetch('/api/criar-cobranca',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        userId:    session.id,
+        userName:  session.nome,
+        userEmail: session.email||null,
+        planoLabel:plano.label,
+        planoValor:plano.valor,
+        planoDias: plano.dias,
+      }),
+    });
+
+    if(!resp.ok){
+      // Fallback: usa PIX estático se a API falhar
+      const err=await resp.json().catch(()=>({}));
+      console.warn('[Asaas] API falhou, usando PIX estático:',err);
+      _selecionarPlanoFallback(plano,qrDiv);
+      return;
+    }
+
+    const data=await resp.json();
+    window._renovPaymentId=data.paymentId;
+
+    // ── Mostra QR Code retornado pelo Asaas ───────────
+    document.getElementById('renov-pix-code').value=data.pixCode||'';
+
+    if(data.qrCodeImage){
+      qrDiv.innerHTML=`<img src="data:image/png;base64,${data.qrCodeImage}" style="width:200px;height:200px;border-radius:8px"/>`;
+    }else if(data.pixCode){
+      // Fallback: gera QR localmente com o código retornado
+      qrDiv.innerHTML='';
+      const _rQR=()=>new QRCode(qrDiv,{text:data.pixCode,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
+      if(typeof QRCode==='undefined'){const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=_rQR;document.head.appendChild(s);}
+      else _rQR();
+    }
+
+    // ── Mostra status de aguardando pagamento ──────────
+    qrDiv.insertAdjacentHTML('afterend',`
+      <div id="renov-status-polling" style="margin-top:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:13px;color:var(--n3)">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#F59E0B;animation:pulse-dot 1.2s ease-in-out infinite"></span>
+        Aguardando pagamento...
+      </div>`);
+
+    // ── Polling: verifica no Supabase se expires_at foi atualizado ──
+    _iniciarPollingPagamento(data.paymentId,plano);
+
+  }catch(err){
+    console.error('[Asaas] Erro ao criar cobrança:',err);
+    _selecionarPlanoFallback(plano,qrDiv);
   }
 
-  // ── Salva no banco em background (não bloqueia UI) ─────
-  // Tenta com coluna 'dias'; se falhar, tenta sem ela
   _salvarRenovacaoBackground(plano);
+}
+
+// Fallback: usa PIX estático gerado localmente (sem Asaas)
+function _selecionarPlanoFallback(plano,qrDiv){
+  const pixCode=gerarPixEMV(_PIX_KEY,_PIX_NAME,_PIX_CITY,plano.valor,'GEPainel');
+  document.getElementById('renov-pix-code').value=pixCode;
+  qrDiv.innerHTML='';
+  const _rQR=()=>new QRCode(qrDiv,{text:pixCode,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
+  if(typeof QRCode==='undefined'){const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=_rQR;s.onerror=()=>{qrDiv.innerHTML='<div style="font-size:11px;word-break:break-all;padding:.5rem;color:var(--n3)">'+pixCode+'</div>';};document.head.appendChild(s);}
+  else _rQR();
+  const avisarBtn=document.getElementById('renov-avisar-btn');
+  if(avisarBtn)avisarBtn.style.display='';
+}
+
+// Polling a cada 4s verificando se expires_at foi atualizado pelo webhook
+function _iniciarPollingPagamento(paymentId,plano){
+  if(window._renovPollingId)clearInterval(window._renovPollingId);
+  const expiresAntes=session.expires_at;
+  let tentativas=0;
+  const MAX=90; // 6 minutos (90 x 4s)
+  window._renovPollingId=setInterval(async()=>{
+    tentativas++;
+    if(tentativas>MAX){
+      clearInterval(window._renovPollingId);
+      const s=document.getElementById('renov-status-polling');
+      if(s)s.innerHTML='<span style="color:var(--amb)">⏱ Tempo esgotado — se pagou, aguarde a confirmação manual.</span>';
+      return;
+    }
+    try{
+      const{data}=await sb.from('users').select('expires_at,plan_type').eq('id',session.id).single();
+      if(data&&data.expires_at!==expiresAntes){
+        // Pagamento confirmado pelo webhook!
+        clearInterval(window._renovPollingId);
+        session.expires_at=data.expires_at;
+        session.plan_type=data.plan_type;
+        saveSession(session);
+        closeM('renov-modal');
+        // Atualiza badge imediatamente
+        const nb=document.getElementById('nav-role');
+        const dias=Math.ceil((new Date(data.expires_at)-new Date())/(1000*60*60*24));
+        const pl=getUserPlan(data.plan_type)||_inferPlanByDias(dias);
+        if(nb&&pl){nb.textContent=`${pl.name} · ${dias}d`;nb.className=`nav-badge ${pl.badge}`;}
+        toast(`🎉 Pagamento confirmado! Acesso renovado: ${pl?.name||plano.label}`);
+        setTimeout(()=>renderDashboard(),800);
+      }
+    }catch(e){}
+  },4000);
 }
 
 async function _salvarRenovacaoBackground(plano){
