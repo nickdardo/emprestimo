@@ -90,7 +90,7 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .nav-right{display:flex;align-items:center;gap:.75rem}
 .nav-user{font-size:13px;color:#9CA3AF;display:flex;align-items:center;gap:8px}
 .nav-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
-.nav-badge{font-size:11px;padding:3px 10px;border-radius:999px;font-weight:700;background:#1F2937;color:#9CA3AF;border:1px solid #374151}
+.nav-badge{font-size:11px;padding:3px 10px;border-radius:999px;font-weight:700;background:#1F2937;color:#9CA3AF;border:1px solid #374151;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .nav-badge.badge-free{background:#7C3AED;color:#fff;border-color:#7C3AED}
 .nav-badge.badge-ativo{background:#16A34A;color:#fff;border-color:#16A34A}
 .nav-badge.badge-warn{background:#D97706;color:#fff;border-color:#D97706}
@@ -599,6 +599,20 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 .nav-badge.badge-diamante{background:linear-gradient(135deg,#60A5FA 0%,#818CF8 60%,#C084FC 100%);color:#fff;border:none;font-weight:800;box-shadow:0 0 8px rgba(129,140,248,.45)}
 .nav-badge.badge-vitalicio{background:linear-gradient(135deg,#059669 0%,#10B981 100%);color:#fff;border:none;font-weight:700}
 
+/* ── RENEWAL PLAN GRID ── */
+.renov-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem}
+@media(max-width:400px){.renov-plan-grid{grid-template-columns:1fr}}
+
+/* ── NAV MOBILE OVERFLOW FIX ── */
+@media(max-width:480px){
+  .nav-badge{max-width:110px;font-size:10px;padding:2px 7px}
+  .nav-right{gap:.4rem}
+  .logout-btn{display:none}
+}
+@media(max-width:360px){
+  .dark-btn,.search-nav-btn{display:none}
+}
+
 </style>
 <body>
 
@@ -766,7 +780,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
           • Pode desativar a qualquer momento
         </div>
         
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1rem" id="renov-grid"></div>
+        <div class="renov-plan-grid" id="renov-grid"></div>
       </div>
       <!-- QR Code -->
       <div id="renov-qr" style="display:none;text-align:center">
@@ -3814,53 +3828,6 @@ async function renderRenovacoes(){
   `;
 }
 
-async function confirmarRenovacao(renovId,userId,dias){
-  if(!confirm('Confirmar este pagamento?'))return;
-  
-  try{
-    // Calcular nova data de expiração
-    const{data:user}=await sb.from('users').select('expiry_date').eq('id',userId).single();
-    
-    let newExpiry;
-    if(user?.expiry_date){
-      const current=new Date(user.expiry_date);
-      if(current>new Date()){
-        // Se ainda não expirou, adiciona os dias
-        newExpiry=new Date(current.getTime()+dias*24*60*60*1000);
-      }else{
-        // Se já expirou, conta a partir de hoje
-        newExpiry=new Date(Date.now()+dias*24*60*60*1000);
-      }
-    }else{
-      // Primeira renovação
-      newExpiry=new Date(Date.now()+dias*24*60*60*1000);
-    }
-    
-    // Atualizar usuário
-    const{error:userError}=await sb.from('users')
-      .update({expiry_date:newExpiry.toISOString()})
-      .eq('id',userId);
-    
-    if(userError)throw userError;
-    
-    // Marcar renovação como confirmada
-    const{error:renovError}=await sb.from('renewals')
-      .update({
-        status:'confirmed',
-        confirmed_at:new Date().toISOString()
-      })
-      .eq('id',renovId);
-    
-    if(renovError)throw renovError;
-    
-    toast('✅ Renovação confirmada!');
-    renderRenovacoes();
-    
-  }catch(err){
-    console.error(err);
-    toast('❌ Erro ao confirmar',true);
-  }
-}
 
 function renderPerfil(){
   const mc=document.getElementById('main-content');
