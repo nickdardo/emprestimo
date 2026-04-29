@@ -2253,7 +2253,8 @@ function renderEmprestimos(){
           <th class="hide-mobile sortable" id="th-sort-responsavel" onclick="sortEmp('responsavel')">Responsável<span class="sort-icon"></span></th>
           <th class="hide-mobile">Garantia</th>
           <th class="hide-mobile sortable" id="th-sort-local" onclick="sortEmp('local')">Local<span class="sort-icon"></span></th>
-          <th class="sortable" id="th-sort-valor" onclick="sortEmp('valor')">Valor<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-valor" onclick="sortEmp('valor')">Valor Inicial<span class="sort-icon"></span></th>
+          <th class="sortable" id="th-sort-saldo" onclick="sortEmp('saldo')">Valor Atual<span class="sort-icon"></span></th>
           <th class="sortable" id="th-sort-juros" onclick="sortEmp('juros')">Juros<span class="sort-icon"></span></th>
           <th class="sortable" id="th-sort-total" onclick="sortEmp('total')">Total<span class="sort-icon"></span></th>
           <th class="sortable" id="th-sort-data" onclick="sortEmp('data')">Data<span class="sort-icon"></span></th>
@@ -2282,6 +2283,7 @@ function applySortEmp(list){
     let va,vb;
     if(col==='nome'){const ta=tomadores.find(t=>t.id===a.tomador_id);const tb2=tomadores.find(t=>t.id===b.tomador_id);va=(ta?.nome||'').toLowerCase();vb=(tb2?.nome||'').toLowerCase();}
     else if(col==='valor'){va=Number(a.valor);vb=Number(b.valor);}
+    else if(col==='saldo'){va=Number(a.saldo_devedor!=null?a.saldo_devedor:a.valor||0);vb=Number(b.saldo_devedor!=null?b.saldo_devedor:b.valor||0);}
     else if(col==='juros'){va=Number(a.juros);vb=Number(b.juros);}
     else if(col==='total'){va=Number(a.valor_total||a.valor);vb=Number(b.valor_total||b.valor);}
     else if(col==='data'){va=a.data_emprestimo||'';vb=b.data_emprestimo||'';}
@@ -2389,6 +2391,14 @@ function _empRow(e,i){
   const pgCnt=parcsEmp.filter(p=>p.status==='pago').length;
   const atCnt=parcsEmp.filter(p=>isAtrasada(p)).length;
   const allPago=parcsEmp.length>0&&pgCnt===parcsEmp.length;
+  // Valor Atual = saldo devedor (após abatimentos). Se nunca abateu, é igual ao valor inicial.
+  const tipo=e.tipo||'juros';
+  const saldoAtual=tipo==='consignado'
+    ? (allPago?0:Number(e.valor||0))
+    : Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0);
+  const houveAbatimento=tipo!=='consignado'&&e.saldo_devedor!=null&&Math.abs(saldoAtual-Number(e.valor||0))>0.01;
+  const corSaldo=saldoAtual===0?'var(--grn)':(houveAbatimento?'var(--amb)':'var(--n3)');
+  const labelSaldo=saldoAtual===0?'Quitado':fmtR(saldoAtual);
     return`<tr id="row-${e.id}">
       <td class="chk-cell" style="display:none;text-align:center"><input type="checkbox" class="emp-chk" value="${e.id}" onchange="onChkChange()"/></td>
       <td style="color:var(--n4);font-size:12px">${i+1}</td>
@@ -2397,12 +2407,12 @@ function _empRow(e,i){
       <td class="hide-mobile" style="color:var(--n3)">${e.garantia||'—'}</td>
       <td class="hide-mobile" style="color:var(--n3)">${e.local||'—'}</td>
       <td style="font-weight:600;color:var(--blu)">${fmtR(e.valor)}</td>
+      <td style="font-weight:600;color:${corSaldo}">${labelSaldo}${houveAbatimento&&saldoAtual>0?'<div style="font-size:10px;font-weight:400;color:var(--n4);margin-top:2px">abatido</div>':''}</td>
       <td class="hide-mobile-juros" style="color:var(--n3)">${(e.juros*100).toFixed(0)}%</td>
       <td class="hide-mobile-juros" style="font-weight:600;color:var(--grn)">${fmtR(e.valor_total)}</td>
       <td style="color:var(--n4);font-size:12px">${fmtDate(e.data_emprestimo)}</td>
       <td>
         ${(()=>{
-          const tipo=e.tipo||'juros';
           if(parcsEmp.length===0){
             return`<button class="btn btn-xs btn-g" onclick="addParcela('${e.id}')">${tipo==='consignado'?'Parcelas':'Juros'}</button>`;
           }
@@ -2430,15 +2440,15 @@ function _empRow(e,i){
 }
 
 function empTbodyHTML(list){
-  if(!list.length)return'<tr><td colspan="11"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>';
+  if(!list.length)return'<tr><td colspan="12"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>';
   const ativos=list.filter(e=>{const ep=parcelas.filter(p=>p.emprestimo_id===e.id);return ep.length===0||ep.some(p=>p.status==='pendente');});
   const quitados=list.filter(e=>{const ep=parcelas.filter(p=>p.emprestimo_id===e.id);return ep.length>0&&ep.every(p=>p.status==='pago');});
   let html=ativos.map((e,i)=>_empRow(e,i+1)).join('');
   if(quitados.length){
-    html+='<tr><td colspan="11" style="padding:.65rem 1rem;background:rgba(0,200,150,.06);border-top:2px solid rgba(0,200,150,.3);border-bottom:1px solid rgba(0,200,150,.2)"><div style="display:flex;align-items:center;gap:.5rem"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#00C896\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg><span style=\"font-size:11px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.05em\">Quitados ('+quitados.length+')</span></div></td></tr>';
+    html+='<tr><td colspan="12" style="padding:.65rem 1rem;background:rgba(0,200,150,.06);border-top:2px solid rgba(0,200,150,.3);border-bottom:1px solid rgba(0,200,150,.2)"><div style="display:flex;align-items:center;gap:.5rem"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#00C896\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg><span style=\"font-size:11px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.05em\">Quitados ('+quitados.length+')</span></div></td></tr>';
     html+=quitados.map((e,i)=>{const row=_empRow(e,ativos.length+i+1);return row.replace('<tr id=','<tr style="opacity:.6" id=');}).join('');
   }
-  return html||'<tr><td colspan="11"><div class="empty"><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>';
+  return html||'<tr><td colspan="12"><div class="empty"><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>';
 }
 
 let _empTipo='juros';
