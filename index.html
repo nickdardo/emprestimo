@@ -1493,7 +1493,7 @@ async function bootApp(){
         navBadge.textContent=`⚠ ${diasNav}d — Renovar`;navBadge.className='nav-badge badge-warn';
       } else {
         const pl=getUserPlan(session.plan_type)||_inferPlanByDias(diasNav);
-        if(pl){navBadge.textContent=pl.name;navBadge.className=`nav-badge ${pl.badge}`;}
+        if(pl){navBadge.textContent=`${pl.name} · ${diasNav}d`;navBadge.className=`nav-badge ${pl.badge}`;}
         else{navBadge.textContent=`Ativo · ${diasNav}d`;navBadge.className='nav-badge badge-ativo';}
       }
     } else {
@@ -4709,14 +4709,24 @@ function abrirRenovacao(){
   if(session.role==='admin'){toast('Admin não precisa renovar!');return;}
   const grid=document.getElementById('renov-grid');
   if(!grid)return;
-  grid.innerHTML=_PIX_PLANOS.map((p,i)=>`
-    <div onclick="selecionarPlano(${i})" style="border:2px solid #E5E7EB;border-radius:var(--r);padding:.85rem;cursor:pointer;text-align:center;transition:all .15s;background:var(--card)"
-      onmouseover="this.style.borderColor='#EA580C';this.style.background='#FFF7ED'"
-      onmouseout="this.style.borderColor='#E5E7EB';this.style.background='var(--card)'">
-      <div style="font-size:1.1rem;font-weight:700;color:var(--n1)">${p.label}</div>
-      <div style="font-size:1.3rem;font-weight:800;color:#EA580C;margin:.25rem 0">R$ ${p.valor.toFixed(2).replace('.',',')}</div>
+  grid.innerHTML=_PIX_PLANOS.map((p,i)=>{
+    const tiers={
+      '30 dias':{name:'🥉 Bronze', bg:'linear-gradient(135deg,#CD7F32,#A0522D)', border:'#CD7F32'},
+      '60 dias':{name:'🥈 Prata',  bg:'linear-gradient(135deg,#C0C0C0,#A8A8A8)', border:'#A8A8A8'},
+      '90 dias':{name:'🥇 Ouro',   bg:'linear-gradient(135deg,#FFD700,#DAA520)', border:'#DAA520'},
+      '6 meses':{name:'💎 Platinum',bg:'linear-gradient(135deg,#E5E4E2,#B8B8B8)', border:'#B8B8B8'},
+      '1 ano':  {name:'💎 Diamante',bg:'linear-gradient(135deg,#60A5FA,#818CF8,#C084FC)', border:'#818CF8'},
+    };
+    const t=tiers[p.label]||{};
+    return`<div onclick="selecionarPlano(${i})" style="border:2px solid ${t.border||'#E5E7EB'};border-radius:var(--r);padding:.85rem;cursor:pointer;text-align:center;transition:all .15s;background:var(--card);position:relative;overflow:hidden"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,.15)'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''">
+      ${t.name?`<div style="display:inline-block;background:${t.bg};color:${p.label==='90 dias'?'#111':'#fff'};border-radius:999px;font-size:10px;font-weight:800;padding:2px 10px;margin-bottom:.4rem;letter-spacing:.03em">${t.name}</div>`:''}
+      <div style="font-size:1.05rem;font-weight:700;color:var(--n1)">${p.label}</div>
+      <div style="font-size:1.3rem;font-weight:800;color:#EA580C;margin:.2rem 0">R$ ${p.valor.toFixed(2).replace('.',',')}</div>
       <div style="font-size:11px;color:var(--n4)">${p.desc}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   
   // Carrega preferência de renovação automática
   const toggle=document.getElementById('renov-auto-toggle');
