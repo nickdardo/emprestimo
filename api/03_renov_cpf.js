@@ -12,7 +12,7 @@
 const SUPABASE_CLIENT = window.supabase;
 
 // 🔧 Ajuste se o nome da tabela for diferente
-const USERS_TABLE = 'usuarios';
+const USERS_TABLE = 'users';
 
 // Guarda o plano selecionado entre as etapas (planos → cpf → qr)
 let _renovPlanoSelecionado = null;
