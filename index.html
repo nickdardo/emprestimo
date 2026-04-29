@@ -18,7 +18,7 @@
 
 <!-- PWA: meta tags iOS (Safari) -->
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="GEPainel"/>
 
 <!-- Descrição (SEO + share) -->
@@ -101,7 +101,7 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 }
 
 /* NAV */
-.nav{background:var(--card);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:var(--sh);padding-top:env(safe-area-inset-top);padding-left:max(1.5rem,env(safe-area-inset-left));padding-right:max(1.5rem,env(safe-area-inset-right));height:calc(60px + env(safe-area-inset-top));box-sizing:border-box}
 .nav-brand{font-family:var(--FT);font-size:1.4rem;color:var(--n1);font-weight:700}
 .nav-brand span{background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-brand .ge{color:var(--n1)}
@@ -123,7 +123,7 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .app-body{display:flex;min-height:calc(100vh - 56px)}
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}
 .sb-overlay.open{display:block}
-.sidebar{width:240px;min-width:240px;background:var(--card);border-right:1px solid var(--border);padding:1rem 0;display:flex;flex-direction:column;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto;transition:all .25s}
+.sidebar{width:240px;min-width:240px;background:var(--card);border-right:1px solid var(--border);padding:1rem 0;display:flex;flex-direction:column;position:sticky;top:calc(60px + env(safe-area-inset-top));height:calc(100vh - 60px - env(safe-area-inset-top));overflow-y:auto;transition:all .25s}
 .sidebar-section{padding:0 1.25rem .5rem;font-size:11px;font-weight:700;color:var(--n4);letter-spacing:.08em;text-transform:uppercase;margin-top:.75rem}
 .sidebar-item{display:flex;align-items:center;gap:12px;padding:.75rem 1.25rem;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--FB);font-size:14px;color:var(--n3);border-right:3px solid transparent;transition:all .2s;border-radius:var(--rs) 0 0 var(--rs);margin:2px 0}
 .sidebar-item:hover{background:rgba(0,188,212,.08);color:var(--n1)}
@@ -133,7 +133,7 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .sidebar-item:hover svg{stroke:var(--n1)}
 .sidebar-item.active svg{stroke:var(--primary)}
 .sidebar-footer{margin-top:auto;padding:1.25rem;border-top:1px solid var(--border);font-size:11px;color:var(--n4);line-height:1.7}
-.content{flex:1;padding:2rem;min-width:0}
+.content{flex:1;padding:2rem;padding-bottom:calc(2rem + env(safe-area-inset-bottom));min-width:0}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:1.5rem}
@@ -341,6 +341,13 @@ body.dark .warn-box{background:#1A1003;border-color:#78350F}
 body.dark .info-box{background:#1C0E04;border-color:#431407}
 .dark-btn{background:transparent;border:1px solid #374151;color:#9CA3AF;width:30px;height:30px;border-radius:var(--rs);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
 .dark-btn:hover{background:#1F2937;color:#fff}
+.install-btn{display:flex;align-items:center;gap:6px;padding:.3rem .75rem;border-radius:var(--rs);background:linear-gradient(135deg,#6D9FFF,#8C43F2);color:#fff;border:none;font-family:var(--FB);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 2px 8px rgba(108,159,255,.25)}
+.install-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(108,159,255,.4)}
+.install-btn:active{transform:translateY(0)}
+@media(max-width:720px){
+  .install-btn span{display:none}
+  .install-btn{padding:.3rem .5rem;min-width:32px;justify-content:center}
+}
 .search-nav-btn{background:transparent;border:1px solid #374151;color:#9CA3AF;width:30px;height:30px;border-radius:var(--rs);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
 .search-nav-btn:hover{background:#1F2937;color:#fff}
 
@@ -699,6 +706,10 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
       </div>
       <button class="wa-nav-btn unset" id="wa-nav-btn" onclick="openWaModal()" title="Configurar WhatsApp para avisos">📱 <span id="wa-nav-label">Seu WhatsApp</span></button>
       <button class="search-nav-btn" onclick="openGlobalSearch()" title="Busca global"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+      <button class="install-btn" id="install-btn" onclick="instalarApp()" title="Instalar GEPainel como app" style="display:none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="install-btn-label">Instalar App</span>
+      </button>
       <button class="dark-btn" id="dark-toggle" onclick="toggleDarkMode()" title="Alternar tema"></button>
     </div>
   </nav>
@@ -5798,5 +5809,124 @@ window.addEventListener('DOMContentLoaded',async()=>{
     });
   }
 </script>
+
+<!-- PWA: Botão Instalar App (Android nativo / iOS modal explicativo) -->
+<div id="ios-install-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)">
+  <div style="background:var(--card);border-radius:14px;max-width:380px;width:100%;padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,.4);border:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#6D9FFF,#8C43F2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8m0 0l-3-3m3 3l3-3"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+      </div>
+      <div>
+        <div style="font-family:var(--FT);font-size:1.15rem;color:var(--n1);font-weight:700">Instalar GEPainel</div>
+        <div style="font-size:12px;color:var(--n4)">Adicionar à Tela de Início</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--n2);line-height:1.6;margin-bottom:1rem">
+      Para instalar o app no iPhone, siga estes passos:
+    </div>
+    <ol style="padding-left:1.2rem;margin:0 0 1rem;font-size:13px;color:var(--n2);line-height:1.8">
+      <li>Toque no botão <strong>Compartilhar</strong> 
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        na barra inferior do Safari</li>
+      <li>Role para baixo e toque em <strong>Adicionar à Tela de Início</strong></li>
+      <li>Toque em <strong>Adicionar</strong> no canto superior direito</li>
+    </ol>
+    <div style="background:rgba(108,159,255,.08);border:1px solid rgba(108,159,255,.2);border-radius:8px;padding:.6rem .8rem;font-size:12px;color:var(--n3);margin-bottom:1rem">
+      💡 <strong>Importante:</strong> use o navegador <strong>Safari</strong>. Outros navegadores no iPhone não permitem instalação.
+    </div>
+    <button onclick="fecharIosInstallModal()" style="width:100%;padding:.7rem;background:linear-gradient(135deg,#6D9FFF,#8C43F2);color:#fff;border:none;border-radius:8px;font-family:var(--FB);font-weight:600;font-size:14px;cursor:pointer">Entendi</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('install-btn');
+  const installLabel = document.getElementById('install-btn-label');
+
+  // Detectar se já está instalado (rodando como PWA)
+  function isStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true
+        || document.referrer.includes('android-app://');
+  }
+
+  // Detectar iOS (iPhone/iPad)
+  function isIOS(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  // Detectar Safari no iOS (necessário para instalação no iOS)
+  function isSafariIOS(){
+    const ua = navigator.userAgent;
+    return isIOS() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  }
+
+  // Se já estiver instalado, esconde o botão permanentemente
+  if (isStandalone()){
+    if (installBtn) installBtn.style.display = 'none';
+    return;
+  }
+
+  // Android/Desktop (Chrome/Edge): captura evento beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) installBtn.style.display = 'flex';
+    console.log('[PWA] Instalador nativo disponível');
+  });
+
+  // iOS: mostra botão (vai abrir modal explicativo)
+  if (isIOS() && !isStandalone()){
+    if (installBtn) installBtn.style.display = 'flex';
+  }
+
+  // Após instalação bem-sucedida (Android/Desktop)
+  window.addEventListener('appinstalled', () => {
+    console.log('[PWA] App instalado com sucesso');
+    if (installBtn) installBtn.style.display = 'none';
+    deferredPrompt = null;
+    // Toast de sucesso (se existir função toast no app)
+    if (typeof toast === 'function') toast('App instalado com sucesso! 🎉');
+  });
+
+  // Função chamada pelo onclick do botão
+  window.instalarApp = async function(){
+    // iOS: abre modal explicativo
+    if (isIOS()){
+      const modal = document.getElementById('ios-install-modal');
+      if (modal) modal.style.display = 'flex';
+      return;
+    }
+
+    // Android/Desktop: usa instalador nativo
+    if (deferredPrompt){
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('[PWA] Resultado:', outcome);
+      if (outcome === 'accepted'){
+        if (installBtn) installBtn.style.display = 'none';
+      }
+      deferredPrompt = null;
+    } else {
+      // Fallback: navegador não suporta ou usuário já dispensou
+      alert('Para instalar este app:\n\n• No Chrome/Edge: clique no menu (⋮) → "Instalar GEPainel"\n• No Safari (iPhone): toque em Compartilhar → "Adicionar à Tela de Início"');
+    }
+  };
+
+  // Fechar modal iOS
+  window.fecharIosInstallModal = function(){
+    const modal = document.getElementById('ios-install-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  // Fechar modal ao clicar no fundo
+  document.getElementById('ios-install-modal')?.addEventListener('click', function(e){
+    if (e.target === this) fecharIosInstallModal();
+  });
+})();
+</script>
+
 </body>
 </html>
