@@ -1619,6 +1619,9 @@ async function loadAll(){
   }
   const[tr,er,pr,ur]=await Promise.all([sbWithRetry(()=>tq),sbWithRetry(()=>eq),sbWithRetry(()=>sb.from('parcelas').select('*').order('numero')),sbWithRetry(()=>sb.from('users').select('*').order('nome'))]);
   tomadores=tr.data||[];emprestimos=er.data||[];users=ur.data||[];
+  // Sincroniza session com dados frescos do banco (evita inconsistência entre nav e dashboard)
+  const freshMe=users.find(u=>u.id===session.id);
+  if(freshMe){session.expires_at=freshMe.expires_at;session.plan_type=freshMe.plan_type;saveSession(session);}
   // Filtrar parcelas apenas dos empréstimos visíveis
   const empIds=new Set(emprestimos.map(e=>e.id));
   // Garantir que o valor de cada parcela é só o juros mensal (sem o capital)
@@ -3876,7 +3879,7 @@ function renderPerfil(){
           </div>
           <div style="text-align:center">
             <div style="font-weight:600;font-size:16px">${session.nome}</div>
-            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'👑 Admin':(()=>{const pl=getUserPlan(session.plan_type);return pl?pl.name:'Operador';})()}</div>
+            <div style="font-size:13px;color:var(--n4);margin-top:2px">@${session.login||''} · ${session.role==='admin'?'👑 Admin':(()=>{let pl=getUserPlan(session.plan_type);if(!pl&&session.expires_at){const d=Math.ceil((new Date(session.expires_at)-new Date())/(1000*60*60*24));pl=_inferPlanByDias(d);}return pl?pl.name:'👑 Vitalício';})()}</div>
           </div>
           <div style="width:100%">
             <div style="font-size:11px;font-weight:700;color:var(--n3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Selecionar foto</div>
