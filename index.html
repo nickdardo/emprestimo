@@ -783,6 +783,29 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
         
         <div class="renov-plan-grid" id="renov-grid"></div>
       </div>
+
+      <!-- ⭐ ETAPA: Coleta de CPF -->
+      <div id="renov-cpf" style="display:none">
+        <div id="renov-cpf-titulo" style="font-size:14px;font-weight:800;color:var(--n1);margin-bottom:.5rem;text-align:center"></div>
+        <div style="font-size:13px;color:var(--n3);margin-bottom:1.25rem;text-align:center">
+          Para gerar a cobrança PIX, precisamos do seu CPF.
+        </div>
+        <div style="margin-bottom:1rem">
+          <label for="renov-cpf-input" style="font-size:12px;font-weight:600;color:var(--n2);display:block;margin-bottom:.4rem">CPF</label>
+          <input id="renov-cpf-input" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" oninput="formatarCpfInput(this)" style="width:100%;font-size:15px;font-family:monospace;background:var(--card2);border:1.5px solid var(--border);border-radius:var(--rs);padding:.75rem 1rem;color:var(--n1);outline:none;box-sizing:border-box"/>
+          <div id="renov-cpf-erro" style="font-size:12px;color:#DC2626;margin-top:.4rem;display:none"></div>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:.6rem;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:.75rem 1rem;margin-bottom:1.25rem;cursor:pointer">
+          <input type="checkbox" id="renov-cpf-salvar" checked style="margin-top:2px;flex-shrink:0;cursor:pointer">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--n1);margin-bottom:2px">Lembrar para próximas cobranças</div>
+            <div style="font-size:11px;color:var(--n3)">Salva seu CPF no perfil — você não precisa informar de novo</div>
+          </div>
+        </label>
+        <button id="renov-cpf-continuar" class="btn btn-p" style="width:100%;margin-bottom:.5rem" onclick="continuarComCpf()">Continuar para o pagamento</button>
+        <button class="btn btn-g btn-sm" style="width:100%" onclick="voltarParaPlanos()">← Voltar aos planos</button>
+      </div>
+
       <!-- QR Code -->
       <div id="renov-qr" style="display:none;text-align:center">
 
@@ -4760,7 +4783,7 @@ function mostrarAvisoRenovacao(){
 // ============================================================
 //
 // 🔧 AJUSTES no topo (verifique antes de usar):
-const SUPABASE_CLIENT = window.supabase;   // seu cliente Supabase
+const SUPABASE_CLIENT = sb;                // cliente Supabase do projeto (linha 1043)
 const USERS_TABLE     = 'users';           // confirmado no webhook-asaas.js
 //
 // ============================================================
