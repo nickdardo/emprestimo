@@ -2,9 +2,27 @@
 <html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>GEPainel</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230D0B1E'/><text x='16' y='22' font-size='16' font-weight='bold' text-anchor='middle' fill='%2300C896'>GE</text></svg>"/>
+
+<!-- PWA: ícones e configuração -->
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png"/>
+<link rel="manifest" href="/manifest.webmanifest"/>
+
+<!-- PWA: meta tags Android (Chrome) -->
+<meta name="theme-color" content="#0F0B1F"/>
+<meta name="application-name" content="GEPainel"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+
+<!-- PWA: meta tags iOS (Safari) -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="GEPainel"/>
+
+<!-- Descrição (SEO + share) -->
+<meta name="description" content="Sistema de gestão de empréstimos, parcelas e clientes."/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -5756,6 +5774,29 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if(Date.now()-_lastActivity>TIMEOUT_MS){toast('Sessão encerrada por inatividade.',true);setTimeout(doLogout,1500);}
   },30000);
 });
+</script>
+
+<!-- PWA: Service Worker (instalação como app) -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then((reg) => {
+          console.log('[PWA] Service Worker registrado:', reg.scope);
+          // Quando uma nova versão estiver disponível, ativa imediatamente
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            if (!newSW) return;
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[PWA] Nova versão disponível.');
+              }
+            });
+          });
+        })
+        .catch((err) => console.warn('[PWA] Falha no registro:', err));
+    });
+  }
 </script>
 </body>
 </html>
