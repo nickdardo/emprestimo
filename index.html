@@ -2419,19 +2419,25 @@ function _empRow(e,i){
       <td style="color:var(--n4);font-size:12px">${fmtDate(e.data_emprestimo)}</td>
       <td>
         ${(()=>{
+          // SVGs inline profissionais (alinhamento vertical centralizado)
+          const svgCheck=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>`;
+          const svgAlert=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+          const svgClock=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+          const svgCard=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`;
+          const svgAlertSmall=`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:4px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+
           if(parcsEmp.length===0){
             return`<button class="btn btn-xs btn-g" onclick="addParcela('${e.id}')">${tipo==='consignado'?'Parcelas':'Juros'}</button>`;
           }
           if(tipo==='juros'){
             // Juros mensal: mostra "X juros pagos" ou "em atraso"
-            if(allPago) return`<button class="btn btn-xs btn-grn" onclick="openParcelas('${e.id}')">✅ Quitado</button>`;
-            if(atCnt)   return`<button class="btn btn-xs btn-d"   onclick="openParcelas('${e.id}')">⚠️ ${atCnt} em atraso</button>`;
-            return`<button class="btn btn-xs btn-amb" onclick="openParcelas('${e.id}')">💰 ${pgCnt} pago${pgCnt!==1?'s':''}</button>`;
+            if(allPago) return`<button class="btn btn-xs btn-grn" onclick="openParcelas('${e.id}')">${svgCheck}Quitado</button>`;
+            if(atCnt)   return`<button class="btn btn-xs btn-d"   onclick="openParcelas('${e.id}')">${svgAlert}${atCnt} em atraso</button>`;
+            return`<button class="btn btn-xs btn-amb" onclick="openParcelas('${e.id}')">${svgClock}${pgCnt} pago${pgCnt!==1?'s':''}</button>`;
           } else {
             // Consignado: mantém X/Y
-            return`<button class="btn btn-xs ${allPago?'btn-grn':atCnt?'btn-d':'btn-amb'}" onclick="openParcelas('${e.id}')">
-              ${allPago?'✅':'💳'} ${pgCnt}/${parcsEmp.length}${atCnt?' ⚠️'+atCnt:''}
-            </button>`;
+            const ic=allPago?svgCheck:svgCard;
+            return`<button class="btn btn-xs ${allPago?'btn-grn':atCnt?'btn-d':'btn-amb'}" onclick="openParcelas('${e.id}')">${ic}${pgCnt}/${parcsEmp.length}${atCnt?svgAlertSmall+atCnt:''}</button>`;
           }
         })()}
       </td>
@@ -2741,7 +2747,7 @@ function openClientView(tomId){
           <span style="font-size:12px;color:var(--n4);margin-left:.4rem">${pctStr}% · ${fmtDate(e.data_emprestimo)}</span>
           ${e.garantia?`<span style="font-size:11px;color:var(--n4);margin-left:.4rem">· ${e.garantia}</span>`:''}
         </div>
-        <span style="font-size:12px;font-weight:600;color:${atCnt?'var(--red)':'var(--grn)'}">${pgCnt}/${parcsEmp.length} pagas${atCnt?` ⚠️${atCnt}`:''}</span>
+        <span style="font-size:12px;font-weight:600;color:${atCnt?'var(--red)':'var(--grn)'}">${pgCnt}/${parcsEmp.length} pagas${atCnt?` <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>${atCnt}`:''}</span>
       </div>
       <div style="padding:.6rem .75rem">${parcRows||`<div style="text-align:center;color:var(--n4);padding:.5rem;font-size:12px">Ilimitado — sem parcelas definidas</div>`}</div>
     </div>`;
