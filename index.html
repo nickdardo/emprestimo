@@ -597,9 +597,9 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 .nav-badge.badge-ouro{background:linear-gradient(135deg,#FFD700 0%,#DAA520 100%);color:#fff;border:none}
 .nav-badge.badge-platinum{background:linear-gradient(135deg,#E5E4E2 0%,#B8B8B8 100%);color:#1F2937;border:none;font-weight:800}
 .nav-badge.badge-diamante{background:linear-gradient(135deg,#60A5FA 0%,#818CF8 60%,#C084FC 100%);color:#fff;border:none;font-weight:800;box-shadow:0 0 8px rgba(129,140,248,.45)}
+.nav-badge.badge-vitalicio{background:linear-gradient(135deg,#059669 0%,#10B981 100%);color:#fff;border:none;font-weight:700}
 
 </style>
-</head>
 <body>
 
 <!-- LOGIN -->
@@ -1447,6 +1447,14 @@ function getUserPlan(planType){
   };
   return m[planType]||null;
 }
+function _inferPlanByDias(dias){
+  if(dias>=365)return{name:'💎 Diamante',badge:'badge-diamante'};
+  if(dias>=180)return{name:'💎 Platinum',badge:'badge-platinum'};
+  if(dias>=90) return{name:'🥇 Ouro',    badge:'badge-ouro'};
+  if(dias>=60) return{name:'🥈 Prata',   badge:'badge-prata'};
+  if(dias>=30) return{name:'🥉 Bronze',  badge:'badge-bronze'};
+  return null;
+}
 
 function getPlanBadgeHTML(u){
   if(u.role==='admin')return`<span class="bdg bdg-admin">Admin</span>`;
@@ -1484,14 +1492,14 @@ async function bootApp(){
       } else if(diasNav<=7){
         navBadge.textContent=`⚠ ${diasNav}d — Renovar`;navBadge.className='nav-badge badge-warn';
       } else {
-        const pl=getUserPlan(session.plan_type);
+        const pl=getUserPlan(session.plan_type)||_inferPlanByDias(diasNav);
         if(pl){navBadge.textContent=pl.name;navBadge.className=`nav-badge ${pl.badge}`;}
         else{navBadge.textContent=`Ativo · ${diasNav}d`;navBadge.className='nav-badge badge-ativo';}
       }
     } else {
       const pl=getUserPlan(session.plan_type);
       if(pl){navBadge.textContent=pl.name;navBadge.className=`nav-badge ${pl.badge}`;}
-      else{navBadge.textContent='Operador';navBadge.className='nav-badge';}
+      else{navBadge.textContent='♾ Vitalício';navBadge.className='nav-badge badge-vitalicio';}
     }
   }catch(e){}
   try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
