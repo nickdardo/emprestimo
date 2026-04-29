@@ -2409,7 +2409,13 @@ function _empRow(e,i){
       <td style="font-weight:600;color:var(--blu)">${fmtR(e.valor)}</td>
       <td style="font-weight:600;color:${corSaldo}">${labelSaldo}${houveAbatimento&&saldoAtual>0?'<div style="font-size:10px;font-weight:400;color:var(--n4);margin-top:2px">abatido</div>':''}</td>
       <td class="hide-mobile-juros" style="color:var(--n3)">${(e.juros*100).toFixed(0)}%</td>
-      <td class="hide-mobile-juros" style="font-weight:600;color:var(--grn)">${fmtR(e.valor_total)}</td>
+      <td class="hide-mobile-juros" style="font-weight:600;color:var(--grn)">${(()=>{
+        // Total atual = saldo devedor + juros sobre o saldo
+        // Para consignado mantém o valor_total original
+        if(tipo==='consignado')return fmtR(e.valor_total);
+        const totalAtual=parseFloat((saldoAtual+saldoAtual*Number(e.juros||0)).toFixed(2));
+        return fmtR(totalAtual);
+      })()}</td>
       <td style="color:var(--n4);font-size:12px">${fmtDate(e.data_emprestimo)}</td>
       <td>
         ${(()=>{
