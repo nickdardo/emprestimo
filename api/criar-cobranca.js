@@ -17,15 +17,25 @@ const ASAAS_HEADERS = {
 
 // ── Busca ou cria cliente no Asaas pelo CPF/email ──────────────────────────
 async function upsertCustomer({ nome, email, cpf }) {
-  // Tenta buscar cliente existente pelo CPF (se fornecido) ou email
-  const searchParam = cpf ? `cpfCnpj=${cpf}` : `email=${encodeURIComponent(email)}`;
+  const searchParam = cpf ? `cpfCnpj=${cpf.replace(/\D/g,'')}` : `email=${encodeURIComponent(email)}`;
   const search = await fetch(`${ASAAS_BASE}/customers?${searchParam}&limit=1`, {
     headers: ASAAS_HEADERS,
   });
   const searchData = await search.json();
 
   if (searchData?.data?.length > 0) {
-    return searchData.data[0].id; // cliente já existe
+    const existing = searchData.data[0];
+
+    // ✅ NOVO: atualiza o cliente se ainda não tem CPF
+    if (cpf && !existing.cpfCnpj) {
+      await fetch(`${ASAAS_BASE}/customers/${existing.id}`, {
+        method: 'PUT',
+        headers: ASAAS_HEADERS,
+        body: JSON.stringify({ cpfCnpj: cpf.replace(/\D/g,'') }),
+      });
+    }
+
+    return existing.id;
   }
 
   // Cria novo cliente
@@ -52,18 +62,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userId, userName, userEmail, planoLabel, planoValor, planoDias } = req.body;
+    const { userId, userName, userEmail, userCpf, planoLabel, planoValor, planoDias } = req.body;
 
     if (!userId || !planoValor || !planoDias) {
       return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' });
     }
 
-    // 1. Busca ou cria cliente no Asaas
-    const customerId = await upsertCustomer({
-      nome:  userName  || 'Usuário GEPainel',
-      email: userEmail || null,
-      cpf:   null, // adicione CPF aqui se quiser
-    });
+    // ✅ Passe o CPF aqui
+const customerId = await upsertCustomer({
+  nome:  userName  || 'Usuário GEPainel',
+  email: userEmail || null,
+  cpf:   userCpf   || null,
+});
 
     // 2. Data de vencimento = hoje + 1 dia (PIX expira em 24h)
     const dueDate = new Date();
