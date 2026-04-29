@@ -1457,12 +1457,12 @@ function _inferPlanByDias(dias){
 }
 
 function getPlanBadgeHTML(u){
-  if(u.role==='admin')return`<span class="bdg bdg-admin">Admin</span>`;
-  const pl=getUserPlan(u.plan_type);
-  if(pl){
-    const s={'badge-bronze':'background:linear-gradient(135deg,#CD7F32,#A0522D);color:#fff','badge-prata':'background:linear-gradient(135deg,#C0C0C0,#A8A8A8);color:#fff','badge-ouro':'background:linear-gradient(135deg,#FFD700,#DAA520);color:#111','badge-platinum':'background:linear-gradient(135deg,#E5E4E2,#B8B8B8);color:#1F2937','badge-diamante':'background:linear-gradient(135deg,#60A5FA,#818CF8,#C084FC);color:#fff'};
-    return`<span class="bdg" style="${s[pl.badge]||''};border-radius:999px;font-weight:700;font-size:11px">${pl.name}</span>`;
-  }
+  if(u.role==='admin')return`<span class="bdg bdg-admin">👑 Admin</span>`;
+  const s={'badge-bronze':'background:linear-gradient(135deg,#CD7F32,#A0522D);color:#fff','badge-prata':'background:linear-gradient(135deg,#C0C0C0,#A8A8A8);color:#fff','badge-ouro':'background:linear-gradient(135deg,#FFD700,#DAA520);color:#111','badge-platinum':'background:linear-gradient(135deg,#E5E4E2,#B8B8B8);color:#1F2937;font-weight:800','badge-diamante':'background:linear-gradient(135deg,#60A5FA,#818CF8,#C084FC);color:#fff;box-shadow:0 0 6px rgba(129,140,248,.4)','badge-vitalicio':'background:linear-gradient(135deg,#059669,#10B981);color:#fff'};
+  let pl=getUserPlan(u.plan_type);
+  if(!pl&&u.expires_at){const d=Math.ceil((new Date(u.expires_at)-new Date())/(1000*60*60*24));pl=_inferPlanByDias(d);}
+  if(!pl&&!u.expires_at)pl={name:'👑 Vitalício',badge:'badge-vitalicio'};
+  if(pl)return`<span class="bdg" style="${s[pl.badge]||''};border-radius:999px;font-weight:700;font-size:11px;padding:2px 8px">${pl.name}</span>`;
   return`<span class="bdg bdg-op">Operador</span>`;
 }
 
@@ -1499,7 +1499,7 @@ async function bootApp(){
     } else {
       const pl=getUserPlan(session.plan_type);
       if(pl){navBadge.textContent=pl.name;navBadge.className=`nav-badge ${pl.badge}`;}
-      else{navBadge.textContent='♾ Vitalício';navBadge.className='nav-badge badge-vitalicio';}
+      else{navBadge.textContent='👑 Vitalício';navBadge.className='nav-badge badge-vitalicio';}
     }
   }catch(e){}
   try{await loadAll();}catch(e){tomadores=[];emprestimos=[];parcelas=[];users=[];}
