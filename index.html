@@ -787,19 +787,19 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
       <!-- ⭐ ETAPA: Coleta de CPF -->
       <div id="renov-cpf" style="display:none">
         <div id="renov-cpf-titulo" style="font-size:14px;font-weight:800;color:var(--n1);margin-bottom:.5rem;text-align:center"></div>
-        <div style="font-size:13px;color:var(--n3);margin-bottom:1.25rem;text-align:center">
+        <div style="font-size:13px;color:var(--n3);margin-bottom:1.5rem;text-align:center;line-height:1.4">
           Para gerar a cobrança PIX, precisamos do seu CPF.
         </div>
         <div style="margin-bottom:1rem">
           <label for="renov-cpf-input" style="font-size:12px;font-weight:600;color:var(--n2);display:block;margin-bottom:.4rem">CPF</label>
-          <input id="renov-cpf-input" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" oninput="formatarCpfInput(this)" style="width:100%;font-size:15px;font-family:monospace;background:var(--card2);border:1.5px solid var(--border);border-radius:var(--rs);padding:.75rem 1rem;color:var(--n1);outline:none;box-sizing:border-box"/>
+          <input id="renov-cpf-input" type="text" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" oninput="formatarCpfInput(this)" style="width:100%;font-size:15px;font-family:monospace;background:var(--card2);border:1.5px solid var(--border);border-radius:var(--rs);padding:.75rem 1rem;color:var(--n1);outline:none;box-sizing:border-box;letter-spacing:.5px"/>
           <div id="renov-cpf-erro" style="font-size:12px;color:#DC2626;margin-top:.4rem;display:none"></div>
         </div>
-        <label style="display:flex;align-items:flex-start;gap:.6rem;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:.75rem 1rem;margin-bottom:1.25rem;cursor:pointer">
-          <input type="checkbox" id="renov-cpf-salvar" checked style="margin-top:2px;flex-shrink:0;cursor:pointer">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--n1);margin-bottom:2px">Lembrar para próximas cobranças</div>
-            <div style="font-size:11px;color:var(--n3)">Salva seu CPF no perfil — você não precisa informar de novo</div>
+        <label style="display:flex;align-items:flex-start;gap:.65rem;background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:.85rem 1rem;margin-bottom:1.25rem;cursor:pointer;box-sizing:border-box;width:100%">
+          <input type="checkbox" id="renov-cpf-salvar" checked style="margin-top:3px;flex-shrink:0;cursor:pointer;width:16px;height:16px;accent-color:var(--p,#F97316)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--n1);margin-bottom:3px;line-height:1.3">Lembrar para próximas cobranças</div>
+            <div style="font-size:11px;color:var(--n3);line-height:1.4">Salva seu CPF no perfil — você não precisa informar de novo</div>
           </div>
         </label>
         <button id="renov-cpf-continuar" class="btn btn-p" style="width:100%;margin-bottom:.5rem" onclick="continuarComCpf()">Continuar para o pagamento</button>
@@ -817,40 +817,46 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
           <div id="renov-qr-canvas" style="display:inline-block;padding:14px;background:#fff;border-radius:16px;border:2px solid #E5E7EB;box-shadow:0 4px 16px rgba(0,0,0,.08)"></div>
         </div>
 
-        <!-- Status polling -->
+        <!-- Status polling (compacto, opcional) -->
         <div id="renov-status-area" style="margin-bottom:.85rem"></div>
 
         <!-- Código copia-e-cola -->
         <div style="margin-bottom:1rem">
-          <div style="font-size:11px;color:var(--n4);margin-bottom:.4rem;text-align:left">📋 Código PIX copia e cola:</div>
+          <div style="font-size:11px;color:var(--n4);margin-bottom:.4rem;text-align:left">Código PIX copia e cola:</div>
           <div style="display:flex;gap:.4rem">
             <input id="renov-pix-code" readonly
               style="flex:1;font-size:10px;font-family:monospace;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:var(--rs);padding:.5rem .75rem;color:#1E293B;cursor:pointer;outline:none"
               onclick="this.select()" placeholder="Aguardando geração..."/>
             <button class="btn btn-p btn-sm" onclick="copiarPix()" style="white-space:nowrap;flex-shrink:0">
-              📋 Copiar
+              Copiar
             </button>
           </div>
         </div>
 
         <!-- Instruções -->
         <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:1.5px solid #BBF7D0;border-radius:var(--rs);padding:.85rem;margin-bottom:.85rem;text-align:left">
-          <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:.35rem">✅ Como pagar:</div>
+          <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:.35rem">Como pagar:</div>
           <div style="font-size:12px;color:#15803D;line-height:1.6">
             1. Abra o app do seu banco<br>
             2. Escaneie o QR Code ou cole o código PIX<br>
             3. Confirme o pagamento<br>
-            <strong>4. Seu acesso será liberado automaticamente! 🎉</strong>
+            <strong>4. Seu acesso será liberado automaticamente.</strong>
           </div>
         </div>
 
-        <!-- Botão avisar (fallback, oculto por padrão com Asaas) -->
-        <button id="renov-avisar-btn" class="btn btn-sm" style="background:#16A34A;color:#fff;width:100%;display:none" onclick="avisarPagamento()">
-          💬 Já paguei — Avisar administrador
+        <!-- Indicador "Aguardando pagamento" (visível durante o polling) -->
+        <div id="renov-aguardando" style="display:none;background:#FFF7ED;border:1.5px solid #FDBA74;border-radius:var(--rs);padding:.75rem 1rem;width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.5rem">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#F59E0B;animation:pulse-dot 1.2s ease-in-out infinite;flex-shrink:0"></span>
+          <span style="font-size:13px;font-weight:600;color:#9A3412">Aguardando confirmação do pagamento...</span>
+        </div>
+
+        <!-- Botão avisar (fallback, oculto até timeout) -->
+        <button id="renov-avisar-btn" class="btn btn-sm" style="background:#16A34A;color:#fff;width:100%;display:none;margin-bottom:.5rem" onclick="avisarPagamento()">
+          Já paguei — Avisar administrador
         </button>
 
         <!-- Voltar -->
-        <button class="btn btn-g btn-sm" style="width:100%;margin-top:.5rem"
+        <button class="btn btn-g btn-sm" style="width:100%"
           onclick="if(window._renovPollingId)clearInterval(window._renovPollingId);document.getElementById('renov-qr').style.display='none';document.getElementById('renov-planos').style.display=''">
           ← Voltar aos planos
         </button>
@@ -2782,7 +2788,9 @@ function openClientView(tomId){
 async function addParcela(empId){
   const emp=emprestimos.find(e=>e.id===empId);
   if(!emp)return;
-  const valorJuros=parseFloat((emp.valor*emp.juros).toFixed(2)); // apenas juros mensal
+  // Juros sobre o SALDO atual (após abatimentos), não sobre o valor original
+  const saldoAtual=parseFloat((emp.saldo_devedor!=null?emp.saldo_devedor:emp.valor).toFixed(2));
+  const valorJuros=parseFloat((saldoAtual*emp.juros).toFixed(2));
   const parcsExist=parcelas.filter(p=>p.emprestimo_id===empId);
   const nextNum=parcsExist.length+1;
   const venc=addMonths(emp.data_emprestimo,nextNum);
@@ -2918,10 +2926,9 @@ function openParcelas(empId){
   document.getElementById('parc-modal-body').innerHTML=`
     <!-- INFO EMPRÉSTIMO -->
     <div style="background:#F9FAFB;border-radius:var(--rs);padding:.75rem 1rem;margin-bottom:1rem;border:1px solid #E5E7EB;font-size:12px;color:var(--n3);display:flex;flex-wrap:wrap;gap:.5rem 1.5rem">
-      <span><strong>${fmtR(emp?.valor)}</strong> emprestado</span>
+      ${emp?.saldo_devedor!=null&&emp.saldo_devedor!==emp.valor?`<span><strong style="color:${estaQuitado?'var(--grn)':'var(--red)'}">${fmtR(saldo)}</strong> saldo devedor${estaQuitado?' (Quitado!)':''}</span><span style="color:var(--n4);text-decoration:line-through">${fmtR(emp?.valor)} original</span>`:`<span><strong>${fmtR(emp?.valor)}</strong> emprestado</span>`}
       <span><strong>${((emp?.juros||0)*100)%1===0?((emp?.juros||0)*100).toFixed(0):((emp?.juros||0)*100).toFixed(1)}%</strong> juros</span>
-      <span>💵 <strong style="color:var(--grn)">${fmtR(emp?.valor*(emp?.juros||0))}</strong>/mês</span>
-      ${emp?.saldo_devedor!=null?`<span>Saldo: <strong style="color:${estaQuitado?'var(--grn)':'var(--red)'}">${fmtR(emp.saldo_devedor)}${estaQuitado?' Quitado!':''}</strong></span>`:`<span>Saldo: <strong style="color:var(--red)">${fmtR(emp?.valor)}</strong></span>`}
+      <span>💵 <strong style="color:var(--grn)">${fmtR(saldo*(emp?.juros||0))}</strong>/mês</span>
       <span><strong>${fmtDate(emp?.data_emprestimo)}</strong></span>
       ${emp?.garantia?`<span><strong>${emp.garantia}</strong></span>`:''}
     </div>
@@ -3025,18 +3032,21 @@ function confirmarPagamento(id, empId){
   const emp=emprestimos.find(x=>x.id===empId);
   if(!p||!emp)return;
 
-  // Juros da parcela = valor original do empréstimo * taxa (parcela representa só os juros)
+  // Juros da parcela = SALDO DEVEDOR ATUAL * taxa (não o valor original)
+  // Se houve abatimento, os juros caem proporcionalmente
   const tipo=emp.tipo||'juros';
+  // Saldo devedor atual (calculado antes para usar no jurosBase)
+  const saldoAtualEmp=parseFloat((emp.saldo_devedor!=null?emp.saldo_devedor:emp.valor).toFixed(2));
   // Juros base da parcela
   const jurosBase=tipo==='consignado'
     ? parseFloat((emp.valor_total_consignado/parcelas.filter(x=>x.emprestimo_id===emp.id).length).toFixed(2))
-    : parseFloat((emp.valor*emp.juros).toFixed(2));
+    : parseFloat((saldoAtualEmp*emp.juros).toFixed(2));
   // Mora diária (só para juros mensal)
   const diasAtrasConf=tipo==='juros'&&isAtrasada(p)?Math.floor((new Date()-new Date(p.vencimento+'T12:00:00'))/(1000*60*60*24)):0;
   const mora=tipo==='juros'&&diasAtrasConf>0?parseFloat((jurosBase/30*diasAtrasConf).toFixed(2)):0;
   const jurosParc=parseFloat((jurosBase+mora).toFixed(2));
-  // Saldo devedor atual
-  const saldo=tipo==='consignado'?0:parseFloat((emp.saldo_devedor!=null?emp.saldo_devedor:emp.valor).toFixed(2));
+  // Saldo devedor atual (usado no resumo do pagamento)
+  const saldo=tipo==='consignado'?0:saldoAtualEmp;
 
   const div=document.createElement('div');
   div.id='confirm-pay-'+id;
@@ -3158,6 +3168,18 @@ async function efetivarPagamento(id, empId, jurosParc, saldoAtual, mora=0, moraI
   if(abat>0){
     await sb.from('emprestimos').update({saldo_devedor:novoSaldo}).eq('id',empId);
     emprestimos=emprestimos.map(e=>e.id===empId?{...e,saldo_devedor:novoSaldo}:e);
+
+    // Recalcula parcelas pendentes futuras com juros sobre o novo saldo
+    const empAtual=emprestimos.find(e=>e.id===empId);
+    if(empAtual&&(empAtual.tipo||'juros')==='juros'&&novoSaldo>0){
+      const novoJurosParc=parseFloat((novoSaldo*empAtual.juros).toFixed(2));
+      const pendentesFuturas=parcelas.filter(pp=>pp.emprestimo_id===empId&&pp.status==='pendente');
+      if(pendentesFuturas.length>0){
+        const idsPend=pendentesFuturas.map(pp=>pp.id);
+        await sb.from('parcelas').update({valor:novoJurosParc}).in('id',idsPend);
+        parcelas=parcelas.map(pp=>idsPend.includes(pp.id)?{...pp,valor:novoJurosParc}:pp);
+      }
+    }
   }
 
   document.getElementById('confirm-pay-'+id)?.remove();
@@ -3209,7 +3231,8 @@ async function autoGerarProximaParcela(empId, saldoOverride){
   }
 
   const proximoNum=(ultimaParc?.numero||0)+1;
-  const valorParc=parseFloat((emp.valor*emp.juros).toFixed(2));
+  // Juros sobre o SALDO atual (após abatimentos), não sobre o valor original
+  const valorParc=parseFloat((saldo*emp.juros).toFixed(2));
 
   const{data:nova,error}=await sb.from('parcelas').insert({
     emprestimo_id:empId,
@@ -4954,6 +4977,10 @@ async function _gerarCobrancaComCpf(plano, cpf) {
 
   const avisarBtn = document.getElementById('renov-avisar-btn');
   if (avisarBtn) avisarBtn.style.display = 'none';
+  const aguardando = document.getElementById('renov-aguardando');
+  if (aguardando) aguardando.style.display = 'none';
+  const statusAreaInit = document.getElementById('renov-status-area');
+  if (statusAreaInit) statusAreaInit.innerHTML = '';
 
   try {
     const resp = await fetch('/api/criar-cobranca', {
@@ -4995,13 +5022,8 @@ async function _gerarCobrancaComCpf(plano, cpf) {
       } else _rQR();
     }
 
-    // Status de aguardando pagamento
-    const statusArea = document.getElementById('renov-status-area');
-    if (statusArea) statusArea.innerHTML = `
-      <div style="display:inline-flex;align-items:center;gap:.5rem;font-size:13px;color:var(--n3);background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:.35rem .85rem">
-        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#F59E0B;animation:pulse-dot 1.2s ease-in-out infinite"></span>
-        Aguardando confirmação do pagamento...
-      </div>`;
+    // Mostra indicador grande "Aguardando confirmação do pagamento..."
+    if (aguardando) aguardando.style.display = 'flex';
 
     // Polling
     _iniciarPollingPagamento(data.paymentId, plano);
@@ -5022,6 +5044,9 @@ function _selecionarPlanoFallback(plano,qrDiv){
   const _rQR=()=>new QRCode(qrDiv,{text:pixCode,width:200,height:200,colorDark:'#111827',colorLight:'#ffffff'});
   if(typeof QRCode==='undefined'){const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=_rQR;s.onerror=()=>{qrDiv.innerHTML='<div style="font-size:11px;word-break:break-all;padding:.5rem;color:var(--n3)">'+pixCode+'</div>';};document.head.appendChild(s);}
   else _rQR();
+  // Modo fallback: webhook não vai confirmar, então mostra o botão "Já paguei"
+  const aguardando=document.getElementById('renov-aguardando');
+  if(aguardando)aguardando.style.display='none';
   const avisarBtn=document.getElementById('renov-avisar-btn');
   if(avisarBtn)avisarBtn.style.display='';
 }
@@ -5036,8 +5061,10 @@ function _iniciarPollingPagamento(paymentId,plano){
     tentativas++;
     if(tentativas>MAX){
       clearInterval(window._renovPollingId);
+      const aguardando=document.getElementById('renov-aguardando');
+      if(aguardando)aguardando.style.display='none';
       const s=document.getElementById('renov-status-area');
-      if(s)s.innerHTML='<div style="font-size:12px;color:var(--amb);background:#FFF7ED;border:1px solid #FDE68A;border-radius:999px;padding:.35rem .85rem;display:inline-block">⏱ Tempo esgotado — se pagou, aguarde a confirmação manual.</div>';
+      if(s)s.innerHTML='<div style="font-size:12px;color:var(--amb);background:#FFF7ED;border:1px solid #FDE68A;border-radius:999px;padding:.35rem .85rem;display:inline-block">Tempo esgotado — se pagou, aguarde a confirmação manual.</div>';
       const avisarBtn=document.getElementById('renov-avisar-btn');
       if(avisarBtn)avisarBtn.style.display='';
       return;
