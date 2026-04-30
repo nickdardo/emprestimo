@@ -6020,18 +6020,5 @@ window.addEventListener('DOMContentLoaded',async()=>{
 })();
 </script>
 
-  // Fechar modal iOS
-  window.fecharIosInstallModal = function(){
-    const modal = document.getElementById('ios-install-modal');
-    if (modal) modal.style.display = 'none';
-  };
-
-  // Fechar modal ao clicar no fundo
-  document.getElementById('ios-install-modal')?.addEventListener('click', function(e){
-    if (e.target === this) fecharIosInstallModal();
-  });
-})();
-</script>
-
 </body>
 </html>
