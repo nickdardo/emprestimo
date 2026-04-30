@@ -796,7 +796,7 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 
 
 <!-- MODAL RENOVAÇÃO DE ACESSO -->
-<div class="mbd" id="renov-modal" style="display:none" onclick="if(event.target===this)closeM('renov-modal')">
+<div class="mbd" id="renov-modal" style="display:none" onclick="if(event.target===this){if(window._renovPollingId)clearInterval(window._renovPollingId);closeM('renov-modal')}">
   <div class="modal" style="max-width:460px">
     <div class="mhdr"><span class="mtitle">Renovar Acesso</span><button class="mclose" onclick="if(window._renovPollingId)clearInterval(window._renovPollingId);closeM('renov-modal')">✕</button></div>
     <div class="mbody">
@@ -5161,6 +5161,9 @@ function _iniciarPollingPagamento(paymentId,plano){
   let tentativas=0;
   const MAX=90; // 6 minutos (90 x 4s)
   window._renovPollingId=setInterval(async()=>{
+    // Pausa polling se aba não está visível (economiza recursos)
+    if(document.hidden)return;
+    
     tentativas++;
     if(tentativas>MAX){
       clearInterval(window._renovPollingId);
@@ -5836,11 +5839,16 @@ window.addEventListener('DOMContentLoaded',async()=>{
   const _isStandalonePWA=window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone===true
     || document.referrer.includes('android-app://');
+  
+  // Timer de inatividade: só roda quando a aba está visível
   setInterval(()=>{
     if(!session)return;
-    // No modo PWA instalado, sessão fica sempre ativa (sem logout por inatividade)
-    if(_isStandalonePWA)return;
-    if(Date.now()-_lastActivity>TIMEOUT_MS){toast('Sessão encerrada por inatividade.',true);setTimeout(doLogout,1500);}
+    if(document.hidden)return; // Pausa quando aba está em background
+    if(_isStandalonePWA)return; // No modo PWA instalado, sessão fica sempre ativa
+    if(Date.now()-_lastActivity>TIMEOUT_MS){
+      toast('Sessão encerrada por inatividade.',true);
+      setTimeout(doLogout,1500);
+    }
   },30000);
 });
 </script>
