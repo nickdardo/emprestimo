@@ -702,20 +702,6 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
     </div>
     
     </div><!-- /login-card-wrap -->
-    
-    <!-- Banner Instalar App (aparece só fora do PWA) -->
-    <div id="login-install-banner" style="display:none;max-width:420px;margin:.85rem auto 0;padding:.85rem 1rem;background:linear-gradient(135deg,rgba(108,159,255,.12),rgba(140,67,242,.12));border:1px solid rgba(140,67,242,.3);border-radius:14px;backdrop-filter:blur(8px)">
-      <div style="display:flex;align-items:center;gap:.85rem">
-        <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#6D9FFF,#8C43F2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8m0 0l-3-3m3 3l3-3"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:#fff;line-height:1.2">Instalar como aplicativo</div>
-          <div style="font-size:11px;color:rgba(196,192,232,.8);margin-top:2px">Acesse mais rápido na tela inicial</div>
-        </div>
-        <button onclick="instalarApp()" style="padding:.5rem .85rem;background:linear-gradient(135deg,#6D9FFF,#8C43F2);color:#fff;border:none;border-radius:8px;font-family:var(--FB);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">Instalar</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -5915,7 +5901,6 @@ window.addEventListener('DOMContentLoaded',async()=>{
 (function(){
   let deferredPrompt = null;
   const installBtn = document.getElementById('install-btn');
-  const installLabel = document.getElementById('install-btn-label');
   const installBanner = document.getElementById('login-install-banner');
 
   function showInstallUI(){
@@ -5927,31 +5912,57 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if (installBanner) installBanner.style.display = 'none';
   }
 
-  // Detectar se já está instalado (rodando como PWA)
+  // Detectar se já está rodando como PWA instalado (standalone)
   function isStandalone(){
     return window.matchMedia('(display-mode: standalone)').matches
         || window.navigator.standalone === true
         || document.referrer.includes('android-app://');
   }
-
-  // Detectar iOS (iPhone/iPad)
   function isIOS(){
     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   }
-
-  // Detectar Safari no iOS (necessário para instalação no iOS)
-  function isSafariIOS(){
-    const ua = navigator.userAgent;
-    return isIOS() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  function isAndroid(){
+    return /Android/i.test(navigator.userAgent);
+  }
+  function isMobile(){
+    return isIOS() || isAndroid();
   }
 
-  // Se já estiver instalado, esconde tudo permanentemente
+  // Lê flag de "já instalado neste navegador" (sobrevive entre sessões)
+  function jaInstalouAqui(){
+    try{ return localStorage.getItem('ep_pwa_installed') === '1'; }catch(e){ return false; }
+  }
+  function marcarComoInstalado(){
+    try{ localStorage.setItem('ep_pwa_installed','1'); }catch(e){}
+  }
+
+  // ─── Cenário 1: já está aberto como PWA → esconde tudo, marca flag e sai
   if (isStandalone()){
+    marcarComoInstalado();
     hideInstallUI();
     return;
   }
 
-  // Android/Desktop (Chrome/Edge): captura evento beforeinstallprompt
+  // ─── Cenário 2: já instalou pelo menos 1x neste navegador → esconde
+  if (jaInstalouAqui()){
+    console.log('[PWA] Já instalado neste navegador, banner oculto');
+    hideInstallUI();
+    return;
+  }
+
+  // ─── Cenário 3: ainda não instalou — decide se mostra
+  // Em mobile, mostra SEMPRE (independente do beforeinstallprompt)
+  // Em desktop, mostra apenas quando o navegador permitir (beforeinstallprompt)
+  if (isMobile()){
+    if (isIOS()){
+      const loginHint = document.getElementById('login-install-hint');
+      if (loginHint) loginHint.textContent = 'Adicione à Tela de Início pelo Safari';
+    }
+    showInstallUI();
+    console.log('[PWA] Mobile detectado, banner visível');
+  }
+
+  // Captura evento de instalação (Android/Desktop com Chrome/Edge)
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -5959,46 +5970,55 @@ window.addEventListener('DOMContentLoaded',async()=>{
     console.log('[PWA] Instalador nativo disponível');
   });
 
-  // iOS: mostra botão (vai abrir modal explicativo)
-  if (isIOS() && !isStandalone()){
-    // Customiza dica do banner para iOS
-    const loginHint = document.getElementById('login-install-hint');
-    if (loginHint) loginHint.textContent = 'Adicione à Tela de Início pelo Safari';
-    showInstallUI();
-  }
-
-  // Após instalação bem-sucedida (Android/Desktop)
+  // Após instalação bem-sucedida
   window.addEventListener('appinstalled', () => {
     console.log('[PWA] App instalado com sucesso');
+    marcarComoInstalado();
     hideInstallUI();
     deferredPrompt = null;
-    // Toast de sucesso (se existir função toast no app)
     if (typeof toast === 'function') toast('App instalado com sucesso! 🎉');
   });
 
-  // Função chamada pelo onclick do botão
+  // Função chamada ao clicar no botão/banner
   window.instalarApp = async function(){
-    // iOS: abre modal explicativo
+    // iOS: sempre abre o modal explicativo
     if (isIOS()){
       const modal = document.getElementById('ios-install-modal');
       if (modal) modal.style.display = 'flex';
       return;
     }
 
-    // Android/Desktop: usa instalador nativo
+    // Android/Desktop com prompt nativo disponível
     if (deferredPrompt){
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       console.log('[PWA] Resultado:', outcome);
       if (outcome === 'accepted'){
+        marcarComoInstalado();
         hideInstallUI();
       }
       deferredPrompt = null;
+      return;
+    }
+
+    // Fallback: sem prompt nativo (Android sem critérios PWA, ou já recusou antes)
+    if (isAndroid()){
+      alert('Para instalar o GEPainel:\n\n1. Toque no menu (⋮) do navegador\n2. Toque em "Instalar app" ou "Adicionar à tela inicial"');
     } else {
-      // Fallback: navegador não suporta ou usuário já dispensou
-      alert('Para instalar este app:\n\n• No Chrome/Edge: clique no menu (⋮) → "Instalar GEPainel"\n• No Safari (iPhone): toque em Compartilhar → "Adicionar à Tela de Início"');
+      alert('Para instalar o GEPainel no computador:\n\n1. Clique no menu (⋮) do navegador\n2. Procure "Instalar GEPainel..."\n\nFunciona melhor no Chrome ou Edge.');
     }
   };
+
+  // Fechar modal iOS
+  window.fecharIosInstallModal = function(){
+    const modal = document.getElementById('ios-install-modal');
+    if (modal) modal.style.display = 'none';
+  };
+  document.getElementById('ios-install-modal')?.addEventListener('click', function(e){
+    if (e.target === this) fecharIosInstallModal();
+  });
+})();
+</script>
 
   // Fechar modal iOS
   window.fecharIosInstallModal = function(){
