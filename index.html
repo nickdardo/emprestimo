@@ -2353,6 +2353,8 @@ function renderEmprestimos(){
         <tbody id="emp-tbody">${empTbodyHTML(emprestimos)}</tbody>
       </table>
     </div>`;
+  // Aplica filtro padrão (esconde quitados quando _empFilter='todos')
+  setTimeout(()=>{try{filterEmp();}catch(e){}},0);
 }
 
 
