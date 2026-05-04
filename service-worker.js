@@ -1,68 +1,119 @@
-// service-worker.js
-// PWA do GEPainel — estratégia "network first" para sempre buscar a versão mais recente.
-// Cache mínimo só para permitir abertura offline básica.
+// GEPainel - Service Worker
+// Versão do cache (altere quando atualizar o app)
+const CACHE_VERSION = 'gepainel-v1.0.0';
+const CACHE_NAME = `gepainel-cache-${CACHE_VERSION}`;
 
-const CACHE_VERSION = 'gepainel-v1';
-const CORE_ASSETS = [
+// Arquivos essenciais para cache (offline-first)
+const ESSENTIAL_FILES = [
   '/',
+  '/index.html',
   '/manifest.webmanifest',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png',
+  'https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+  'https://unpkg.com/lucide@latest/dist/umd/lucide.js'
 ];
 
-// ─── Instalação: cacheia apenas o essencial ─────────────────────────────────
+// Instalação - faz cache dos arquivos essenciais
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // ativa imediatamente, sem esperar abas antigas fecharem
+  console.log('[SW] Instalando Service Worker...');
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) =>
-      cache.addAll(CORE_ASSETS).catch((err) => {
-        console.warn('[SW] Falha ao cachear core assets:', err);
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('[SW] Cache aberto, salvando arquivos essenciais...');
+        return cache.addAll(ESSENTIAL_FILES);
       })
-    )
+      .then(() => {
+        console.log('[SW] Arquivos essenciais salvos no cache');
+        return self.skipWaiting(); // Ativa imediatamente
+      })
+      .catch((err) => {
+        console.warn('[SW] Erro ao fazer cache:', err);
+      })
   );
 });
 
-// ─── Ativação: limpa caches antigos ─────────────────────────────────────────
+// Ativação - limpa caches antigos
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Ativando Service Worker...');
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log('[SW] Removendo cache antigo:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+      .then(() => {
+        console.log('[SW] Service Worker ativado');
+        return self.clients.claim(); // Controla todas as páginas imediatamente
+      })
   );
 });
 
-// ─── Fetch: estratégia network-first com fallback offline ───────────────────
+// Estratégia de cache: Network First (prioriza rede, fallback para cache)
 self.addEventListener('fetch', (event) => {
-  const req = event.request;
+  const { request } = event;
+  
+  // Ignora requisições que não sejam GET
+  if (request.method !== 'GET') {
+    return;
+  }
 
-  // Só intercepta GET — POST/PUT/etc precisam ir direto pra rede
-  if (req.method !== 'GET') return;
+  // Ignora requisições para APIs externas (Supabase, etc)
+  const url = new URL(request.url);
+  if (url.origin.includes('supabase')) {
+    return; // Supabase sempre vai direto para a rede
+  }
 
-  // Não intercepta APIs (Asaas, Supabase, /api/*) — sempre rede
-  const url = new URL(req.url);
-  const isApi =
-    url.pathname.startsWith('/api/') ||
-    url.hostname.includes('supabase') ||
-    url.hostname.includes('asaas') ||
-    url.hostname.includes('googleapis');
-  if (isApi) return;
-
-  // Network-first: tenta rede, se falhar usa cache
   event.respondWith(
-    fetch(req)
-      .then((response) => {
-        // Cacheia a resposta para uso offline futuro (apenas ok 200)
-        if (response.ok && response.status === 200) {
-          const respClone = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => {
-            cache.put(req, respClone).catch(() => {});
-          });
+    // Tenta buscar da rede primeiro
+    fetch(request)
+      .then((networkResponse) => {
+        // Se conseguiu da rede, salva no cache e retorna
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(request, responseToCache);
+            });
         }
-        return response;
+        return networkResponse;
       })
-      .catch(() => caches.match(req).then((cached) => cached || caches.match('/')))
+      .catch(() => {
+        // Se falhou na rede, tenta buscar do cache
+        return caches.match(request)
+          .then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('[SW] Servindo do cache:', request.url);
+              return cachedResponse;
+            }
+            
+            // Se não tem no cache e é uma navegação, retorna a index.html
+            if (request.mode === 'navigate') {
+              return caches.match('/index.html');
+            }
+            
+            // Fallback genérico
+            return new Response('Offline - conteúdo não disponível', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: new Headers({
+                'Content-Type': 'text/plain'
+              })
+            });
+          });
+      })
   );
+});
+
+// Listener para mensagens (ex: forçar atualização)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
