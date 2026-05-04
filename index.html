@@ -47,10 +47,28 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 
 /* LOGIN */
 .login-bg{
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:#07020F;padding:1rem;position:relative;overflow:hidden;
+  min-height:100vh;
+  min-height:100dvh; /* Dynamic viewport height para mobile */
+  max-height:100vh;
+  max-height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#07020F;
+  padding:1rem;
+  position:relative;
+  overflow:hidden;
 }
-#stars-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#stars-canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  max-height:100vh;
+  max-height:100dvh;
+  pointer-events:none;
+  z-index:0;
+}
 .login-bg-glow{
   position:absolute;inset:0;pointer-events:none;z-index:1;
   background:
@@ -94,10 +112,13 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 .login-error{background:var(--red0);color:var(--red);font-size:13px;padding:.65rem .85rem;border-radius:var(--rs);margin-bottom:1rem;display:none;border-left:3px solid #DC2626;font-weight:500}
 .login-hint{font-size:12px;color:var(--n4);text-align:center;margin-top:1.5rem}
 @media(max-width:480px){
-  .login-card-wrap{border-radius:18px}
+  .login-bg{padding:.75rem}
+  .login-card-wrap{border-radius:18px;max-width:100%}
   .login-card{border-radius:16px}
-  .login-card-body{padding:1.5rem 1.25rem 2rem}
-  .login-logo{font-size:2rem}
+  .login-card-body{padding:1.25rem 1rem 1.5rem}
+  .login-logo{font-size:1.85rem}
+  .login-sub{margin-bottom:1.5rem;font-size:12px}
+  .login-field{margin-bottom:.85rem}
 }
 
 /* NAV */
@@ -121,9 +142,9 @@ body{font-family:var(--FB);background:var(--bg);color:var(--n1);min-height:100vh
 
 /* LAYOUT */
 .app-body{display:flex;min-height:calc(100vh - 56px)}
-.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;backdrop-filter:blur(2px)}
 .sb-overlay.open{display:block}
-.sidebar{width:240px;min-width:240px;background:var(--card);border-right:1px solid var(--border);padding:1rem 0;display:flex;flex-direction:column;position:sticky;top:calc(60px + env(safe-area-inset-top));height:calc(100vh - 60px - env(safe-area-inset-top));overflow-y:auto;transition:all .25s}
+.sidebar{width:240px;min-width:240px;background:var(--card);border-right:1px solid var(--border);padding:1rem 0;display:flex;flex-direction:column;position:sticky;top:calc(60px + env(safe-area-inset-top));height:calc(100vh - 60px - env(safe-area-inset-top));overflow-y:auto;transition:all .25s;z-index:95}
 .sidebar-section{padding:0 1.25rem .5rem;font-size:11px;font-weight:700;color:var(--n4);letter-spacing:.08em;text-transform:uppercase;margin-top:.75rem}
 .sidebar-item{display:flex;align-items:center;gap:12px;padding:.75rem 1.25rem;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:var(--FB);font-size:14px;color:var(--n3);border-right:3px solid transparent;transition:all .2s;border-radius:var(--rs) 0 0 var(--rs);margin:2px 0}
 .sidebar-item:hover{background:rgba(0,188,212,.08);color:var(--n1)}
@@ -245,11 +266,20 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
 
 @media(max-width:900px){
   .hamburger{display:flex}
-  .sidebar{position:fixed;top:56px;left:-240px;height:calc(100vh - 56px);z-index:95}
-  .sidebar.open{left:0;box-shadow:var(--shm)}
+  .sidebar{
+    position:fixed;
+    top:0;
+    left:-260px;
+    height:100vh;
+    padding-top:calc(60px + env(safe-area-inset-top));
+    z-index:95;
+    box-shadow:4px 0 20px rgba(0,0,0,.4);
+  }
+  .sidebar.open{left:0}
   .stats{grid-template-columns:1fr 1fr}
   .fgrid{grid-template-columns:1fr}
   .full{grid-column:1}
+  .nav-user{display:none}
 }
 @media(max-width:768px){
   /* Nav — esconde itens secundários */
@@ -5800,7 +5830,12 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   if(!canvas)return;
   var ctx=canvas.getContext('2d');
   var stars=[];
-  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+  function resize(){
+    // Usa a altura real da viewport, considerando barras de navegação mobile
+    const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+    canvas.width=window.innerWidth;
+    canvas.height=vh;
+  }
   resize();
   window.addEventListener('resize',resize);
   for(var i=0;i<220;i++){
