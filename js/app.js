@@ -48,7 +48,6 @@ function toast(msg,err=false){const t=document.createElement('div');t.className=
 function openM(id){document.getElementById(id).style.display='flex';}
 function closeM(id){document.getElementById(id).style.display='none';}
 
-
 // ══ BOTTOM NAV ══
 function toggleBottomNav(on){
   const prev=localStorage.getItem('ep_bottom_nav')==='1';
@@ -94,7 +93,6 @@ function renderBottomNav(){
       <span>Sair</span>
     </button>`;
 }
-
 
 // ══ CALCULADORA ══
 let _calcVal='0',_calcOp=null,_calcPrev=null,_calcNewNum=true;
@@ -143,7 +141,6 @@ function renderCal(){
   for(let d=1;d<=dM;d++){const isH=d===hoje.getDate()&&_calM===hoje.getMonth()&&_calY===hoje.getFullYear();html+=`<div style="font-size:11px;padding:3px;border-radius:50%;cursor:default;text-align:center;${isH?'background:var(--grn);color:#0D0B1E;font-weight:700;':'color:var(--n2);'}">${d}</div>`;}
   g.innerHTML=html;
 }
-
 
 // ══ INDICAÇÃO ══
 function gerarCodigoIndicacao(userId){return 'GE'+userId.substring(0,6).toUpperCase();}
@@ -341,7 +338,6 @@ function showPage(p){
   else if(p==='relatorio')renderRelatorio();
 }
 
-
 function togglePwd(inputId, btn){
   const inp=document.getElementById(inputId);
   if(!inp)return;
@@ -352,7 +348,6 @@ function togglePwd(inputId, btn){
   btn.innerHTML=show?eyeOff:eyeOn;
   btn.style.color=show?'var(--grn)':'var(--n3)';
 }
-
 
 async function sbWithRetry(fn, tentativas=3, delay=1500){
   for(let i=0;i<tentativas;i++){
@@ -474,7 +469,6 @@ async function doRegister(){
     await bootApp();toast('✓ Bem-vindo(a), '+data.nome.split(' ')[0]+'! Você tem 30 dias grátis.');
   }catch(e){showRegErr('Erro de conexão.');btn.textContent='Criar conta →';btn.disabled=false;}
 }
-
 
 // ══ FUNÇÃO PARA DETERMINAR PLANO DO USUÁRIO ══
 function getUserPlan(planType){
@@ -678,7 +672,6 @@ async function loadAll(){
     return p;
   });
 }
-
 
 function renderDashboardSelector(){
   const mc=document.getElementById('main-content');
@@ -1231,7 +1224,6 @@ function renderEmprestimos(){
   setTimeout(()=>{try{filterEmp();}catch(e){}},0);
 }
 
-
 let _empSort={col:null,dir:'asc'};
 function sortEmp(col){
   if(_empSort.col===col){_empSort.dir=_empSort.dir==='asc'?'desc':'asc';}
@@ -1265,7 +1257,6 @@ function applySortEmp(list){
     return 0;
   });
 }
-
 
 let _tomSort={col:null,dir:'asc'};
 function sortTom(col){
@@ -1495,7 +1486,6 @@ function updateEmpCalc(){
     } else if(box){box.style.display='none';}
   }
 }
-
 
 // ══ FUNÇÕES DE ANEXO DE ARQUIVO ══
 function showFileName(input){
@@ -1794,7 +1784,6 @@ async function addParcela(empId){
   parcelas.push(data);toast('✓ Parcela adicionada!');
   openParcelas(empId);
 }
-
 
 async function abrirQuitacao(empId){
   const emp=emprestimos.find(e=>e.id===empId);
@@ -2238,7 +2227,6 @@ async function autoGerarProximaParcela(empId, saldoOverride){
   toast(`✓ ${lblProximo(emp)} gerado automaticamente: ${fmtDate(novaData)}`);
 }
 
-
 function confirmarAtrasoComDupla(parcId, tomId){
   // Primeiro modal de confirmação
   const div=document.createElement('div');
@@ -2293,7 +2281,6 @@ async function marcarPendente(id, empId){
   if(curPage==='dashboard')renderDashboard();
   else if(curPage==='emprestimos')renderEmprestimos();
 }
-
 
 // ══ SELEÇÃO EM LOTE DE PARCELAS ══
 function toggleSelecaoParc(empId){
@@ -2802,7 +2789,6 @@ function calcSim(){
   updateRefTable(val);
 }
 
-
 // ══ PERFIL ══
 
 // ══ RENOVAÇÕES (ADMIN) ══
@@ -2898,7 +2884,6 @@ async function renderRenovacoes(){
     `:''}
   `;
 }
-
 
 function renderPerfil(){
   const mc=document.getElementById('main-content');
@@ -3267,9 +3252,6 @@ async function deleteUsr(id){
   users=users.filter(x=>x.id!==id);toast('Usuário removido');renderUsuarios();
 }
 
-
-
-
 // ══ NOTIFICAÇÕES DO NAVEGADOR ══
 let _notifInterval = null;
 
@@ -3421,7 +3403,6 @@ function iniciarVerificacaoAutomatica(){
   },30*60*1000);
 }
 
-
 // ══ TERMINOLOGIA POR TIPO ══
 function lblParcela(emp, plural=false){
   const tipo=emp?.tipo||'juros';
@@ -3431,7 +3412,6 @@ function lblParcela(emp, plural=false){
 function lblProximo(emp){
   return (emp?.tipo||'juros')==='consignado'?'Próxima Parcela':'Próximo Vencimento';
 }
-
 
 let _waPulseAtivo=false;
 function ativarPulsoWa(){
@@ -3585,7 +3565,6 @@ function enviarAvisosWa(){
   window.open(url,'_blank');
 }
 
-
 function exportRelatPDF(){
   const mc=document.getElementById('main-content');
   if(!mc)return;
@@ -3648,7 +3627,6 @@ function exportRelatCSV(){
   toast('✓ CSV exportado!');
 }
 
-
 // ══ PIX / RENOVAÇÃO ══
 const _PIX_KEY='01058147250';
 const _PIX_NAME='Eduardo Ribeiro Oliveira';
@@ -3696,7 +3674,6 @@ function gerarPixEMV(chave,nome,cidade,valor,txid){
     '6304';
   return payload+_crc16pix(payload);
 }
-
 
 // ══ GERADOR DE CÓDIGO PIX (EMV) ══
 function gerarPixCode(valor){
@@ -4219,8 +4196,6 @@ async function avisarPagamento(){
   setTimeout(()=>closeM('renov-modal'),2500);
 }
 
-
-
 async function verificarRenovacoesPendentes(){
   try{
     const{data}=await sb.from('renovacoes').select('id').eq('status','pendente');
@@ -4615,14 +4590,12 @@ function printFicha(tomId){
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ficha — ${tom.nome}</title>
   <style>body{font-family:Arial,sans-serif;padding:2rem;color:#111;max-width:800px;margin:0 auto}h1{font-size:1.5rem;margin-bottom:.25rem}h2{font-size:1rem;color:#666;font-weight:400;margin:0 0 1.5rem}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;padding:6px 8px;text-align:left;border-bottom:2px solid #ddd}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}.stat{border:1px solid #ddd;border-radius:8px;padding:.75rem;text-align:center}.stat-label{font-size:10px;text-transform:uppercase;color:#666;margin-bottom:4px}.stat-val{font-size:1.2rem;font-weight:700}.footer{margin-top:2rem;font-size:11px;color:#999;text-align:right}
 
-
 @media(max-width:640px){
   .relat-grid-a,.relat-grid-b{grid-template-columns:1fr!important}
   #chart-fluxo,#chart-proj,#chart-inad{max-height:180px}
   #chart-saude{max-height:140px}
   #chart-tipo{max-height:110px!important;max-width:110px!important}
 }
-
 
 /* ── BOTTOM NAV MOBILE ──────────────────────────────────── */
 .bnav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:.35rem .5rem;background:none;border:none;cursor:pointer;font-size:10px;font-weight:600;color:var(--n4);min-width:52px;border-radius:var(--rs);transition:color .15s}
@@ -4744,7 +4717,6 @@ window.addEventListener('DOMContentLoaded',async()=>{
     }
   },30000);
 });
-</script>
 
 <!-- PWA: Service Worker (instalação como app) -->
 
