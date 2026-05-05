@@ -1143,22 +1143,29 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 </div>
 
 <!-- MODAL ESCOLHA WHATSAPP -->
-<div class="mbd" id="whatsapp-choice-modal" style="display:none" onclick="if(event.target===this)closeWhatsAppChoice()">
+<div class="mbd" id="whatsapp-choice-modal" style="display:none;z-index:300" onclick="if(event.target===this)closeWhatsAppChoice()">
   <div class="modal" style="max-width:480px">
-    <div class="mhdr"><span class="mtitle">💬 Enviar WhatsApp</span><button class="mclose" onclick="closeWhatsAppChoice()">✕</button></div>
-    <div class="mbody">
+    <div class="mhdr"><span class="mtitle">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Enviar WhatsApp
+    </span><button class="mclose" onclick="closeWhatsAppChoice()">✕</button></div>
+    <div class="mbody" id="whatsapp-choice-body">
       <div style="font-size:13px;color:var(--n3);margin-bottom:1.25rem">Escolha como deseja enviar a mensagem:</div>
       
       <button onclick="enviarWhatsAppManual()" class="btn btn-full" style="background:#F3F4F6;color:#1E293B;border:2px solid #E5E7EB;margin-bottom:.75rem;padding:1rem;text-align:left;display:flex;align-items:center;gap:.75rem;transition:all .2s" onmouseover="this.style.borderColor='#16A34A';this.style.background='#F0FDF4'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F3F4F6'">
-        <div style="font-size:1.5rem">✍️</div>
+        <div style="font-size:1.5rem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+        </div>
         <div>
           <div style="font-weight:700;font-size:14px">Envio Manual</div>
           <div style="font-size:11px;color:var(--n4);margin-top:2px">Abre o WhatsApp sem mensagem pré-preenchida</div>
         </div>
       </button>
 
-      <button onclick="enviarWhatsAppAutomatico()" class="btn btn-full" style="background:#F0FDF4;color:#16A34A;border:2px solid #16A34A;padding:1rem;text-align:left;display:flex;align-items:center;gap:.75rem;transition:all .2s" onmouseover="this.style.background='#16A34A';this.style.color='#fff'" onmouseout="this.style.background='#F0FDF4';this.style.color='#16A34A'">
-        <div style="font-size:1.5rem">🤖</div>
+      <button onclick="mostrarPreviaWhatsApp()" class="btn btn-full" style="background:#F0FDF4;color:#16A34A;border:2px solid #16A34A;padding:1rem;text-align:left;display:flex;align-items:center;gap:.75rem;transition:all .2s" onmouseover="this.style.background='#16A34A';this.style.color='#fff'" onmouseout="this.style.background='#F0FDF4';this.style.color='#16A34A'">
+        <div style="font-size:1.5rem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
         <div>
           <div style="font-weight:700;font-size:14px">Envio Automático</div>
           <div style="font-size:11px;opacity:.8;margin-top:2px">Mensagem pronta com dados da parcela</div>
@@ -1455,6 +1462,90 @@ function enviarWhatsAppManual() {
   if (!_whatsAppData) return;
   const numero = _whatsAppData.tom.contato.replace(/\D/g, '');
   window.open(`https://wa.me/55${numero}`, '_blank');
+  closeWhatsAppChoice();
+}
+
+function mostrarPreviaWhatsApp() {
+  if (!_whatsAppData) return;
+  
+  const { tom, parcela } = _whatsAppData;
+  
+  // Pega a parcela mais próxima do vencimento se não foi especificada
+  let parcelaEscolhida = parcela;
+  if (!parcelaEscolhida) {
+    const hoje = new Date();
+    const parcelasPendentes = parcelas.filter(p => {
+      const emp = emprestimos.find(e => e.id === p.emprestimo_id);
+      return emp && emp.tomador_id === tom.id && p.status === 'pendente';
+    }).sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
+    
+    parcelaEscolhida = parcelasPendentes[0];
+  }
+  
+  if (!parcelaEscolhida) {
+    toast('Nenhuma parcela pendente encontrada', true);
+    return;
+  }
+  
+  // Busca a chave PIX do usuário logado
+  const chavePix = session.pix || session.contato || session.email || '[SUA_CHAVE_PIX]';
+  
+  // Monta a mensagem
+  const nome = tom.nome;
+  const valor = fmtR(parcelaEscolhida.valor);
+  const data = fmtDate(parcelaEscolhida.vencimento);
+  
+  const mensagem = `Olá ${nome},
+
+Você tem uma parcela de ${valor} com vencimento em ${data}.
+
+💳 Pix: ${chavePix}
+💵 Dinheiro: Combinar entrega
+
+Qualquer dúvida, estou aqui!`;
+  
+  // Mostra prévia editável
+  const body = document.getElementById('whatsapp-choice-body');
+  body.innerHTML = `
+    <div style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span style="font-weight:700;font-size:14px;color:var(--n1)">Prévia da Mensagem</span>
+      </div>
+      <div style="font-size:11px;color:var(--n4);margin-bottom:.75rem">Você pode editar a mensagem antes de enviar:</div>
+      <textarea id="whatsapp-message-preview" style="width:100%;min-height:200px;padding:.75rem;border:2px solid var(--border);border-radius:var(--rs);font-family:var(--FM);font-size:13px;color:var(--n1);background:var(--card);resize:vertical">${mensagem}</textarea>
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <button onclick="voltarEscolhaWhatsApp()" class="btn btn-g btn-sm" style="flex:1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        Voltar
+      </button>
+      <button onclick="confirmarEnvioWhatsApp()" class="btn btn-grn btn-sm" style="flex:2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Enviar WhatsApp
+      </button>
+    </div>
+  `;
+}
+
+function voltarEscolhaWhatsApp() {
+  closeWhatsAppChoice();
+  // Reabre o modal
+  setTimeout(() => {
+    if (_whatsAppData) {
+      openWhatsAppChoice(_whatsAppData.tom.id, _whatsAppData.parcela);
+    }
+  }, 100);
+}
+
+function confirmarEnvioWhatsApp() {
+  if (!_whatsAppData) return;
+  
+  const mensagem = document.getElementById('whatsapp-message-preview').value;
+  const numero = _whatsAppData.tom.contato.replace(/\D/g, '');
+  const mensagemEncoded = encodeURIComponent(mensagem);
+  
+  window.open(`https://wa.me/55${numero}?text=${mensagemEncoded}`, '_blank');
   closeWhatsAppChoice();
 }
 
@@ -2993,7 +3084,10 @@ function openClientView(tomId){
         <div style="font-size:12px;color:var(--n4);margin-top:2px">${tom.contato?`${tom.contato} · `:''} ${empsDoTom.length} empréstimo${empsDoTom.length!==1?'s':''}</div>
       </div>
       <div style="display:flex;gap:.4rem;align-items:center">
-        ${tom.contato?`<button onclick="openWhatsAppChoice('${tom.id}')" class="btn btn-sm" style="background:#16A34A;color:#fff;font-size:12px;padding:.3rem .7rem;cursor:pointer;border:none">💬 WhatsApp</button>`:''}
+        ${tom.contato?`<button onclick="openWhatsAppChoice('${tom.id}')" class="btn btn-sm" style="background:#16A34A;color:#fff;font-size:12px;padding:.3rem .7rem;cursor:pointer;border:none;display:flex;align-items:center;gap:.3rem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          WhatsApp
+        </button>`:''}
         <button class="btn btn-g btn-sm" style="font-size:12px" onclick="printFicha('${tom.id}')">🖨 Imprimir</button>
         <button onclick="document.getElementById('client-view-modal').remove()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--n4)">✕</button>
       </div>
