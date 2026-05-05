@@ -1,0 +1,19 @@
+# Dependências
+node_modules/
+
+# Ambiente
+.env
+.env.local
+
+# Vercel
+.vercel
+
+# Sistema
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporários
+*.tmp
+*.log
