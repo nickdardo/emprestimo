@@ -1452,6 +1452,7 @@ async function enviarRecuperacaoSenha(){
 
 // ══ WHATSAPP CHOICE ══
 let _whatsAppData = null;
+let _whatsAppOriginalContent = null;
 
 function openWhatsAppChoice(tomadorId, parcela = null) {
   const tom = tomadores.find(t => t.id === tomadorId);
@@ -1461,18 +1462,29 @@ function openWhatsAppChoice(tomadorId, parcela = null) {
   }
   
   _whatsAppData = { tom, parcela };
+  
+  // Salva o conteúdo original na primeira vez
+  const body = document.getElementById('whatsapp-choice-body');
+  if (!_whatsAppOriginalContent) {
+    _whatsAppOriginalContent = body.innerHTML;
+  } else {
+    // Restaura o conteúdo original
+    body.innerHTML = _whatsAppOriginalContent;
+  }
+  
   document.getElementById('whatsapp-choice-modal').style.display = 'flex';
 }
 
 function closeWhatsAppChoice() {
   document.getElementById('whatsapp-choice-modal').style.display = 'none';
-  _whatsAppData = null;
+  // Não limpa _whatsAppData aqui para permitir voltar
 }
 
 function enviarWhatsAppManual() {
   if (!_whatsAppData) return;
   const numero = _whatsAppData.tom.contato.replace(/\D/g, '');
   window.open(`https://wa.me/55${numero}`, '_blank');
+  _whatsAppData = null;
   closeWhatsAppChoice();
 }
 
@@ -1540,13 +1552,10 @@ Qualquer dúvida, estou aqui!`;
 }
 
 function voltarEscolhaWhatsApp() {
-  closeWhatsAppChoice();
-  // Reabre o modal
-  setTimeout(() => {
-    if (_whatsAppData) {
-      openWhatsAppChoice(_whatsAppData.tom.id, _whatsAppData.parcela);
-    }
-  }, 100);
+  const body = document.getElementById('whatsapp-choice-body');
+  if (_whatsAppOriginalContent) {
+    body.innerHTML = _whatsAppOriginalContent;
+  }
 }
 
 function confirmarEnvioWhatsApp() {
@@ -1557,6 +1566,7 @@ function confirmarEnvioWhatsApp() {
   const mensagemEncoded = encodeURIComponent(mensagem);
   
   window.open(`https://wa.me/55${numero}?text=${mensagemEncoded}`, '_blank');
+  _whatsAppData = null;
   closeWhatsAppChoice();
 }
 
