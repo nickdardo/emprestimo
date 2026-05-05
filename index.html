@@ -810,10 +810,18 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
     </div>
 
     <!-- BLOCO WHATSAPP -->
-    <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:var(--rs);padding:1rem;margin-bottom:1rem">
-      <div style="font-weight:700;font-size:13px;margin-bottom:.5rem">💬 WhatsApp (abre mensagem pronta)</div>
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);padding:1rem;margin-bottom:1rem">
+      <div style="font-weight:700;font-size:13px;margin-bottom:.5rem;color:var(--n1)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        WhatsApp (abre mensagem pronta)
+      </div>
+      <div class="fg" style="margin-bottom:.75rem">
+        <span class="lbl" style="color:var(--n3)">Número WhatsApp</span>
+        <input id="wa-num-input" placeholder="(91) 99999-0000" maxlength="15" oninput="maskTel(this)" inputmode="numeric" style="background:var(--card);color:var(--n1);border:1px solid var(--border)"/>
+      </div>
       <div class="fg">
-        <input id="wa-num-input" placeholder="(91) 99999-0000" maxlength="15" oninput="maskTel(this)" inputmode="numeric"/>
+        <span class="lbl" style="color:var(--n3)">Chave PIX (para mensagens automáticas)</span>
+        <input id="pix-input" placeholder="CPF, telefone, e-mail ou chave aleatória" style="background:var(--card);color:var(--n1);border:1px solid var(--border)"/>
       </div>
     </div>
 
@@ -821,7 +829,10 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
     <div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap">
       <button class="btn btn-g btn-sm" onclick="closeM('wa-modal')">Fechar</button>
       <button class="btn btn-sm" style="background:#DC2626;color:#fff" onclick="clearWaNumber()">Remover WA</button>
-      <button class="btn btn-sm" style="background:#2563EB;color:#fff" onclick="testarMensagemWa()">👁 Prévia WA</button>
+      <button class="btn btn-sm" style="background:#2563EB;color:#fff" onclick="testarMensagemWa()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        Prévia WA
+      </button>
       <button class="btn btn-sm" style="background:#16A34A;color:#fff" onclick="saveWaNumber()">Salvar WA</button>
     </div>
   </div>
@@ -4831,7 +4842,9 @@ function openWaModal(){
   desativarPulsoWa();
   try{
     const saved=localStorage.getItem('ep_wa_num')||'';
+    const savedPix=localStorage.getItem('ep_pix')||session?.pix||'';
     document.getElementById('wa-num-input').value=saved;
+    document.getElementById('pix-input').value=savedPix;
   }catch(e){}
   const box=document.getElementById('wa-preview-box');
   if(box)box.style.display='none';
@@ -4841,23 +4854,72 @@ function openWaModal(){
 
 function saveWaNumber(){
   const num=document.getElementById('wa-num-input').value.trim();
+  const pix=document.getElementById('pix-input').value.trim();
+  
   if(!num){toast('⚠ Informe o número',true);return;}
-  try{localStorage.setItem('ep_wa_num',num);}catch(e){}
+  
+  // Salva no localStorage
+  try{
+    localStorage.setItem('ep_wa_num',num);
+    if(pix) localStorage.setItem('ep_pix',pix);
+  }catch(e){}
+  
+  // Atualiza session
+  if(session){
+    session.contato=num;
+    if(pix) session.pix=pix;
+    saveSession(session);
+    
+    // Atualiza no banco de dados
+    (async()=>{
+      try{
+        const updates={contato:num};
+        if(pix) updates.pix=pix;
+        
+        await sbWithRetry(()=>sb.from('usuarios').update(updates).eq('id',session.id));
+        toast('✓ WhatsApp e PIX salvos!');
+      }catch(err){
+        console.error('Erro ao salvar:',err);
+        toast('✓ Salvo localmente!');
+      }
+    })();
+  }
+  
   const btn=document.getElementById('wa-nav-btn');
   const lbl=document.getElementById('wa-nav-label');
   if(btn)btn.classList.remove('unset');
   if(lbl)lbl.textContent=num;
   closeM('wa-modal');
-  toast('✓ WhatsApp salvo!');
 }
 
 function clearWaNumber(){
-  try{localStorage.removeItem('ep_wa_num');}catch(e){}
+  try{
+    localStorage.removeItem('ep_wa_num');
+    localStorage.removeItem('ep_pix');
+  }catch(e){}
+  
+  // Limpa da session
+  if(session){
+    session.contato='';
+    session.pix='';
+    saveSession(session);
+    
+    // Limpa do banco
+    (async()=>{
+      try{
+        await sbWithRetry(()=>sb.from('usuarios').update({contato:'',pix:''}).eq('id',session.id));
+      }catch(err){
+        console.error('Erro ao limpar:',err);
+      }
+    })();
+  }
+  
   const btn=document.getElementById('wa-nav-btn');
   const lbl=document.getElementById('wa-nav-label');
   if(btn)btn.classList.add('unset');
   if(lbl)lbl.textContent='Seu WhatsApp';
   document.getElementById('wa-num-input').value='';
+  document.getElementById('pix-input').value='';
   closeM('wa-modal');
   toast('WhatsApp removido');
 }
