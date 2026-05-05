@@ -1142,6 +1142,32 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   </div>
 </div>
 
+<!-- MODAL ESCOLHA WHATSAPP -->
+<div class="mbd" id="whatsapp-choice-modal" style="display:none" onclick="if(event.target===this)closeWhatsAppChoice()">
+  <div class="modal" style="max-width:480px">
+    <div class="mhdr"><span class="mtitle">💬 Enviar WhatsApp</span><button class="mclose" onclick="closeWhatsAppChoice()">✕</button></div>
+    <div class="mbody">
+      <div style="font-size:13px;color:var(--n3);margin-bottom:1.25rem">Escolha como deseja enviar a mensagem:</div>
+      
+      <button onclick="enviarWhatsAppManual()" class="btn btn-full" style="background:#F3F4F6;color:#1E293B;border:2px solid #E5E7EB;margin-bottom:.75rem;padding:1rem;text-align:left;display:flex;align-items:center;gap:.75rem;transition:all .2s" onmouseover="this.style.borderColor='#16A34A';this.style.background='#F0FDF4'" onmouseout="this.style.borderColor='#E5E7EB';this.style.background='#F3F4F6'">
+        <div style="font-size:1.5rem">✍️</div>
+        <div>
+          <div style="font-weight:700;font-size:14px">Envio Manual</div>
+          <div style="font-size:11px;color:var(--n4);margin-top:2px">Abre o WhatsApp sem mensagem pré-preenchida</div>
+        </div>
+      </button>
+
+      <button onclick="enviarWhatsAppAutomatico()" class="btn btn-full" style="background:#F0FDF4;color:#16A34A;border:2px solid #16A34A;padding:1rem;text-align:left;display:flex;align-items:center;gap:.75rem;transition:all .2s" onmouseover="this.style.background='#16A34A';this.style.color='#fff'" onmouseout="this.style.background='#F0FDF4';this.style.color='#16A34A'">
+        <div style="font-size:1.5rem">🤖</div>
+        <div>
+          <div style="font-weight:700;font-size:14px">Envio Automático</div>
+          <div style="font-size:11px;opacity:.8;margin-top:2px">Mensagem pronta com dados da parcela</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══ SUPABASE ══
 const SUPA_URL='https://abmwlhxdvfgnptmvtkla.supabase.co';
@@ -1404,6 +1430,77 @@ async function enviarRecuperacaoSenha(){
     btn.textContent='Enviar →';
     btn.disabled=false;
   }
+}
+
+// ══ WHATSAPP CHOICE ══
+let _whatsAppData = null;
+
+function openWhatsAppChoice(tomadorId, parcela = null) {
+  const tom = tomadores.find(t => t.id === tomadorId);
+  if (!tom || !tom.contato) {
+    toast('Cliente sem contato cadastrado', true);
+    return;
+  }
+  
+  _whatsAppData = { tom, parcela };
+  document.getElementById('whatsapp-choice-modal').style.display = 'flex';
+}
+
+function closeWhatsAppChoice() {
+  document.getElementById('whatsapp-choice-modal').style.display = 'none';
+  _whatsAppData = null;
+}
+
+function enviarWhatsAppManual() {
+  if (!_whatsAppData) return;
+  const numero = _whatsAppData.tom.contato.replace(/\D/g, '');
+  window.open(`https://wa.me/55${numero}`, '_blank');
+  closeWhatsAppChoice();
+}
+
+function enviarWhatsAppAutomatico() {
+  if (!_whatsAppData) return;
+  
+  const { tom, parcela } = _whatsAppData;
+  const numero = tom.contato.replace(/\D/g, '');
+  
+  // Pega a parcela mais próxima do vencimento se não foi especificada
+  let parcelaEscolhida = parcela;
+  if (!parcelaEscolhida) {
+    const hoje = new Date();
+    const parcelasPendentes = parcelas.filter(p => {
+      const emp = emprestimos.find(e => e.id === p.emprestimo_id);
+      return emp && emp.tomador_id === tom.id && p.status === 'pendente';
+    }).sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
+    
+    parcelaEscolhida = parcelasPendentes[0];
+  }
+  
+  if (!parcelaEscolhida) {
+    toast('Nenhuma parcela pendente encontrada', true);
+    return;
+  }
+  
+  // Busca a chave PIX do usuário logado
+  const chavePix = session.pix || session.contato || session.email || '[SUA_CHAVE_PIX]';
+  
+  // Monta a mensagem
+  const nome = tom.nome;
+  const valor = fmtR(parcelaEscolhida.valor);
+  const data = fmtDate(parcelaEscolhida.vencimento);
+  
+  const mensagem = `Olá ${nome},
+
+Você tem uma parcela de ${valor} com vencimento em ${data}.
+
+💳 Pix: ${chavePix}
+💵 Dinheiro: Combinar entrega
+
+Qualquer dúvida, estou aqui!`;
+  
+  const mensagemEncoded = encodeURIComponent(mensagem);
+  window.open(`https://wa.me/55${numero}?text=${mensagemEncoded}`, '_blank');
+  closeWhatsAppChoice();
 }
 
 // ══ SIDEBAR ══
@@ -2896,7 +2993,7 @@ function openClientView(tomId){
         <div style="font-size:12px;color:var(--n4);margin-top:2px">${tom.contato?`${tom.contato} · `:''} ${empsDoTom.length} empréstimo${empsDoTom.length!==1?'s':''}</div>
       </div>
       <div style="display:flex;gap:.4rem;align-items:center">
-        ${tom.contato?`<a href="https://wa.me/55${tom.contato.replace(/\D/g,'')}" target="_blank" class="btn btn-sm" style="background:#16A34A;color:#fff;font-size:12px;padding:.3rem .7rem;text-decoration:none">💬 WhatsApp</a>`:''}
+        ${tom.contato?`<button onclick="openWhatsAppChoice('${tom.id}')" class="btn btn-sm" style="background:#16A34A;color:#fff;font-size:12px;padding:.3rem .7rem;cursor:pointer;border:none">💬 WhatsApp</button>`:''}
         <button class="btn btn-g btn-sm" style="font-size:12px" onclick="printFicha('${tom.id}')">🖨 Imprimir</button>
         <button onclick="document.getElementById('client-view-modal').remove()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--n4)">✕</button>
       </div>
