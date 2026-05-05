@@ -1,7 +1,3 @@
-// ══ SUPABASE ══
-const SUPA_URL='https://abmwlhxdvfgnptmvtkla.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFibXdsaHhkdmZnbnB0bXZ0a2xhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NjU2NzQsImV4cCI6MjA5MTU0MTY3NH0.rHxMXklvuy1uktseEWAkPRp4cdvVlzl_mx97fAvKZY0';
-const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 
 // ══ SESSÃO ══
 const TIMEOUT_MS=10*60*1000;
