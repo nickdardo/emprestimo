@@ -1,0 +1,27 @@
+{
+  "name": "GEPainel",
+  "short_name": "GEPainel",
+  "description": "Sistema de gestão de empréstimos, parcelas e clientes.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07020F",
+  "theme_color": "#0F0B1F",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"]
+}
