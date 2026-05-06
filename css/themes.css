@@ -1,0 +1,209 @@
+/* ════════════════════════════════════════════════════════════════
+   THEMES — Overrides de dark mode e light mode (data-theme)
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── DARK MODE OVERRIDES ── */
+body.dark .sidebar{background:var(--bg);border-color:var(--border)}
+body.dark .sidebar-footer{border-color:var(--border)}
+body.dark .sidebar-item:hover{background:var(--card)}
+body.dark .sidebar-item.active{background:var(--card)}
+body.dark .card,.dark .stat,.dark .modal{background:var(--card)!important;border-color:var(--border)!important}
+body.dark input,body.dark select,body.dark textarea{background:var(--card2);border-color:var(--border);color:var(--n1)}
+body.dark input:focus,body.dark select:focus,body.dark textarea:focus{border-color:var(--primary)!important;outline:none;box-shadow:0 0 0 3px rgba(255,183,77,.15)!important}
+body.dark select option{background:var(--card);color:var(--n1)}
+body.dark select:focus{border-color:var(--primary)}
+body.dark input::placeholder,body.dark textarea::placeholder{color:var(--n4)}
+body.dark .modal{background:var(--card)!important;color:var(--n1)}
+body.dark .mbody{color:var(--n1)}
+body.dark .lbl{color:var(--n3)}
+body.dark .msec{color:var(--primary)}
+body.dark .login-card{background:#1E293B;color:#F1F5F9}
+body.dark .login-field input{background:#0F172A!important;border-color:#475569;color:#F1F5F9!important;-webkit-text-fill-color:#F1F5F9!important}
+body.dark .login-field input:focus{border-color:#EA580C!important;box-shadow:0 0 0 2px rgba(234,88,12,.3)!important;outline:none!important}
+body.dark .login-field input:-webkit-autofill,
+body.dark .login-field input:-webkit-autofill:hover,
+body.dark .login-field input:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px #0F172A inset!important;-webkit-text-fill-color:#F1F5F9!important}
+body.dark .wa-modal-inner{background:var(--card);color:var(--n1)}
+body.dark .gsearch-box{background:var(--card)}
+body.dark .gsearch-row{border-color:var(--border)}
+body.dark .gsearch-row input{color:var(--n1);background:transparent}
+body.dark .gsearch-item{border-color:var(--border)}
+body.dark .gsearch-item:hover{background:var(--card2)}
+body.dark .gsearch-empty{color:var(--n4)}
+body.dark .emp-tipo-desc{background:var(--card2);border-color:var(--border)}
+body.dark #notif-perm-msg{color:var(--n3)}
+body.dark .tbl-wrap{border-color:var(--border)}
+body.dark table thead th{background:var(--card);border-color:var(--border)}
+body.dark tbody tr{border-color:var(--border)}
+body.dark tbody tr:hover{background:var(--card)}
+body.dark .mhdr,.dark .mfooter{border-color:#334155!important}
+body.dark .logout-btn{border-color:#334155;color:#94A3B8}
+body.dark .warn-box{background:#1A1003;border-color:#78350F}
+body.dark .info-box{background:#1C0E04;border-color:#431407}
+.dark-btn{background:transparent;border:1px solid #374151;color:#9CA3AF;width:30px;height:30px;border-radius:var(--rs);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+
+/* ── LIGHT MODE OVERRIDES ── */
+html[data-theme="light"] body{background:#F8FAFC;color:#0F172A}
+/* Nav */
+html[data-theme="light"] .nav{background:#fff;border-color:#E2E8F0}
+html[data-theme="light"] .nav-brand{color:#0F172A}
+html[data-theme="light"] .hamburger span{background:#0F172A}
+html[data-theme="light"] .nav-user{color:#475569}
+html[data-theme="light"] .nav-badge{background:#F1F5F9;color:#475569;border-color:#E2E8F0}
+html[data-theme="light"] .dark-btn,html[data-theme="light"] .search-nav-btn,html[data-theme="light"] .logout-btn{border-color:#E2E8F0;color:#475569;background:transparent}
+html[data-theme="light"] .dark-btn:hover,html[data-theme="light"] .search-nav-btn:hover,html[data-theme="light"] .logout-btn:hover{background:#F1F5F9;color:#0F172A}
+/* Sidebar */
+html[data-theme="light"] .sidebar{background:#fff;border-color:#E2E8F0}
+html[data-theme="light"] .sidebar-section{color:#CBD5E1}
+html[data-theme="light"] .sidebar-item{color:#475569}
+html[data-theme="light"] .sidebar-item:hover{background:rgba(0,200,150,.08);color:#0F172A}
+html[data-theme="light"] .sidebar-item.active{background:rgba(0,200,150,.1);color:var(--grn);border-right-color:var(--grn)}
+html[data-theme="light"] .sidebar-footer{border-color:#E2E8F0;color:#94A3B8}
+/* Cards e Stats */
+html[data-theme="light"] .stat,html[data-theme="light"] .card{background:#fff!important;border-color:#E2E8F0!important}
+html[data-theme="light"] .stat-value{color:#0F172A}
+html[data-theme="light"] .stat-label,html[data-theme="light"] .stat-sub{color:#94A3B8}
+/* Tabela */
+html[data-theme="light"] .tbl-wrap{border-color:#E2E8F0}
+html[data-theme="light"] thead th{background:#F8FAFC;border-color:#E2E8F0;color:#64748B}
+html[data-theme="light"] tbody tr{border-color:#F1F5F9}
+html[data-theme="light"] tbody tr:hover{background:#F0FDF4}
+html[data-theme="light"] tbody td{color:#0F172A}
+html[data-theme="light"] th.sortable:hover{background:#F1F5F9;color:#0F172A}
+/* Inputs */
+html[data-theme="light"] input,html[data-theme="light"] select,html[data-theme="light"] textarea{background:#fff;border-color:#E2E8F0;color:#0F172A}
+html[data-theme="light"] input:focus,html[data-theme="light"] select:focus,html[data-theme="light"] textarea:focus{border-color:var(--grn)}
+html[data-theme="light"] input::placeholder,html[data-theme="light"] textarea::placeholder{color:#CBD5E1}
+html[data-theme="light"] select option{background:#fff;color:#0F172A}
+/* Modais */
+html[data-theme="light"] .modal{background:#fff!important;border-color:#E2E8F0!important}
+html[data-theme="light"] .mhdr,html[data-theme="light"] .mfooter{border-color:#E2E8F0!important;background:#fff}
+html[data-theme="light"] .mtitle{color:#0F172A}
+html[data-theme="light"] .mclose{color:#94A3B8}
+html[data-theme="light"] .mclose:hover{background:#F1F5F9}
+html[data-theme="light"] .msec{border-color:#F1F5F9;color:var(--grn)}
+html[data-theme="light"] .mbody{color:#0F172A}
+html[data-theme="light"] .parc-row{border-color:#F1F5F9}
+/* Botões */
+html[data-theme="light"] .btn-g{border-color:#E2E8F0;color:#475569}
+html[data-theme="light"] .btn-g:hover{background:#F8FAFC}
+html[data-theme="light"] .btn-p{background:#0F172A}
+html[data-theme="light"] .btn-p:hover{background:#1E293B}
+/* Pills */
+html[data-theme="light"] .pill{background:#F8FAFC;border-color:#E2E8F0;color:#475569}
+html[data-theme="light"] .pill:hover{border-color:#94A3B8;color:#0F172A}
+html[data-theme="light"] .pill.active{background:#0F172A;border-color:#0F172A;color:#fff}
+/* Labels e textos */
+html[data-theme="light"] .lbl{color:#475569}
+html[data-theme="light"] .sec-title,html[data-theme="light"] .card-title,html[data-theme="light"] .mtitle{color:#0F172A}
+html[data-theme="light"] .empty-text{color:#475569}
+/* Bottom nav */
+html[data-theme="light"] #bottom-nav{background:#fff;border-color:#E2E8F0}
+html[data-theme="light"] .bnav-item{color:#94A3B8}
+html[data-theme="light"] .bnav-item.active{color:var(--grn)}
+/* WA Modal */
+html[data-theme="light"] .wa-modal-inner{background:#fff;color:#0F172A}
+/* Busca global */
+html[data-theme="light"] .gsearch-box{background:#fff}
+html[data-theme="light"] .gsearch-row{border-color:#E2E8F0}
+html[data-theme="light"] .gsearch-row input{color:#0F172A}
+html[data-theme="light"] .gsearch-item{border-color:#F1F5F9}
+html[data-theme="light"] .gsearch-item:hover{background:#F0FDF4}
+html[data-theme="light"] .gsearch-empty{color:#94A3B8}
+/* Desc tipo empréstimo */
+html[data-theme="light"] .emp-tipo-desc{background:#FFF7ED;border-color:#FED7AA;color:#9A3412}
+/* Info/warn boxes */
+html[data-theme="light"] .info-box{background:#FFF7ED;border-color:#FED7AA;color:#9A3412}
+html[data-theme="light"] .warn-box{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:#78350F}
+/* Sim cells */
+html[data-theme="light"] .sim-cell{background:#F8FAFC;border-color:#E2E8F0;color:#0F172A}
+html[data-theme="light"] .sim-cell.highlight{background:rgba(0,200,150,.1);color:var(--grn)}
+html[data-theme="light"] .sim-cell.total-col{background:#ECFDF5;color:var(--grn)}
+/* Modais dinâmicos gerados via JS (inline styles #fff / #F9FAFB) */
+html[data-theme="light"] .mbd > div,
+html[data-theme="light"] #client-view-modal > div,
+html[data-theme="light"] [id^="confirm-pay-"] > div,
+html[data-theme="light"] [id^="import-preview-modal"] > div{background:#fff!important;color:#0F172A!important}
+html[data-theme="light"] .mbd > div div[style*="background:#F9FAFB"],
+html[data-theme="light"] .mbd > div div[style*="background:#FAFAFA"],
+html[data-theme="light"] .mbd > div div[style*="background:#F3F4F6"]{background:#F8FAFC!important}
+html[data-theme="light"] .mbd > div div[style*="color:#6B7280"],
+html[data-theme="light"] .mbd > div span[style*="color:#6B7280"]{color:#475569!important}
+html[data-theme="light"] .mbd > div div[style*="border:1px solid #E5E7EB"]{border-color:#E2E8F0!important}
+/* Botão consignado não selecionado em light mode */
+html[data-theme="light"] #btn-tipo-consig:not([style*="background:#EA580C"]){background:#F8FAFC!important;color:#475569!important;border-color:#E2E8F0!important}
+
+/* ── DARK MODE — MODAIS DINÂMICOS ── */
+/* ── DARK MODE — MODAIS DINÂMICOS ───────────────────────── */
+body.dark .client-view-modal-inner,
+body.dark #client-view-modal > div,
+body.dark [id^="confirm-pay-"] > div,
+body.dark [id^="import-preview-modal"] > div {
+  background:#1E293B!important;
+  color:#F1F5F9!important;
+}
+body.dark #client-view-modal > div *,
+body.dark [id^="confirm-pay-"] > div *{
+  border-color:#334155!important;
+}
+/* Sticky header do client-view */
+body.dark #client-view-modal div[style*="position:sticky"],
+body.dark #client-view-modal div[style*="background:#fff"],
+body.dark [id^="confirm-pay-"] div[style*="background:#fff"],
+body.dark [id^="confirm-pay-"] div[style*="background:#F9FAFB"],
+body.dark [id^="import-preview-modal"] div[style*="background:#fff"]{
+  background:#1E293B!important;
+  color:#F1F5F9!important;
+}
+body.dark #client-view-modal div[style*="background:#F9FAFB"],
+body.dark #client-view-modal div[style*="background:#FAFAFA"],
+body.dark #client-view-modal div[style*="background:#F3F4F6"],
+body.dark #client-view-modal div[style*="background:#EFF6FF"]{
+  background:#0F172A!important;
+}
+body.dark #client-view-modal div[style*="border:1px solid #E5E7EB"]{
+  border-color:#334155!important;
+}
+/* Cores de texto nos modais dinâmicos */
+body.dark #client-view-modal span[style*="color:#6B7280"],
+body.dark #client-view-modal span[style*="color:var(--n4)"],
+body.dark #client-view-modal div[style*="color:var(--n4)"],
+body.dark #client-view-modal div[style*="color:var(--n3)"],
+body.dark #client-view-modal div[style*="color:#374151"]{
+  color:#94A3B8!important;
+}
+body.dark #client-view-modal div[style*="color:var(--n1)"],
+body.dark #client-view-modal div[style*="color:var(--n2)"],
+body.dark #client-view-modal span[style*="color:var(--n2)"]{
+  color:#F1F5F9!important;
+}
+/* Barra de progresso */
+body.dark #client-view-modal div[style*="background:#E5E7EB"]{
+  background:#334155!important;
+}
+/* Parcela rows */
+body.dark #parc-modal .mbody div[style*="background:#FAFAFA"],
+body.dark #parc-modal .mbody div[style*="background:#F9FAFB"]{
+  background:#0F172A!important;
+}
+body.dark #parc-modal .mbody div[style*="background:#F0FDF4"]{
+  background:#052e16!important;
+}
+body.dark #parc-modal .mbody div[style*="background:#FEF2F2"]{
+  background:#2d0707!important;
+}
+
+/* ── WHATSAPP GESTOR ────────────────────────────────────────── */
+
+/* ── BADGES DE PLANOS ── */
+/* Badges de Planos */
+.nav-badge.badge-bronze{background:linear-gradient(135deg,#CD7F32 0%,#A0522D 100%);color:#fff;border:none}
+.nav-badge.badge-prata{background:linear-gradient(135deg,#C0C0C0 0%,#A8A8A8 100%);color:#fff;border:none}
+.nav-badge.badge-ouro{background:linear-gradient(135deg,#FFD700 0%,#DAA520 100%);color:#fff;border:none}
+.nav-badge.badge-platinum{background:linear-gradient(135deg,#E5E4E2 0%,#B8B8B8 100%);color:#1F2937;border:none;font-weight:800}
+.nav-badge.badge-diamante{background:linear-gradient(135deg,#60A5FA 0%,#818CF8 60%,#C084FC 100%);color:#fff;border:none;font-weight:800;box-shadow:0 0 8px rgba(129,140,248,.45)}
+.nav-badge.badge-vitalicio{background:linear-gradient(135deg,#059669 0%,#10B981 100%);color:#fff;border:none;font-weight:700}
+
+
+/* ── PULSE-DOT (animação) ── */
+/* ── NAV MOBILE OVERFLOW FIX ── */
