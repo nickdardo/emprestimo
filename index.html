@@ -377,7 +377,7 @@
           <span class="lbl">Cliente *</span>
           <div style="display:flex;gap:.5rem">
             <select id="emp-tom" style="flex:1" onchange="updateEmpCalc()"><option value="">Selecione ou crie</option></select>
-            <button class="btn btn-g btn-sm" onclick="openTomModal(null)" style="z-index:250;position:relative">+ Novo Cliente</button>
+            <button onclick="openTomModal(null)" style="background:#EA580C;border:2px dashed #FB923C;color:#fff;padding:.55rem 1rem;border-radius:var(--rs);font-family:var(--FB);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;white-space:nowrap;transition:all .15s;z-index:250;position:relative" onmouseenter="this.style.background='#C2410C';this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='#EA580C';this.style.transform='translateY(0)'"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Cliente</button>
           </div>
         </div>
         <div class="fg"><span class="lbl">Responsável</span><input id="emp-resp" placeholder="Ex: Nicole"/></div>
