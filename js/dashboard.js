@@ -46,7 +46,7 @@ function renderDashboard(){
       <div style="display:flex;align-items:center;gap:.75rem">
         ${voltarBtn}
         <span class="sec-title">${userAtivo ? userAtivo.nome.split(' ')[0] : 'Dashboard'}</span>
-        ${userAtivo ? getPlanBadgeHTML(userAtivo) : ''}
+        ${userAtivo ? '<span class="role-tag">Credor</span>' : ''}
       </div>
       <div style="display:flex;gap:.5rem">
         <button class="btn btn-grn btn-sm" onclick="openEmpModal(null)">+ Novo Empréstimo</button>
