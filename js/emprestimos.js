@@ -511,10 +511,12 @@ function empTbodyHTML(list){
   if(!list.length)return'<tr><td colspan="12"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>';
   const ativos=list.filter(e=>!isEmprestimoQuitado(e));
   const quitados=list.filter(e=>isEmprestimoQuitado(e));
-  let html=ativos.map((e,i)=>_empRow(e,i+1)).join('');
+  const total=ativos.length+quitados.length;
+  // Numeração invertida: o item do topo recebe o maior número e decresce até 1 no final.
+  let html=ativos.map((e,i)=>_empRow(e,total-i)).join('');
   if(quitados.length){
     html+='<tr><td colspan="12" style="padding:.65rem 1rem;background:rgba(0,200,150,.06);border-top:2px solid rgba(0,200,150,.3);border-bottom:1px solid rgba(0,200,150,.2)"><div style="display:flex;align-items:center;gap:.5rem"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#00C896\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg><span style=\"font-size:11px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.05em\">Quitados ('+quitados.length+')</span></div></td></tr>';
-    html+=quitados.map((e,i)=>{const row=_empRow(e,ativos.length+i+1);return row.replace('<tr id=','<tr style="opacity:.6" id=');}).join('');
+    html+=quitados.map((e,i)=>{const row=_empRow(e,quitados.length-i);return row.replace('<tr id=','<tr style="opacity:.6" id=');}).join('');
   }
   return html||'<tr><td colspan="12"><div class="empty"><div class="empty-text">Nenhum empréstimo.</div></div></td></tr>';
 }
