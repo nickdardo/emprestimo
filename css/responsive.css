@@ -18,7 +18,9 @@
   .stats{grid-template-columns:1fr 1fr}
   .fgrid{grid-template-columns:1fr}
   .full{grid-column:1}
-  .nav-user{display:none}
+  /* Em mobile, mantém o badge "Ouro · 132d" visível e esconde apenas avatar+nome */
+  .nav-user .nav-avatar,
+  .nav-user #nav-name{display:none}
 }
 
 /* MAX 768 — Nav esconde itens secundários */
