@@ -183,7 +183,7 @@ function _tomRow(t,i){
   const emps=emprestimos.filter(e=>e.tomador_id===t.id);
   const totalEmprestado=emps.reduce((s,e)=>s+Number(e.valor||0),0);
   return`<tr>
-    <td style="color:var(--n4);font-size:12px">${i+1}</td>
+    <td style="color:var(--n4);font-size:12px">${i}</td>
     <td style="font-weight:600">${t.nome}</td>
     <td style="color:var(--n3)">${t.contato?`<a href="https://wa.me/55${t.contato.replace(/\D/g,'')}" target="_blank" style="color:var(--grn);text-decoration:none">${t.contato}</a>`:'—'}</td>
     <td class="hide-mobile" style="color:var(--n3)">${t.ocupacao||'—'}</td>
@@ -209,11 +209,11 @@ function tomTbodyHTML(list){
   const quitados=list.filter(t=>_isClienteQuitado(t));
   
   let html='';
-  // Ativos
+  // Ativos — numeração invertida (topo recebe o maior número, decresce até 1)
   if(ativos.length){
-    html+=ativos.map((t,i)=>_tomRow(t,i+1)).join('');
+    html+=ativos.map((t,i)=>_tomRow(t,ativos.length-i)).join('');
   }
-  // Separador + Quitados
+  // Separador + Quitados (contagem independente, também invertida)
   if(quitados.length){
     html+=`<tr><td colspan="7" style="padding:.75rem 1rem;background:#F0FDF4;border-top:2px solid #D1FAE5;border-bottom:1px solid #D1FAE5">
       <div style="display:flex;align-items:center;gap:.5rem">
@@ -222,7 +222,7 @@ function tomTbodyHTML(list){
       </div>
     </td></tr>`;
     html+=quitados.map((t,i)=>{
-      const row=_tomRow(t,ativos.length+i+1);
+      const row=_tomRow(t,quitados.length-i);
       return row.replace('<tr>',`<tr style="opacity:.7">`);
     }).join('');
   }
