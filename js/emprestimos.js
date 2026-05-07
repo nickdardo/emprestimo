@@ -456,7 +456,7 @@ function _empRow(e,i){
   const labelSaldo=saldoAtual===0?'Quitado':fmtR(saldoAtual);
     return`<tr id="row-${e.id}">
       <td class="chk-cell" style="display:none;text-align:center"><input type="checkbox" class="emp-chk" value="${e.id}" onchange="onChkChange()"/></td>
-      <td style="color:var(--n4);font-size:12px">${i+1}</td>
+      <td style="color:var(--n4);font-size:12px">${i}</td>
       <td style="font-weight:600">${tom?.nome||'—'}</td>
       <td class="hide-mobile" style="color:var(--n3)">${e.responsavel||'—'}</td>
       <td class="hide-mobile" style="color:var(--n3)">${e.garantia||'—'}</td>
