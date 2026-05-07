@@ -191,3 +191,70 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   border-radius:999px;
   white-space:nowrap;
 }
+
+/* Ícone de informação dos cards do dashboard + tooltip explicativo */
+.stat-info{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:14px;
+  height:14px;
+  margin-left:4px;
+  vertical-align:middle;
+  color:var(--n4);
+  cursor:help;
+  position:relative;
+  opacity:.45;
+  transition:opacity .15s, color .15s;
+}
+.stat-info:hover{opacity:1;color:var(--grn)}
+.stat-info::after{
+  content:attr(data-tip);
+  position:absolute;
+  bottom:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%);
+  background:#1F2937;
+  color:#F9FAFB;
+  font-size:11px;
+  font-weight:500;
+  font-family:var(--FB);
+  line-height:1.5;
+  letter-spacing:0;
+  text-transform:none;
+  text-align:left;
+  padding:.55rem .7rem;
+  border-radius:6px;
+  width:max-content;
+  max-width:240px;
+  white-space:normal;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .15s, visibility .15s;
+  z-index:50;
+  box-shadow:0 4px 12px rgba(0,0,0,.35);
+}
+.stat-info::before{
+  content:'';
+  position:absolute;
+  bottom:calc(100% + 3px);
+  left:50%;
+  transform:translateX(-50%);
+  border:5px solid transparent;
+  border-top-color:#1F2937;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .15s, visibility .15s;
+  z-index:50;
+}
+.stat-info:hover::after, .stat-info:hover::before,
+.stat-info.show-tt::after, .stat-info.show-tt::before{
+  opacity:1;
+  visibility:visible;
+}
+/* Em mobile o tooltip pode estourar nas bordas — limita largura e ajusta posição */
+@media(max-width:600px){
+  .stat-info::after{max-width:200px;font-size:10.5px}
+}
