@@ -27,10 +27,13 @@ function renderDashboard(){
     return ep.length===0||ep.some(p=>p.status==='pendente');
   });
   const totalEmp = empsAtivos.reduce((s,e)=>s+Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0),0);
-  const totalLucro = emps.reduce((s,e)=>s+Number(e.lucro||0),0);
+  // Lucro Esperado: soma apenas dos ativos (lucro que ainda vai entrar)
+  const totalLucro = empsAtivos.reduce((s,e)=>s+Number(e.lucro||0),0);
   const pRecebido  = parcs.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor||0),0);
   const pPendente  = parcs.filter(p=>p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);
   const atrasadas  = parcs.filter(p=>isAtrasada(p));
+  // Pendentes que ainda vão vencer (não estão atrasadas) — para subtítulo do card
+  const aVencer    = parcs.filter(p=>p.status==='pendente'&&!isAtrasada(p));
   const vencHoje   = parcs.filter(p=>p.status==='pendente'&&p.vencimento===today());
 
   // Sobrescreve variáveis locais para reusar nos cards
@@ -53,10 +56,10 @@ function renderDashboard(){
       </div>
     </div>
     <div class="stats">
-      <div class="stat"><div class="stat-label">Total Emprestado</div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${empsAtivos.length} em aberto</div></div>
-      <div class="stat"><div class="stat-label">Lucro Esperado</div><div class="stat-value" style="color:var(--grn)">${fmtR(totalLucro)}</div><div class="stat-sub">em juros</div></div>
-      <div class="stat"><div class="stat-label">Recebido</div><div class="stat-value" style="color:var(--grn)">${fmtR(pRecebido)}</div><div class="stat-sub">em parcelas pagas</div></div>
-      <div class="stat"><div class="stat-label">Próximas Parcelas</div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${parcs.filter(p=>p.status==='pendente').length} parcelas</div></div>
+      <div class="stat"><div class="stat-label">Total Emprestado <span class="stat-info" data-tip="Capital ativo na rua: soma do saldo devedor dos empréstimos que ainda têm parcelas pendentes. Não inclui quitados." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${empsAtivos.length} em aberto</div></div>
+      <div class="stat"><div class="stat-label">Lucro Esperado <span class="stat-info" data-tip="Quanto você ainda vai ganhar nos empréstimos ativos: soma do lucro previsto (juros) dos empréstimos com parcelas em aberto." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--grn)">${fmtR(totalLucro)}</div><div class="stat-sub">em juros</div></div>
+      <div class="stat"><div class="stat-label">Recebido <span class="stat-info" data-tip="Dinheiro que já entrou no caixa: soma das parcelas (juros e consignados) com status pago." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--grn)">${fmtR(pRecebido)}</div><div class="stat-sub">em parcelas pagas</div></div>
+      <div class="stat"><div class="stat-label">Próximas Parcelas <span class="stat-info" data-tip="Quanto está agendado para entrar: soma de todas as parcelas pendentes. O subtítulo separa as que ainda vão vencer das que já estão atrasadas." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${aVencer.length} a vencer${atrasadas.length?` · <span style="color:var(--red);font-weight:600">${atrasadas.length} em atraso</span>`:''}</div></div>
     </div>
     ${(()=>{
       const hoje=new Date();hoje.setHours(0,0,0,0);
