@@ -259,22 +259,25 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   .stat-info::after{max-width:200px;font-size:10.5px}
 }
 
-/* Ícone de info nos cards de stat — área clicável maior */
+/* Ícone de info nos cards de stat — posicionado no canto superior direito */
+.stat{position:relative}
 .stat-info{
+  position:absolute;
+  top:.6rem;
+  right:.6rem;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:20px;
-  height:20px;
-  margin-left:6px;
+  width:24px;
+  height:24px;
   border-radius:50%;
   background:var(--card2);
   color:var(--n4);
   cursor:pointer;
-  vertical-align:-4px;
   transition:all .15s;
   border:1px solid var(--border);
   user-select:none;
+  z-index:2;
 }
 .stat-info:hover,.stat-info.active{
   color:var(--grn);
@@ -282,3 +285,5 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
   background:transparent;
 }
 .stat-info svg{display:block;pointer-events:none}
+/* Espaço extra à direita do label para não colidir com o botão de info */
+.stat .stat-label{padding-right:30px}
