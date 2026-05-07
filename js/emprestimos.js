@@ -316,7 +316,14 @@ function renderEmprestimos(){
       </table>
     </div>`;
   // Aplica filtro padrão (esconde quitados quando _empFilter='todos')
-  setTimeout(()=>{try{filterEmp();}catch(e){}},0);
+  // e marca visualmente a coluna ativa de ordenação (Data ↓ por padrão).
+  setTimeout(()=>{
+    try{
+      const th=document.getElementById('th-sort-'+_empSort.col);
+      if(th){th.classList.remove('asc','desc');th.classList.add(_empSort.dir);}
+      filterEmp();
+    }catch(e){}
+  },0);
 }
 
 

@@ -28,7 +28,7 @@ let _dashUserId = null; // null = todos (admin), ou id do usuário filtrado
 
 // ── EMPRÉSTIMOS ──
 let _selectMode = false;
-let _empSort = {col:null, dir:'asc'};
+let _empSort = {col:'data', dir:'desc'};
 let _tomSort = {col:null, dir:'asc'};
 let _empFilter = 'todos';
 let _empTipo = 'juros';
