@@ -258,3 +258,27 @@ th.sortable.asc,th.sortable.desc{color:var(--grn)}
 @media(max-width:600px){
   .stat-info::after{max-width:200px;font-size:10.5px}
 }
+
+/* Ícone de info nos cards de stat — área clicável maior */
+.stat-info{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  margin-left:6px;
+  border-radius:50%;
+  background:var(--card2);
+  color:var(--n4);
+  cursor:pointer;
+  vertical-align:-4px;
+  transition:all .15s;
+  border:1px solid var(--border);
+  user-select:none;
+}
+.stat-info:hover,.stat-info.active{
+  color:var(--grn);
+  border-color:var(--grn);
+  background:transparent;
+}
+.stat-info svg{display:block;pointer-events:none}
