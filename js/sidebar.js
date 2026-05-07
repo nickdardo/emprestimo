@@ -151,7 +151,7 @@ function buildSidebar(){
         <div id="calc-expr" style="text-align:right;font-size:10px;color:var(--n4);margin-bottom:.5rem;min-height:14px"></div>
         <div id="calc-btns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px"></div>
       </div>
-      <div id="cal-popup" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;margin-bottom:.5rem">
+      <div id="cal-popup" style="display:block;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem;margin-bottom:.5rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
           <button onclick="calNav(-1)" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;color:var(--n1);padding:.3rem .75rem;font-size:18px;font-weight:700;line-height:1;transition:all .15s;min-width:36px" onmouseover="this.style.borderColor='var(--grn)';this.style.color='var(--grn)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--n1)'">‹</button>
           <span id="cal-title" style="font-size:12px;font-weight:700;color:var(--n1)"></span>
@@ -160,7 +160,9 @@ function buildSidebar(){
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center" id="cal-grid"></div>
       </div>
     </div>
-    <div class="sidebar-footer">GEPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`
+    <div class="sidebar-footer">GEPainel v1.0<br><span style="color:var(--n4)">Desenvolvido por Eduardo Ribeiro</span></div>`;
+  // Renderiza o calendário já abrindo por padrão (popup começa com display:block)
+  try{renderCal();}catch(e){}
 }
 
 function showPage(p){
