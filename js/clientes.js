@@ -148,7 +148,6 @@ function renderTomadores(){
     <div class="tbl-wrap">
       <table>
         <thead id="tom-thead"><tr>
-          <th style="width:36px">Nº</th>
           <th class="sortable" id="th-tom-nome" onclick="sortTom('nome')">Nome<span class="sort-icon"></span></th>
           <th class="sortable" id="th-tom-contato" onclick="sortTom('contato')">Contato<span class="sort-icon"></span></th>
           <th class="hide-mobile sortable" id="th-tom-ocupacao" onclick="sortTom('ocupacao')">Ocupação<span class="sort-icon"></span></th>
@@ -183,8 +182,7 @@ function _tomRow(t,i){
   const emps=emprestimos.filter(e=>e.tomador_id===t.id);
   const totalEmprestado=emps.reduce((s,e)=>s+Number(e.valor||0),0);
   return`<tr>
-    <td style="color:var(--n4);font-size:12px">${i}</td>
-    <td style="font-weight:600">${t.nome}</td>
+    <td style="font-weight:600"><span style="cursor:pointer;color:var(--n1);transition:color .15s" onclick="openClientView('${t.id}')" onmouseenter="this.style.color='var(--grn)'" onmouseleave="this.style.color='var(--n1)'" title="Ver detalhes do cliente">${t.nome} <span style="font-size:11px;color:var(--grn)">→</span></span></td>
     <td style="color:var(--n3)">${t.contato?`<a href="https://wa.me/55${t.contato.replace(/\D/g,'')}" target="_blank" style="color:var(--grn);text-decoration:none">${t.contato}</a>`:'—'}</td>
     <td class="hide-mobile" style="color:var(--n3)">${t.ocupacao||'—'}</td>
     <td style="font-weight:600;color:var(--blu)">${emps.length}</td>
@@ -203,26 +201,26 @@ function _isClienteQuitado(t){
 }
 
 function tomTbodyHTML(list){
-  if(!list.length)return`<tr><td colspan="8"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum cliente.</div></div></td></tr>`;
+  if(!list.length)return`<tr><td colspan="6"><div class="empty"><div style="font-size:2rem;margin-bottom:.5rem;color:var(--n5)">—</div><div class="empty-text">Nenhum cliente.</div></div></td></tr>`;
   
   const ativos=list.filter(t=>!_isClienteQuitado(t));
   const quitados=list.filter(t=>_isClienteQuitado(t));
   
   let html='';
-  // Ativos — numeração invertida (topo recebe o maior número, decresce até 1)
+  // Ativos
   if(ativos.length){
-    html+=ativos.map((t,i)=>_tomRow(t,ativos.length-i)).join('');
+    html+=ativos.map(t=>_tomRow(t)).join('');
   }
-  // Separador + Quitados (contagem independente, também invertida)
+  // Separador + Quitados
   if(quitados.length){
-    html+=`<tr><td colspan="7" style="padding:.75rem 1rem;background:#F0FDF4;border-top:2px solid #D1FAE5;border-bottom:1px solid #D1FAE5">
+    html+=`<tr><td colspan="6" style="padding:.75rem 1rem;background:#F0FDF4;border-top:2px solid #D1FAE5;border-bottom:1px solid #D1FAE5">
       <div style="display:flex;align-items:center;gap:.5rem">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         <span style="font-size:12px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.05em">Quitados (${quitados.length})</span>
       </div>
     </td></tr>`;
-    html+=quitados.map((t,i)=>{
-      const row=_tomRow(t,quitados.length-i);
+    html+=quitados.map(t=>{
+      const row=_tomRow(t);
       return row.replace('<tr>',`<tr style="opacity:.7">`);
     }).join('');
   }
