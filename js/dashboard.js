@@ -56,10 +56,10 @@ function renderDashboard(){
       </div>
     </div>
     <div class="stats">
-      <div class="stat"><div class="stat-label">Total Emprestado <span class="stat-info" data-tip="Capital ativo na rua: soma do saldo devedor dos empréstimos que ainda têm parcelas pendentes. Não inclui quitados." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${empsAtivos.length} em aberto</div></div>
-      <div class="stat"><div class="stat-label">Lucro Esperado <span class="stat-info" data-tip="Quanto você ainda vai ganhar nos empréstimos ativos: soma do lucro previsto (juros) dos empréstimos com parcelas em aberto." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--grn)">${fmtR(totalLucro)}</div><div class="stat-sub">em juros</div></div>
-      <div class="stat"><div class="stat-label">Recebido <span class="stat-info" data-tip="Dinheiro que já entrou no caixa: soma das parcelas (juros e consignados) com status pago." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--grn)">${fmtR(pRecebido)}</div><div class="stat-sub">em parcelas pagas</div></div>
-      <div class="stat"><div class="stat-label">Próximas Parcelas <span class="stat-info" data-tip="Quanto está agendado para entrar: soma de todas as parcelas pendentes. O subtítulo separa as que ainda vão vencer das que já estão atrasadas." onclick="this.classList.toggle('show-tt')"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${aVencer.length} a vencer${atrasadas.length?` · <span style="color:var(--red);font-weight:600">${atrasadas.length} em atraso</span>`:''}</div></div>
+      <div class="stat"><div class="stat-label">Total Emprestado <span class="stat-info" onclick="toggleStatInfo('total-emprestado',this)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--blu)">${fmtR(totalEmp)}</div><div class="stat-sub">${empsAtivos.length} em aberto</div></div>
+      <div class="stat"><div class="stat-label">Lucro Esperado <span class="stat-info" onclick="toggleStatInfo('lucro-esperado',this)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--grn)">${fmtR(totalLucro)}</div><div class="stat-sub">em juros</div></div>
+      <div class="stat"><div class="stat-label">Recebido <span class="stat-info" onclick="toggleStatInfo('recebido',this)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--grn)">${fmtR(pRecebido)}</div><div class="stat-sub">em parcelas pagas</div></div>
+      <div class="stat"><div class="stat-label">Próximas Parcelas <span class="stat-info" onclick="toggleStatInfo('proximas-parcelas',this)"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span></div><div class="stat-value" style="color:var(--amb)">${fmtR(pPendente)}</div><div class="stat-sub">${aVencer.length} a vencer${atrasadas.length?` · <span style="color:var(--red);font-weight:600">${atrasadas.length} em atraso</span>`:''}</div></div>
     </div>
     ${(()=>{
       const hoje=new Date();hoje.setHours(0,0,0,0);
@@ -229,4 +229,59 @@ function mostrarVencimento(tipo){
 function voltarUltimosEmp(){
   filtroAtivo = null;
   renderDashboard();
+}
+
+// ══ INFO MODAL DOS CARDS DE STATÍSTICAS DO DASHBOARD ══
+const _STAT_INFOS = {
+  'total-emprestado':{
+    titulo:'Total Emprestado',
+    cor:'var(--blu)',
+    resumo:'Capital ativo na rua — dinheiro que ainda não voltou pro seu bolso.',
+    detalhe:'Pega os empréstimos ativos (que têm pelo menos uma parcela pendente, ou são ilimitados sem prazo) e soma o saldo devedor de cada um. Quando há abatimento parcial (ex: cliente pagou metade do principal via "Quitar"), conta apenas o que ainda falta. Não inclui empréstimos quitados.'
+  },
+  'lucro-esperado':{
+    titulo:'Lucro Esperado',
+    cor:'var(--grn)',
+    resumo:'Quanto ainda vai entrar de juros nos empréstimos ativos.',
+    detalhe:'Soma o lucro previsto de cada empréstimo ativo. Para empréstimos a juros: total dos juros mensais que ainda serão cobrados. Para consignados: diferença entre o total das parcelas pendentes e o principal correspondente. Quitados não entram na conta.'
+  },
+  'recebido':{
+    titulo:'Recebido',
+    cor:'var(--grn)',
+    resumo:'Dinheiro vivo que já entrou no seu caixa.',
+    detalhe:'Soma o valor de todas as parcelas com status "pago". Inclui: juros mensais já cobrados em empréstimos a juros, parcelas pagas de consignados (que trazem parte do principal + parte do juro) e quitações registradas como parcela paga.'
+  },
+  'proximas-parcelas':{
+    titulo:'Próximas Parcelas',
+    cor:'var(--amb)',
+    resumo:'Soma de todo o dinheiro agendado para entrar.',
+    detalhe:'Soma o valor das parcelas com status "pendente". O subtítulo separa em duas situações: <strong style="color:var(--n2)">a vencer</strong> (vencimento ainda no futuro) e <strong style="color:var(--red)">em atraso</strong> (vencimento já passou e não foi pago).'
+  }
+};
+
+function toggleStatInfo(key,btn){
+  const existing=document.getElementById('stat-info-modal');
+  // Se já existe e é da mesma chave → fecha (toggle off)
+  if(existing){
+    const sameKey=existing.getAttribute('data-key')===key;
+    existing.remove();
+    document.querySelectorAll('.stat-info.active').forEach(el=>el.classList.remove('active'));
+    if(sameKey)return;
+  }
+  const info=_STAT_INFOS[key];
+  if(!info)return;
+  if(btn)btn.classList.add('active');
+  const div=document.createElement('div');
+  div.id='stat-info-modal';
+  div.setAttribute('data-key',key);
+  div.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .15s ease-out';
+  div.onclick=e=>{if(e.target===div){div.remove();document.querySelectorAll('.stat-info.active').forEach(el=>el.classList.remove('active'));}};
+  div.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);width:100%;max-width:440px;padding:1.4rem 1.5rem 1.25rem;box-shadow:0 20px 50px rgba(0,0,0,.45);position:relative">
+    <button onclick="document.getElementById('stat-info-modal').remove();document.querySelectorAll('.stat-info.active').forEach(el=>el.classList.remove('active'))" style="position:absolute;top:.5rem;right:.5rem;width:32px;height:32px;background:transparent;border:none;color:var(--n4);cursor:pointer;font-size:22px;line-height:1;border-radius:50%;transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseenter="this.style.color='var(--red)';this.style.background='var(--card2)'" onmouseleave="this.style.color='var(--n4)';this.style.background='transparent'" aria-label="Fechar">×</button>
+    <div style="font-family:var(--FT);font-size:1.15rem;color:${info.cor};margin-bottom:.6rem;padding-right:2rem;font-weight:700">${info.titulo}</div>
+    <div style="font-size:13px;color:var(--n2);margin-bottom:1rem;line-height:1.5">${info.resumo}</div>
+    <div style="font-size:10px;font-weight:700;color:var(--n4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Como é calculado</div>
+    <div style="font-size:12px;color:var(--n3);line-height:1.55">${info.detalhe}</div>
+  </div>`;
+  document.body.appendChild(div);
 }
