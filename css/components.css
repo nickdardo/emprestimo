@@ -130,6 +130,8 @@ tbody td{padding:.75rem 1rem;vertical-align:middle;color:var(--n1)}
 .pill-grn.active{background:#16A34A;border-color:#16A34A;color:#fff}
 .pill-juros.active{background:#EA580C;border-color:#EA580C;color:#fff}
 .pill-consig.active{background:#2563EB;border-color:#2563EB;color:#fff}
+.pill-diario.active{background:#F59E0B;border-color:#F59E0B;color:#fff}
+.pill-semanal.active{background:#0891B2;border-color:#0891B2;color:#fff}
 
 /* ── BUSCA GLOBAL ───────────────────────────────────────────── */
 
