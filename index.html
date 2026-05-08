@@ -357,7 +357,7 @@
     <div class="mbody">
 
       <!-- SELETOR DE TIPO -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
         <button type="button" id="btn-tipo-juros" onclick="setTipoEmp('juros')"
           style="padding:.6rem;border-radius:var(--rs);font-family:var(--FB);font-size:13px;font-weight:600;cursor:pointer;border:2px solid #EA580C;background:#EA580C;color:#fff;transition:all .15s">
           ◆ Juros Mensal
@@ -367,11 +367,110 @@
           ■ Consignado
         </button>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
+        <button type="button" id="btn-tipo-diario" onclick="setTipoEmp('diario')"
+          style="padding:.6rem;border-radius:var(--rs);font-family:var(--FB);font-size:13px;font-weight:600;cursor:pointer;border:2px solid #E5E7EB;background:#fff;color:#6B7280;transition:all .15s">
+          ☀ Diário
+        </button>
+        <button type="button" id="btn-tipo-semanal" onclick="setTipoEmp('semanal')"
+          style="padding:.6rem;border-radius:var(--rs);font-family:var(--FB);font-size:13px;font-weight:600;cursor:pointer;border:2px solid #E5E7EB;background:#fff;color:#6B7280;transition:all .15s">
+          ☷ Semanal
+        </button>
+      </div>
       <!-- Descrição do tipo -->
       <div id="emp-tipo-desc" style="font-size:12px;color:#9A3412;background:#FFF7ED;border-radius:var(--rs);padding:.5rem .85rem;margin-bottom:1rem;border:1px solid #FED7AA">
         Parcela mensal = só juros. Capital reduz com abatimentos. Gera juros diários após vencimento.
       </div>
 
+      <!-- ═══════════════════════════════════════════════════════════
+           BLOCO ESPECIAL — DIÁRIO (UI calculadora bidirecional)
+           Substitui o bloco padrão quando tipo='diario'
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="emp-diario-block" style="display:none">
+        <div class="fgrid">
+          <div class="fg full">
+            <span class="lbl">Cliente *</span>
+            <div style="display:flex;gap:.5rem">
+              <select id="emp-tom-diario" style="flex:1"><option value="">Selecione ou crie</option></select>
+              <button onclick="openTomModal(null)" style="background:#F59E0B;border:2px dashed #FCD34D;color:#fff;padding:.55rem 1rem;border-radius:var(--rs);font-family:var(--FB);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;white-space:nowrap" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Cliente</button>
+            </div>
+          </div>
+          <div class="fg"><span class="lbl">Responsável</span><input id="emp-resp-diario" placeholder="Ex: Nicole"/></div>
+          <div class="fg"><span class="lbl">Garantia</span><input id="emp-gar-diario" placeholder="Ex: TV 32&quot;, Sem garantia"/></div>
+          <div class="fg full"><span class="lbl">Local</span><input id="emp-loc-diario" placeholder="Ex: Belém, Marituba"/></div>
+
+          <div class="msec full" style="border-top:none;padding-top:0">Parcelas e juros</div>
+
+          <div class="fg full">
+            <span class="lbl">Nº de Parcelas *</span>
+            <input type="number" id="dia-nparc" min="1" max="365" value="15" oninput="updateDiarioCalc('nparc')" inputmode="numeric"/>
+            <div style="font-size:11px;color:var(--n4);margin-top:3px">Quantas parcelas diárias</div>
+          </div>
+
+          <div class="fg">
+            <span class="lbl">Valor Emprestado (R$) *</span>
+            <input type="text" id="dia-valor" placeholder="Ex: 500,00" oninput="maskCurrency(this);updateDiarioCalc('valor')" inputmode="numeric"/>
+          </div>
+          <div class="fg">
+            <span class="lbl">Parcela Diária (R$) *</span>
+            <input type="text" id="dia-parcela" placeholder="Ex: 50,00" oninput="maskCurrency(this);updateDiarioCalc('parcela')" inputmode="numeric"/>
+          </div>
+
+          <div class="fg full">
+            <span class="lbl">Juros (%)</span>
+            <input type="text" id="dia-juros" placeholder="Ex: 50,00" oninput="updateDiarioCalc('juros')" inputmode="decimal"/>
+            <div style="font-size:11px;color:var(--n4);margin-top:3px">Altere o juros para recalcular a parcela automaticamente</div>
+          </div>
+        </div>
+
+        <div id="dia-resumo" style="margin-top:.75rem;background:#FFFBEB;border-radius:var(--rs);padding:.85rem 1rem;border:1px solid #FDE68A;color:#92400E;font-size:13px;line-height:1.6">
+          <div style="font-weight:700;margin-bottom:.25rem"><span id="dia-r-cab">Resumo</span></div>
+          <div>Total a receber: <strong id="dia-r-total">R$ 0,00</strong></div>
+          <div>Lucro: <strong id="dia-r-lucro">R$ 0,00</strong> <span id="dia-r-pct" style="color:#A16207">(0%)</span></div>
+        </div>
+
+        <div class="fgrid" style="margin-top:.75rem">
+          <div class="fg">
+            <span class="lbl">Data do Contrato</span>
+            <input type="date" id="dia-data" onchange="updateDiarioPreview()"/>
+            <div style="font-size:11px;color:var(--n4);margin-top:3px">Quando foi fechado</div>
+          </div>
+          <div class="fg">
+            <span class="lbl">1ª Cobrança *</span>
+            <input type="date" id="dia-data-cobr" onchange="updateDiarioPreview()"/>
+            <div style="font-size:11px;color:var(--n4);margin-top:3px">Quando começa</div>
+          </div>
+        </div>
+
+        <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--n3);margin-bottom:.5rem">Não cobra nos seguintes dias:</div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:13px;color:var(--n2)">
+              <input type="checkbox" id="dia-skip-sat" checked onchange="updateDiarioPreview()"/> Sábado
+            </label>
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:13px;color:var(--n2)">
+              <input type="checkbox" id="dia-skip-sun" checked onchange="updateDiarioPreview()"/> Domingo
+            </label>
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:not-allowed;font-size:13px;color:var(--n4)" title="Em breve">
+              <input type="checkbox" id="dia-skip-hol" disabled/> Feriados <span style="font-size:10px;background:var(--card2);padding:1px 6px;border-radius:999px;color:var(--n4)">em breve</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="dia-preview" style="margin-top:.75rem;background:#ECFDF5;border-radius:var(--rs);padding:.7rem 1rem;border:1px solid #A7F3D0;color:#065F46;font-size:13px">
+          <span style="font-weight:700">✓ <span id="dia-prev-count">0</span> parcelas geradas</span>
+          <div style="font-size:12px;margin-top:2px;color:#047857"><span id="dia-prev-range">—</span></div>
+        </div>
+
+        <div class="fgrid" style="margin-top:.75rem">
+          <div class="fg full"><span class="lbl">Observação</span><input id="emp-obs-diario" placeholder="Anotações..."/></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           BLOCO PADRÃO — para juros mensal, consignado e semanal
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="emp-default-block">
       <div class="fgrid">
         <div class="fg full">
           <span class="lbl">Cliente *</span>
@@ -429,6 +528,8 @@
         </div>
         <div class="fg"><span class="lbl">Observação</span><input id="emp-obs" placeholder="Anotações..."/></div>
       </div>
+      </div>
+      <!-- /emp-default-block -->
       
       <!-- CAMPO DE ANEXO -->
       <div class="fgrid" style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)">
