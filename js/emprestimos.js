@@ -285,6 +285,8 @@ function renderEmprestimos(){
       <button class="pill" id="pill-ativo" onclick="setEmpFilter('ativo')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Ativos</button>
       <button class="pill pill-juros" id="pill-juros" onclick="setEmpFilter('juros')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Juros</button>
       <button class="pill pill-consig" id="pill-consig" onclick="setEmpFilter('consig')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Consignado</button>
+      <button class="pill pill-diario" id="pill-diario" onclick="setEmpFilter('diario')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Diário</button>
+      <button class="pill pill-semanal" id="pill-semanal" onclick="setEmpFilter('semanal')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Semanal</button>
     </div>
     <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
@@ -438,6 +440,8 @@ function filterEmp(){
   else if(_empFilter==='semparc'){f=f.filter(e=>parcelas.filter(p=>p.emprestimo_id===e.id).length===0);}
   else if(_empFilter==='juros'){f=f.filter(e=>(e.tipo||'juros')==='juros');}
   else if(_empFilter==='consig'){f=f.filter(e=>e.tipo==='consignado');}
+  else if(_empFilter==='diario'){f=f.filter(e=>e.tipo==='diario');}
+  else if(_empFilter==='semanal'){f=f.filter(e=>e.tipo==='semanal');}
   else {
     // Filtro padrão "todos": esconde os já quitados (continuam acessíveis pela pílula "Quitados")
     f=f.filter(e=>!isEmprestimoQuitado(e));
@@ -455,10 +459,12 @@ function _empRow(e,i){
   const quitado=isEmprestimoQuitado(e);
   // Valor Atual = saldo devedor (após abatimentos). Se nunca abateu, é igual ao valor inicial.
   const tipo=e.tipo||'juros';
-  const saldoAtual=tipo==='consignado'
+  // Diário e semanal seguem a mesma lógica do consignado (parcelas amortizam até zerar)
+  const ehAmortizado=tipo==='consignado'||tipo==='diario'||tipo==='semanal';
+  const saldoAtual=ehAmortizado
     ? (allPago?0:Number(e.valor||0))
     : Number(e.saldo_devedor!=null?e.saldo_devedor:e.valor||0);
-  const houveAbatimento=tipo!=='consignado'&&e.saldo_devedor!=null&&Math.abs(saldoAtual-Number(e.valor||0))>0.01;
+  const houveAbatimento=!ehAmortizado&&e.saldo_devedor!=null&&Math.abs(saldoAtual-Number(e.valor||0))>0.01;
   const corSaldo=saldoAtual===0?'var(--grn)':(houveAbatimento?'var(--amb)':'var(--n3)');
   const labelSaldo=saldoAtual===0?'Quitado':fmtR(saldoAtual);
     return`<tr id="row-${e.id}">
@@ -473,8 +479,8 @@ function _empRow(e,i){
       <td class="hide-mobile-juros" style="color:var(--n3)">${(e.juros*100).toFixed(0)}%</td>
       <td class="hide-mobile-juros" style="font-weight:600;color:var(--grn)">${(()=>{
         // Total atual = saldo devedor + juros sobre o saldo
-        // Para consignado mantém o valor_total original
-        if(tipo==='consignado')return fmtR(e.valor_total);
+        // Para tipos amortizados (consignado/diário/semanal) mantém o valor_total original
+        if(ehAmortizado)return fmtR(e.valor_total_consignado||(e.valor*(1+Number(e.juros||0))));
         const totalAtual=parseFloat((saldoAtual+saldoAtual*Number(e.juros||0)).toFixed(2));
         return fmtR(totalAtual);
       })()}</td>
@@ -489,7 +495,7 @@ function _empRow(e,i){
           const svgAlertSmall=`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:4px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
 
           if(parcsEmp.length===0){
-            return`<button class="btn btn-xs btn-g" onclick="addParcela('${e.id}')">${tipo==='consignado'?'Parcelas':'Juros'}</button>`;
+            return`<button class="btn btn-xs btn-g" onclick="addParcela('${e.id}')">${ehAmortizado?'Parcelas':'Juros'}</button>`;
           }
           if(tipo==='juros'){
             // Juros mensal: mostra "X juros pagos" ou "em atraso"
@@ -498,7 +504,7 @@ function _empRow(e,i){
             if(atCnt)   return`<button class="btn btn-xs btn-d"   onclick="openParcelas('${e.id}')">${svgAlert}${atCnt} em atraso</button>`;
             return`<button class="btn btn-xs btn-amb" onclick="openParcelas('${e.id}')">${svgClock}${pgCnt} pago${pgCnt!==1?'s':''}</button>`;
           } else {
-            // Consignado: mantém X/Y
+            // Consignado/Diário/Semanal: mantém X/Y
             const ic=allPago?svgCheck:svgCard;
             return`<button class="btn btn-xs ${allPago?'btn-grn':atCnt?'btn-d':'btn-amb'}" onclick="openParcelas('${e.id}')">${ic}${pgCnt}/${parcsEmp.length}${atCnt?svgAlertSmall+atCnt:''}</button>`;
           }
@@ -529,33 +535,190 @@ function empTbodyHTML(list){
 }
 
 
+// ════════════════════════════════════════════════════════════════
+// EMPRÉSTIMO DIÁRIO — Calculadora bidirecional
+// ════════════════════════════════════════════════════════════════
+
+// Popula o select de cliente do bloco diário e ajusta data padrão
+function initDiarioFields(){
+  const sel=document.getElementById('emp-tom-diario');
+  if(sel){
+    sel.innerHTML='<option value="">Selecione o cliente</option>'+
+      tomadores.map(t=>`<option value="${t.id}">${t.nome}</option>`).join('');
+  }
+  const data=document.getElementById('dia-data');
+  const cobr=document.getElementById('dia-data-cobr');
+  if(data&&!data.value)data.value=today();
+  if(cobr&&!cobr.value)cobr.value=today();
+  updateDiarioCalc('init');
+  updateDiarioPreview();
+}
+
+// Recalcula com base no campo que o usuário editou.
+// Lógica bidirecional:
+//   - editou valor/parcela/nparc → recalcula juros (%)
+//   - editou juros               → recalcula parcela
+function updateDiarioCalc(origem){
+  const valor   = parseCurrency(document.getElementById('dia-valor')?.value)||0;
+  let   parcela = parseCurrency(document.getElementById('dia-parcela')?.value)||0;
+  const nparc   = parseInt(document.getElementById('dia-nparc')?.value)||0;
+  const jurosEl = document.getElementById('dia-juros');
+  let   juros   = parseFloat((jurosEl?.value||'0').replace(',','.'))||0;
+
+  if(origem==='juros' && valor>0 && nparc>0){
+    // Recalcula a parcela para casar com o juros digitado
+    const total = valor*(1+juros/100);
+    parcela = parseFloat((total/nparc).toFixed(2));
+    document.getElementById('dia-parcela').value = parcela.toFixed(2).replace('.',',');
+  } else if(valor>0 && parcela>0 && nparc>0){
+    // Recalcula o juros para casar com a parcela atual
+    const total = parcela*nparc;
+    juros = ((total/valor)-1)*100;
+    if(jurosEl)jurosEl.value = juros.toFixed(2).replace('.',',');
+  }
+
+  // Atualiza resumo
+  const total = parcela*nparc;
+  const lucro = total-valor;
+  const pct   = valor>0 ? (lucro/valor)*100 : 0;
+  const cab   = document.getElementById('dia-r-cab');
+  const tEl   = document.getElementById('dia-r-total');
+  const lEl   = document.getElementById('dia-r-lucro');
+  const pEl   = document.getElementById('dia-r-pct');
+  if(cab)cab.textContent = `Resumo (${nparc||0} parcela${nparc===1?'':'s'}):`;
+  if(tEl)tEl.textContent = fmtR(total);
+  if(lEl)lEl.textContent = fmtR(lucro);
+  if(pEl)pEl.textContent = `(${pct.toFixed(1)}%)`;
+
+  updateDiarioPreview();
+}
+
+// Calcula a sequência de N datas, pulando os dias marcados
+function _diarioGerarDatas(dataInicialStr, n, skipSat, skipSun){
+  if(!dataInicialStr || n<=0)return [];
+  const datas=[];
+  const d=new Date(dataInicialStr+'T12:00:00');
+  // A 1ª cobrança PODE cair num dia que normalmente seria pulado — respeita a escolha do credor
+  // Adiciona a 1ª direta:
+  datas.push(d.toISOString().split('T')[0]);
+  while(datas.length<n){
+    d.setDate(d.getDate()+1);
+    const dow=d.getDay(); // 0=dom 6=sáb
+    if(skipSat && dow===6)continue;
+    if(skipSun && dow===0)continue;
+    datas.push(d.toISOString().split('T')[0]);
+  }
+  return datas;
+}
+
+// Atualiza o preview "X parcelas geradas: dd/mm até dd/mm"
+function updateDiarioPreview(){
+  const nparc   = parseInt(document.getElementById('dia-nparc')?.value)||0;
+  const cobr    = document.getElementById('dia-data-cobr')?.value||'';
+  const skipSat = document.getElementById('dia-skip-sat')?.checked;
+  const skipSun = document.getElementById('dia-skip-sun')?.checked;
+  const cnt=document.getElementById('dia-prev-count');
+  const rng=document.getElementById('dia-prev-range');
+  const box=document.getElementById('dia-preview');
+  if(!cnt||!rng||!box)return;
+  if(!nparc||!cobr){
+    cnt.textContent='0';
+    rng.textContent='Preencha os campos para visualizar';
+    return;
+  }
+  const datas=_diarioGerarDatas(cobr,nparc,skipSat,skipSun);
+  cnt.textContent=String(datas.length);
+  if(datas.length){
+    rng.textContent=`${fmtDate(datas[0])} até ${fmtDate(datas[datas.length-1])}`;
+  } else {
+    rng.textContent='—';
+  }
+}
+
 function setTipoEmp(tipo){
   _empTipo=tipo;
   const bjuros=document.getElementById('btn-tipo-juros');
   const bconsig=document.getElementById('btn-tipo-consig');
+  const bdia=document.getElementById('btn-tipo-diario');
+  const bsem=document.getElementById('btn-tipo-semanal');
   const desc=document.getElementById('emp-tipo-desc');
   const consigWrap=document.getElementById('emp-consig-wrap');
   const jurosWrap=document.getElementById('emp-juros-wrap');
   const nparclbl=document.getElementById('emp-nparc-lbl');
   const nparc=document.getElementById('emp-nparc');
 
+  // Reseta todos os 4 botões pro estado neutro
+  [bjuros,bconsig,bdia,bsem].forEach(b=>{
+    if(!b)return;
+    b.style.background='#fff';
+    b.style.borderColor='#E5E7EB';
+    b.style.color='#6B7280';
+  });
+
+  // Configurações por tipo
+  const cfg={
+    juros:{
+      btn:bjuros, bg:'#EA580C', border:'#EA580C',
+      desc:'Parcela mensal = só juros. Capital reduz com abatimentos. Gera juros diários após vencimento.',
+      descBg:'#FFF7ED', descBd:'#FED7AA', descCol:'#9A3412',
+      consigVisible:false
+    },
+    consignado:{
+      btn:bconsig, bg:'#2563EB', border:'#2563EB',
+      desc:'Valor total fixo. Cliente paga parcelado mensalmente. Pagamento antecipado com desconto negociável.',
+      descBg:'#EFF6FF', descBd:'#BFDBFE', descCol:'#1e40af',
+      consigVisible:true
+    },
+    diario:{
+      btn:bdia, bg:'#F59E0B', border:'#F59E0B',
+      desc:'Valor total fixo. Cliente paga parcela TODOS OS DIAS (pula domingos). Capital amortiza até zerar.',
+      descBg:'#FFFBEB', descBd:'#FDE68A', descCol:'#92400E',
+      consigVisible:true
+    },
+    semanal:{
+      btn:bsem, bg:'#0891B2', border:'#0891B2',
+      desc:'Valor total fixo. Cliente paga parcela A CADA SEMANA. Capital amortiza até zerar.',
+      descBg:'#ECFEFF', descBd:'#A5F3FC', descCol:'#155E75',
+      consigVisible:true
+    }
+  };
+  const c=cfg[tipo]||cfg.juros;
+  if(c.btn){
+    c.btn.style.background=c.bg;
+    c.btn.style.borderColor=c.border;
+    c.btn.style.color='#fff';
+  }
+  if(desc){
+    desc.textContent=c.desc;
+    desc.style.background=c.descBg;
+    desc.style.borderColor=c.descBd;
+    desc.style.color=c.descCol;
+  }
+  if(consigWrap)consigWrap.style.display=c.consigVisible?'':'none';
+  if(jurosWrap)jurosWrap.style.display=c.consigVisible?'none':'';
+
+  // Alternar bloco especial do Diário vs bloco padrão
+  const blkDiario=document.getElementById('emp-diario-block');
+  const blkDefault=document.getElementById('emp-default-block');
+  if(tipo==='diario'){
+    if(blkDiario)blkDiario.style.display='';
+    if(blkDefault)blkDefault.style.display='none';
+    // Inicializa a calculadora do diário se ainda não foi
+    initDiarioFields();
+  } else {
+    if(blkDiario)blkDiario.style.display='none';
+    if(blkDefault)blkDefault.style.display='';
+  }
+
   if(tipo==='juros'){
-    bjuros.style.background='#EA580C';bjuros.style.borderColor='#EA580C';bjuros.style.color='#fff';
-    bconsig.style.background='#fff';bconsig.style.borderColor='#E5E7EB';bconsig.style.color='#6B7280';
-    desc.textContent='Parcela mensal = só juros. Capital reduz com abatimentos. Gera juros diários após vencimento.';
-    desc.style.background='#FFF7ED';desc.style.borderColor='#FED7AA';desc.style.color='#9A3412';
-    if(consigWrap)consigWrap.style.display='none';
-    if(jurosWrap)jurosWrap.style.display='';
     if(nparclbl)nparclbl.textContent='Nº de Parcelas';
     if(nparc){nparc.options[0].text='Ilimitado';}
   } else {
-    bjuros.style.background='#fff';bjuros.style.borderColor='#E5E7EB';bjuros.style.color='#6B7280';
-    bconsig.style.background='#2563EB';bconsig.style.borderColor='#2563EB';bconsig.style.color='#fff';
-    desc.textContent='Valor total fixo. Cliente paga parcelado. Pagamento antecipado com desconto negociável.';
-    desc.style.background='#EFF6FF';desc.style.borderColor='#BFDBFE';desc.style.color='#1e40af';
-    if(consigWrap)consigWrap.style.display='';
-    if(jurosWrap)jurosWrap.style.display='none';
-    if(nparclbl)nparclbl.textContent='Nº de Parcelas *';
+    if(nparclbl){
+      nparclbl.textContent = tipo==='diario' ? 'Nº de Parcelas Diárias *'
+                           : tipo==='semanal' ? 'Nº de Parcelas Semanais *'
+                           : 'Nº de Parcelas *';
+    }
     if(nparc&&nparc.value==='0')nparc.value='10';
   }
   updateEmpCalc();
@@ -568,7 +731,9 @@ function updateEmpCalc(){
   const box=document.getElementById('emp-calc');
   const consigWrap3=document.getElementById('calc-parc-consig-wrap');
 
-  if(_empTipo==='consignado'){
+  const ehAmortizado=_empTipo==='consignado'||_empTipo==='diario'||_empTipo==='semanal';
+
+  if(ehAmortizado){
     const valConsig=parseCurrency(document.getElementById('emp-valor-consig')?.value)||0;
     if(val>0&&valConsig>0&&box){
       box.style.display='block';
@@ -577,7 +742,16 @@ function updateEmpCalc(){
       document.getElementById('calc-total').textContent=fmtR(valConsig);
       document.getElementById('calc-parc').textContent=fmtR(lucro>0?lucro:0);
       if(consigWrap3)consigWrap3.style.display=nparc>0?'':'none';
-      if(parcVal)document.getElementById('calc-parc-consig').textContent=fmtR(parcVal);
+      if(parcVal){
+        document.getElementById('calc-parc-consig').textContent=fmtR(parcVal);
+        // Atualiza label "Parcela" conforme a frequência
+        const lblParcEl=document.querySelector('#calc-parc-consig-wrap > div:first-child');
+        if(lblParcEl){
+          lblParcEl.textContent = _empTipo==='diario' ? 'Por dia'
+                                : _empTipo==='semanal' ? 'Por semana'
+                                : 'Parcela';
+        }
+      }
     } else if(box){box.style.display='none';}
   } else {
     const lucro=val*juros;
@@ -633,7 +807,26 @@ function openEmpModal(id){
     document.getElementById('emp-valor').value=editEmp.valor||'';
     document.getElementById('emp-juros').value=editEmp.juros||'0.2';
     document.getElementById('emp-obs').value=editEmp.obs||'';
-    if(tipo==='consignado'){
+    if(tipo==='diario'){
+      // Popula os campos do bloco especial do diário
+      initDiarioFields();
+      const tomDia=document.getElementById('emp-tom-diario');
+      if(tomDia)tomDia.value=editEmp.tomador_id||'';
+      document.getElementById('emp-resp-diario').value=editEmp.responsavel||'';
+      document.getElementById('emp-gar-diario').value=editEmp.garantia||'';
+      document.getElementById('emp-loc-diario').value=editEmp.local||'';
+      document.getElementById('emp-obs-diario').value=editEmp.obs||'';
+      document.getElementById('dia-data').value=editEmp.data_emprestimo||today();
+      document.getElementById('dia-data-cobr').value=editEmp.data_primeira_cobranca||editEmp.data_emprestimo||today();
+      document.getElementById('dia-valor').value=editEmp.valor?String(editEmp.valor).replace('.',','):'';
+      const parcsExist=parcelas.filter(p=>p.emprestimo_id===editEmp.id);
+      const parcVal=parcsExist[0]?Number(parcsExist[0].valor||0):0;
+      document.getElementById('dia-parcela').value=parcVal?parcVal.toFixed(2).replace('.',','):'';
+      document.getElementById('dia-nparc').value=parcsExist.length||15;
+      document.getElementById('dia-skip-sat').checked=editEmp.skip_sabado!==false; // padrão true
+      document.getElementById('dia-skip-sun').checked=editEmp.skip_domingo!==false; // padrão true
+      updateDiarioCalc('init');
+    } else if(tipo==='consignado'||tipo==='semanal'){
       const vconsig=document.getElementById('emp-valor-consig');
       if(vconsig)vconsig.value=editEmp.valor_total_consignado||'';
       const parcsCount=parcelas.filter(p=>p.emprestimo_id===editEmp.id).length;
@@ -677,12 +870,133 @@ function addMonths(dateStr, months){
   return d.toISOString().split('T')[0];
 }
 
+// Adiciona N dias úteis (pulando apenas domingos) à data informada.
+// Ex: empréstimo diário em 06/05 (3ª): parcela 1 = 07/05, parcela 2 = 08/05,
+//     parcela 6 = 12/05 (pulou 11/05 que era domingo).
+function addDaysSkipSunday(dateStr, n){
+  const d=new Date(dateStr+'T12:00:00');
+  let count=0;
+  while(count<n){
+    d.setDate(d.getDate()+1);
+    if(d.getDay()!==0)count++; // 0 = domingo: pula
+  }
+  return d.toISOString().split('T')[0];
+}
+
+// Adiciona N semanas (7 dias cada) à data informada.
+function addWeeks(dateStr, weeks){
+  const d=new Date(dateStr+'T12:00:00');
+  d.setDate(d.getDate()+weeks*7);
+  return d.toISOString().split('T')[0];
+}
+
 async function saveEmp(){
+  const tipo=_empTipo||'juros';
+
+  // ════════════════ DIÁRIO — fluxo próprio (bloco especial) ════════════════
+  if(tipo==='diario'){
+    const tomId   = document.getElementById('emp-tom-diario').value;
+    const valor   = parseCurrency(document.getElementById('dia-valor').value);
+    const parcela = parseCurrency(document.getElementById('dia-parcela').value);
+    const nparc   = parseInt(document.getElementById('dia-nparc').value)||0;
+    const data    = document.getElementById('dia-data').value;
+    const dataCobr= document.getElementById('dia-data-cobr').value;
+    const skipSat = document.getElementById('dia-skip-sat').checked;
+    const skipSun = document.getElementById('dia-skip-sun').checked;
+
+    if(!tomId){toast('⚠ Selecione o cliente',true);return;}
+    if(!valor||valor<=0){toast('⚠ Informe o valor emprestado',true);return;}
+    if(!parcela||parcela<=0){toast('⚠ Informe o valor da parcela',true);return;}
+    if(!nparc||nparc<=0){toast('⚠ Informe o número de parcelas',true);return;}
+    if(!data){toast('⚠ Informe a data do contrato',true);return;}
+    if(!dataCobr){toast('⚠ Informe a 1ª cobrança',true);return;}
+
+    const total = parseFloat((parcela*nparc).toFixed(2));
+    if(total<=valor){toast('⚠ Total das parcelas deve ser maior que o emprestado',true);return;}
+    const juros = parseFloat(((total-valor)/valor).toFixed(4));
+
+    const payload={
+      tomador_id:tomId,
+      responsavel:(document.getElementById('emp-resp-diario').value.trim()||'').toUpperCase()||null,
+      garantia:(document.getElementById('emp-gar-diario').value.trim()||'').toUpperCase()||null,
+      local:(document.getElementById('emp-loc-diario').value.trim()||'').toUpperCase()||null,
+      valor:parseFloat(valor.toFixed(2)),
+      juros:juros,
+      tipo:'diario',
+      valor_total_consignado:total,
+      data_emprestimo:data,
+      data_primeira_cobranca:dataCobr,
+      skip_sabado:skipSat,
+      skip_domingo:skipSun,
+      obs:document.getElementById('emp-obs-diario').value.trim()||null,
+      created_by:session.id,
+      owner_id:session.id
+    };
+
+    const btn=document.querySelector('#emp-modal .btn-grn');btn.textContent='Salvando...';btn.disabled=true;
+    try{
+      // Tenta inserir com todos os campos. Se as colunas novas (data_primeira_cobranca,
+      // skip_sabado, skip_domingo) não existirem no banco, faz fallback sem elas.
+      async function insertEmp(p){
+        const{data,error}=await sb.from('emprestimos').insert(p).select().single();
+        if(error){
+          const msg=String(error.message||'');
+          if(/column|does not exist|unknown/i.test(msg) && (p.data_primeira_cobranca!==undefined||p.skip_sabado!==undefined)){
+            // Remove os campos novos e tenta de novo
+            const {data_primeira_cobranca, skip_sabado, skip_domingo, ...resto}=p;
+            console.warn('[Diário] Colunas novas ausentes no Supabase — usando fallback. Recomenda-se rodar o ALTER TABLE.');
+            const r2=await sb.from('emprestimos').insert(resto).select().single();
+            if(r2.error)throw r2.error;
+            return r2.data;
+          }
+          throw error;
+        }
+        return data;
+      }
+      async function updateEmp(id,p){
+        const{data,error}=await sb.from('emprestimos').update(p).eq('id',id).select().single();
+        if(error){
+          const msg=String(error.message||'');
+          if(/column|does not exist|unknown/i.test(msg) && (p.data_primeira_cobranca!==undefined||p.skip_sabado!==undefined)){
+            const {data_primeira_cobranca, skip_sabado, skip_domingo, ...resto}=p;
+            const r2=await sb.from('emprestimos').update(resto).eq('id',id).select().single();
+            if(r2.error)throw r2.error;
+            return r2.data;
+          }
+          throw error;
+        }
+        return data;
+      }
+
+      if(editEmp){
+        const d=await updateEmp(editEmp.id,payload);
+        emprestimos=emprestimos.map(e=>e.id===editEmp.id?d:e);
+        toast('✓ Empréstimo atualizado!');
+      } else {
+        const d=await insertEmp(payload);
+        emprestimos.unshift(d);
+
+        const datas=_diarioGerarDatas(dataCobr,nparc,skipSat,skipSun);
+        const parcsPayload=datas.map((venc,i)=>({
+          emprestimo_id:d.id,numero:i+1,vencimento:venc,valor:parcela,status:'pendente'
+        }));
+        const{data:ps,error:pe}=await sb.from('parcelas').insert(parcsPayload).select();
+        if(!pe&&ps)parcelas.push(...ps);
+        toast(`✓ Diário registrado! ${nparc}× ${fmtR(parcela)}`);
+      }
+      closeM('emp-modal');
+      if(curPage==='dashboard')renderDashboard();
+      else renderEmprestimos();
+    }catch(e){toast('Erro ao salvar',true);console.error(e);}
+    btn.textContent='Salvar Empréstimo';btn.disabled=false;
+    return;
+  }
+
+  // ════════════════ FLUXO PADRÃO — juros mensal, consignado, semanal ════════════════
   const tomId=document.getElementById('emp-tom').value;
   const valor=parseCurrency(document.getElementById('emp-valor').value);
   const data=document.getElementById('emp-data').value;
   const nparc=parseInt(document.getElementById('emp-nparc').value)||0;
-  const tipo=_empTipo||'juros';
 
   if(!tomId){toast('⚠ Selecione o cliente',true);return;}
   if(!valor||valor<=0){toast('⚠ Informe o valor',true);return;}
@@ -690,10 +1004,11 @@ async function saveEmp(){
 
   let juros=0, valorTotalConsig=null;
 
-  if(tipo==='consignado'){
+  const ehAmortizado=tipo==='consignado'||tipo==='semanal';
+  if(ehAmortizado){
     valorTotalConsig=parseCurrency(document.getElementById('emp-valor-consig')?.value)||0;
     if(!valorTotalConsig||valorTotalConsig<=valor){toast('⚠ Valor total a receber deve ser maior que o emprestado',true);return;}
-    if(!nparc||nparc<=0){toast('⚠ Informe o número de parcelas para consignado',true);return;}
+    if(!nparc||nparc<=0){toast('⚠ Informe o número de parcelas',true);return;}
     juros=parseFloat(((valorTotalConsig-valor)/valor).toFixed(4));
   } else {
     juros=parseFloat(document.getElementById('emp-juros').value);
@@ -726,16 +1041,20 @@ async function saveEmp(){
       if(error)throw error;
       emprestimos.unshift(d);
 
-      if(tipo==='consignado'){
-        // Parcelas fixas: valorTotal / nparc
+      if(ehAmortizado){
+        const calcVenc=(i)=>{
+          if(tipo==='semanal')return addWeeks(data,i+1);
+          return addMonths(data,i+1);
+        };
         const valorParc=parseFloat((valorTotalConsig/nparc).toFixed(2));
         const parcsPayload=Array.from({length:nparc},(_,i)=>{
-          const venc=addMonths(data,i+1);
+          const venc=calcVenc(i);
           return{emprestimo_id:d.id,numero:i+1,vencimento:venc,valor:valorParc,status:'pendente'};
         });
         const{data:ps,error:pe}=await sb.from('parcelas').insert(parcsPayload).select();
         if(!pe&&ps)parcelas.push(...ps);
-        toast('✓ Consignado registrado! '+nparc+'× '+fmtR(valorParc));
+        const lblTipo = tipo==='semanal'?'Semanal':'Consignado';
+        toast(`✓ ${lblTipo} registrado! ${nparc}× ${fmtR(valorParc)}`);
       } else if(nparc>0){
         const valorParc=parseFloat((valor*juros).toFixed(2));
         const parcsPayload=Array.from({length:nparc},(_,i)=>{
@@ -746,7 +1065,6 @@ async function saveEmp(){
         if(!pe&&ps)parcelas.push(...ps);
         toast('✓ Empréstimo registrado! '+nparc+' parcela'+(nparc!==1?'s':'')+' gerada'+(nparc!==1?'s':'')+'.');
       } else {
-        // Juros ilimitado: gera automaticamente a primeira parcela (vence em 1 mês no mesmo dia)
         const valorParcAuto=parseFloat((valor*juros).toFixed(2));
         const vencStrAuto=addMonths(data,1);
         const{data:pa,error:pe}=await sb.from('parcelas').insert({
@@ -807,7 +1125,16 @@ function openClientView(tomId){
       <div style="display:flex;justify-content:space-between;align-items:center;padding:.65rem 1rem;background:#F9FAFB;border-bottom:1px solid #E5E7EB;cursor:pointer;transition:all .15s" onclick="document.getElementById('client-view-modal').remove();openParcelas('${e.id}')" onmouseenter="this.style.background='#F3F4F6'" onmouseleave="this.style.background='#F9FAFB'">
         <div>
           <span style="font-weight:700;color:var(--blu)">${fmtR(e.valor)}</span>
-          <span style="font-size:11px;padding:1px 7px;border-radius:999px;font-weight:700;margin-left:.4rem;${(e.tipo||'juros')==='consignado'?'background:#EFF6FF;color:#2563EB':'background:#FFF7ED;color:#EA580C'}">${(e.tipo||'juros')==='consignado'?'Consignado':'A Juros'}</span>
+          ${(()=>{
+            const t=e.tipo||'juros';
+            const cfg={
+              juros:{lbl:'A Juros',bg:'#FFF7ED',col:'#EA580C'},
+              consignado:{lbl:'Consignado',bg:'#EFF6FF',col:'#2563EB'},
+              diario:{lbl:'Diário',bg:'#FFFBEB',col:'#F59E0B'},
+              semanal:{lbl:'Semanal',bg:'#ECFEFF',col:'#0891B2'}
+            }[t]||{lbl:'A Juros',bg:'#FFF7ED',col:'#EA580C'};
+            return `<span style="font-size:11px;padding:1px 7px;border-radius:999px;font-weight:700;margin-left:.4rem;background:${cfg.bg};color:${cfg.col}">${cfg.lbl}</span>`;
+          })()}
           <span style="font-size:12px;color:var(--n4);margin-left:.4rem">${pctStr}% · ${fmtDate(e.data_emprestimo)}</span>
           ${e.garantia?`<span style="font-size:11px;color:var(--n4);margin-left:.4rem">· ${e.garantia}</span>`:''}
         </div>
@@ -877,16 +1204,50 @@ function openClientView(tomId){
 async function addParcela(empId){
   const emp=emprestimos.find(e=>e.id===empId);
   if(!emp)return;
-  // Juros sobre o SALDO atual (após abatimentos), não sobre o valor original
-  const saldoAtual=parseFloat((emp.saldo_devedor!=null?emp.saldo_devedor:emp.valor).toFixed(2));
-  const valorJuros=parseFloat((saldoAtual*emp.juros).toFixed(2));
+  const tipo=emp.tipo||'juros';
   const parcsExist=parcelas.filter(p=>p.emprestimo_id===empId);
   const nextNum=parcsExist.length+1;
-  const venc=addMonths(emp.data_emprestimo,nextNum);
+
+  let valorParc, venc;
+
+  if(tipo==='diario'){
+    // Parcela fixa = a mesma das anteriores
+    valorParc = parcsExist.length>0
+      ? Number(parcsExist[0].valor||0)
+      : parseFloat((Number(emp.valor_total_consignado||0)/nextNum).toFixed(2));
+    // Próximo vencimento: pega o último gerado e avança 1 dia, respeitando skip_sabado/domingo
+    const skipSat = emp.skip_sabado!==false; // default true
+    const skipSun = emp.skip_domingo!==false; // default true
+    const ultima = parcsExist
+      .map(p=>p.vencimento)
+      .sort()
+      .pop();
+    const base = ultima || emp.data_primeira_cobranca || emp.data_emprestimo;
+    if(ultima){
+      // gera +1 a partir da última
+      const datas = _diarioGerarDatas(base, 2, skipSat, skipSun);
+      venc = datas[1] || base;
+    } else {
+      venc = base;
+    }
+  } else if(tipo==='semanal'||tipo==='consignado'){
+    // Tipos amortizados: parcela fixa = a mesma das anteriores
+    valorParc = parcsExist.length>0
+      ? Number(parcsExist[0].valor||0)
+      : parseFloat((Number(emp.valor_total_consignado||0)/nextNum).toFixed(2));
+    if(tipo==='semanal') venc=addWeeks(emp.data_emprestimo,nextNum);
+    else                 venc=addMonths(emp.data_emprestimo,nextNum);
+  } else {
+    // Juros mensal: juros sobre o SALDO atual (após abatimentos), não sobre o valor original
+    const saldoAtual=parseFloat((emp.saldo_devedor!=null?emp.saldo_devedor:emp.valor).toFixed(2));
+    valorParc=parseFloat((saldoAtual*emp.juros).toFixed(2));
+    venc=addMonths(emp.data_emprestimo,nextNum);
+  }
+
   const{data,error}=await sb.from('parcelas').insert({
     emprestimo_id:empId,numero:nextNum,
     vencimento:venc,
-    valor:valorJuros,status:'pendente'
+    valor:valorParc,status:'pendente'
   }).select().single();
   if(error){toast('Erro ao adicionar parcela',true);return;}
   parcelas.push(data);toast('✓ Parcela adicionada!');

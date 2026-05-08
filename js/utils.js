@@ -56,7 +56,7 @@ function isEmprestimoQuitado(emp){
   const todasPagas=ep.every(p=>p.status==='pago');
   if(!todasPagas) return false;
   const tipo=emp.tipo||'juros';
-  if(tipo==='consignado') return true;
+  if(tipo==='consignado'||tipo==='diario'||tipo==='semanal') return true;
   // tipo='juros': exige saldo devedor zerado
   const saldo=Number(emp.saldo_devedor!=null?emp.saldo_devedor:emp.valor||0);
   return saldo===0;
